@@ -1,0 +1,28 @@
+Buy/Sell Criteria
+- More Alpha Normalized
+- Metric about winners / losers ratio
+- Metric of a stocks % rank in its group. 0-100
+
+Bugs
+- Different number of cells on axis don't align right
+- Concurrent modification exception when drawing cells in MapCellPanel class
+- Tooltip mouseover location doesn't always work with weird resolutions
+- Sometimes cell flickering
+- Queries in QueryManager should close on error
+- Make sure the same maps come out the same when run at different times.
+- GeneticSearcher still isn't saving maps right?
+- tradingaccounthistory isn't guaranteed to update correctly (and in fact usually does not) because it gets the latest price for each position from basicr, and in many cases that hasn't been updated with real-time data.
+
+Other Stuff to Add or Change
+- Input validation
+- Could change the resolution in real time if you stored all the map query results in memory
+- In memory DB
+- GUI options to set what a "good" map is before you run the Eval button
+- Simulate a larger time frame and without filters and let the filters change the map as the user changes them.  Simulation period could be date range sliders or something.  Have some calculation to show how resilient to change the map is.  If a map this month looks similar to a map last month, that's good.
+- Make a copy of basicr & metric tables with random walk values in them to make sure nothing too great can be found by the genetic searcher
+- Make a smooth animation to new location for map symbols
+- Value at Risk & Modern Portfolio Theory.  Look for a java non-linear solver.
+- Ideally my stop exit criteria would be something like waiting up to 20 days for the sell criteria to hit.  If it doesn't, dont' simply use a "sell after 20 days" cutoff, change it to something like "sell when williamsr10 rises above 50" - something that will hit quickly.
+- basicr might want to have a lastupdated timestamp column
+- Do I want do exit a position if I find that it appears in a high priority zone on an opposite map?
+- Also, do I want to keep a position that gets an exit criteria if it's still in a HP zone?
