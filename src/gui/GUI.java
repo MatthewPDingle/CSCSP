@@ -141,7 +141,7 @@ public class GUI {
 	private JCheckBox chkDJIA = null;
 	private JCheckBox chkSP500 = null;
 	private JCheckBox chkETF = null;
-	private JCheckBox chkIndex = null;
+	private JCheckBox chkBitcoin = null;
 	
 	// Stop Loss Panel
 	private JPanel pnlStopLoss = null;
@@ -342,7 +342,7 @@ public class GUI {
 			ps.setEtf(Boolean.valueOf(args[20]));
 			
 			args[21] = args[21].replaceAll("\\.csm", "");
-			chkIndex.setSelected(Boolean.valueOf(args[21]));
+			chkBitcoin.setSelected(Boolean.valueOf(args[21]));
 			ps.setIndex(Boolean.valueOf(args[21]));
 			
 			btnBuildMap.doClick();
@@ -434,7 +434,7 @@ public class GUI {
 			chkETF.setSelected(Boolean.valueOf(parts[20]));
 			ps.setEtf(Boolean.valueOf(parts[20]));
 			
-			chkIndex.setSelected(Boolean.valueOf(parts[21]));
+			chkBitcoin.setSelected(Boolean.valueOf(parts[21]));
 			ps.setIndex(Boolean.valueOf(parts[21]));
 			
 			ps.setMapColor(cbBasedOn.getSelectedItem().toString());
@@ -728,7 +728,7 @@ public class GUI {
 		pnlFilters.add(getChkDJIA());
 		pnlFilters.add(getChkSP500());
 		pnlFilters.add(getChkETF());
-		pnlFilters.add(getChkIndex());
+		pnlFilters.add(getChkBitcoin());
 		
 		// Legend Panel
 		pnlLegend = new JPanel();
@@ -895,7 +895,7 @@ public class GUI {
 		if (frame == null) {
 			frame = new JFrame();
 			frame.setSize(new Dimension(822, 638));
-			frame.setTitle("Chip Swinger Championship Stock Picker .36");
+			frame.setTitle("Chip Swinger Championship Stock Picker .37");
 			frame.setContentPane(panel);
 			frame.setVisible(true);
 			frame.addWindowListener(new java.awt.event.WindowAdapter() {
@@ -1705,20 +1705,20 @@ public class GUI {
 		return chkETF;
 	}
 
-	public JCheckBox getChkIndex() {
-		chkIndex = new JCheckBox("Index");
-		chkIndex.setBounds(new Rectangle(160, 136, 60, 20));
-		chkIndex.setFont(new Font("Dialog", Font.BOLD, 12));
-		chkIndex.setSelected(false);
-		ps.setIndex(chkIndex.isSelected());
+	public JCheckBox getChkBitcoin() {
+		chkBitcoin = new JCheckBox("Bitcoin");
+		chkBitcoin.setBounds(new Rectangle(160, 136, 60, 20));
+		chkBitcoin.setFont(new Font("Dialog", Font.BOLD, 12));
+		chkBitcoin.setSelected(false);
+		ps.setIndex(chkBitcoin.isSelected());
 		
-		chkIndex.addActionListener(new ActionListener() {
+		chkBitcoin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				ps.setIndex(chkIndex.isSelected());
+				ps.setIndex(chkBitcoin.isSelected());
 			}
 		});
 		
-		return chkIndex;
+		return chkBitcoin;
 	}
 
 	/**

@@ -33,13 +33,13 @@ public class MapUpdateThread extends Thread {
 			float yMetricMax = Constants.METRIC_MIN_MAX_VALUE.get("max_" + ps.getyAxisMetric());
 			float yCellSize = (yMetricMax - yMetricMin) / (float)ps.getyRes();
 			
-			Calendar latestDateInBasicr = QueryManager.getMaxDateFromBasicr();
+			Calendar latestDateInBar = QueryManager.getMaxDateFromBar();
 			
 			MUTCoordinator mutCoordinator = MUTCoordinator.getInstance();
 			Cell cell;
 			while ((cell = mutCoordinator.getNextAvailableCell()) != null && running) {
 				// Run main MapCell query
-				MapCell mc = QueryManager.cellQuery(cell.xMetricPosition, xCellSize, cell.yMetricPosition, yCellSize, latestDateInBasicr);
+				MapCell mc = QueryManager.cellQuery(cell.xMetricPosition, xCellSize, cell.yMetricPosition, yCellSize, latestDateInBar);
 					
 				// Normalize the values of the x and y metrics to 0 to 100
 				float xMetricRange = xMetricMax - xMetricMin;

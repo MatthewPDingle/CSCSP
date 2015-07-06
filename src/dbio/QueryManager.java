@@ -33,76 +33,73 @@ public class QueryManager {
 			String q = "SELECT ";
 			if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_NUM_TRADING_DAYS_LATER)) {
 				// "metricsp500perchange"
-				q += "(SELECT (b2.adjclose - b1.adjclose) / b1.adjclose * 100 FROM basicr b1 INNER JOIN basicr b2 ON b1.symbol = b2.symbol AND b2.date = (SELECT q.date FROM (SELECT date, adjclose FROM basicr WHERE date >= b.date AND symbol = b.symbol ORDER BY date LIMIT " + ((int) ps.getSellValue() + 1) + ") q ORDER BY date DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.date = b.date) AS metricsp500perchange, ";
+				q += "(SELECT (b2.close - b1.close) / b1.close * 100 FROM bar b1 INNER JOIN bar b2 ON b1.symbol = b2.symbol AND b2.start = (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + ((int) ps.getSellValue() + 1) + ") q ORDER BY start DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.start = b.start) AS metricsp500perchange, ";
 				// "perchange" when the sell metric is # Trading Days Later
-				q += "((SELECT q.adjclose FROM (SELECT date, adjclose FROM basicr WHERE date >= b.date AND symbol = b.symbol ORDER BY date LIMIT " + ((int) ps.getSellValue() + 1) + " ) q ORDER BY date DESC LIMIT 1) - b.adjclose) / b.adjclose * 100 AS perchange, ";
-				// "positionlength". Is 0 if the metric exit never hits and it runs to the latest date.
-				q += "countbusinessdays(b.date, (SELECT q.date FROM (SELECT date, adjclose FROM basicr WHERE date >= b.date AND symbol = b.symbol ORDER BY date LIMIT " + ((int) ps.getSellValue() + 1) + " ) q ORDER BY date DESC LIMIT 1)) AS positionlength, ";
+				q += "((SELECT q.close FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + ((int) ps.getSellValue() + 1) + " ) q ORDER BY start DESC LIMIT 1) - b.close) / b.close * 100 AS perchange, ";
+				// "positionlength". Is 0 if the metric exit never hits and it runs to the latest start.
+				q += "(SELECT COUNT(*) FROM bar b3 WHERE b3.symbol = b.symbol AND b3.start > b.start AND b3.start <= (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + ((int) ps.getSellValue() + 1) + " ) q ORDER BY start DESC LIMIT 1)) AS positionlength, ";
 			} else if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_PERCENT_UP)) {
 				// "metricsp500perchange"
-				q += "(SELECT (b2.adjclose - b1.adjclose) / b1.adjclose * 100 FROM basicr b1 INNER JOIN basicr b2 ON b1.symbol = b2.symbol AND b2.date = (SELECT q.date FROM (SELECT date FROM basicr WHERE date >= b.date AND symbol = b.symbol AND (adjclose-b.adjclose) / b.adjclose * 100 >= " + ps.getSellValue() + " ORDER BY date) q ORDER BY date LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.date = b.date) AS metricsp500perchange, ";
-				// "perchange" when the sell metric is % Up - Will be latest date if it never hits.
-				q += "COALESCE((SELECT (q.adjclose - b.adjclose) / b.adjclose * 100 FROM (SELECT date, adjclose FROM basicr WHERE date >= b.date AND symbol = b.symbol AND (adjclose - b.adjclose) / b.adjclose * 100 >= " + ps.getSellValue() + " ORDER BY date) q ORDER BY date LIMIT 1), (((SELECT q.adjclose FROM (SELECT date, adjclose FROM basicr WHERE date > b.date AND symbol = b.symbol ORDER BY date DESC LIMIT 1 ) q ORDER BY date DESC LIMIT 1) - b.adjclose) / b.adjclose * 100)) AS perchange, ";
-				// "positionlength". Is 0 if the metric exit never hits and it runs to the latest date.
-				q += "countbusinessdays(b.date, (SELECT q.date FROM (SELECT date, adjclose FROM basicr WHERE date >= b.date AND symbol = b.symbol AND (adjclose - b.adjclose) / b.adjclose * 100 >= " + ps.getSellValue() + " ORDER BY date) q ORDER BY date LIMIT 1)) AS positionlength, ";
+				q += "(SELECT (b2.close - b1.close) / b1.close * 100 FROM bar b1 INNER JOIN bar b2 ON b1.symbol = b2.symbol AND b2.start = (SELECT q.start FROM (SELECT start FROM bar WHERE start >= b.start AND symbol = b.symbol AND (close-b.close) / b.close * 100 >= " + ps.getSellValue() + " ORDER BY start) q ORDER BY start LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.start = b.start) AS metricsp500perchange, ";
+				// "perchange" when the sell metric is % Up - Will be latest start if it never hits.
+				q += "COALESCE((SELECT (q.close - b.close) / b.close * 100 FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol AND (close - b.close) / b.close * 100 >= " + ps.getSellValue() + " ORDER BY start) q ORDER BY start LIMIT 1), (((SELECT q.close FROM (SELECT start, close FROM bar WHERE start > b.start AND symbol = b.symbol ORDER BY start DESC LIMIT 1 ) q ORDER BY start DESC LIMIT 1) - b.close) / b.close * 100)) AS perchange, ";
+				// "positionlength". Is 0 if the metric exit never hits and it runs to the latest start.
+				q += "(SELECT COUNT(*) FROM bar b3 WHERE b3.symbol = b.symbol AND b3.start > b.start AND b3.start <= (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol AND (close - b.close) / b.close * 100 >= " + ps.getSellValue() + " ORDER BY start) q ORDER BY start LIMIT 1)) AS positionlength, ";
 			} else if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_PERCENT_DOWN)) {
 				// "metricsp500perchange"
-				q += "(SELECT (b2.adjclose - b1.adjclose) / b1.adjclose * 100 FROM basicr b1 INNER JOIN basicr b2 ON b1.symbol = b2.symbol AND b2.date = (SELECT q.date FROM (SELECT date FROM basicr WHERE date >= b.date AND symbol = b.symbol AND (adjclose-b.adjclose) / b.adjclose * 100 <= -"+ ps.getSellValue() + " ORDER BY date) q ORDER BY date LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.date = b.date) AS metricsp500perchange, ";
-				// "perchange" when the sell metric is % Down - Will be latest date if it never hits.
-				q += "COALESCE((SELECT (q.adjclose - b.adjclose) / b.adjclose * 100 FROM 	(SELECT date, adjclose FROM basicr WHERE date >= b.date AND symbol = b.symbol AND (adjclose - b.adjclose) / b.adjclose * 100 <= -" + ps.getSellValue() + " ORDER BY date) q ORDER BY date LIMIT 1), (((SELECT q.adjclose FROM (SELECT date, adjclose FROM basicr WHERE date > b.date AND symbol = b.symbol ORDER BY date DESC LIMIT 1 ) q ORDER BY date DESC LIMIT 1) - b.adjclose) / b.adjclose * 100)) AS perchange, ";
-				// "positionlength". Is 0 if the metric exit never hits and it runs to the latest date.
-				q += "countbusinessdays(b.date, (SELECT q.date FROM (SELECT date, adjclose FROM basicr WHERE date >= b.date AND symbol = b.symbol AND (adjclose - b.adjclose) / b.adjclose * 100 <= -" + ps.getSellValue() + " ORDER BY date) q ORDER BY date LIMIT 1)) AS positionlength, ";
+				q += "(SELECT (b2.close - b1.close) / b1.close * 100 FROM bar b1 INNER JOIN bar b2 ON b1.symbol = b2.symbol AND b2.start = (SELECT q.start FROM (SELECT start FROM bar WHERE start >= b.start AND symbol = b.symbol AND (close-b.close) / b.close * 100 <= -"+ ps.getSellValue() + " ORDER BY start) q ORDER BY start LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.start = b.start) AS metricsp500perchange, ";
+				// "perchange" when the sell metric is % Down - Will be latest start if it never hits.
+				q += "COALESCE((SELECT (q.close - b.close) / b.close * 100 FROM 	(SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol AND (close - b.close) / b.close * 100 <= -" + ps.getSellValue() + " ORDER BY start) q ORDER BY start LIMIT 1), (((SELECT q.close FROM (SELECT start, close FROM bar WHERE start > b.start AND symbol = b.symbol ORDER BY start DESC LIMIT 1 ) q ORDER BY start DESC LIMIT 1) - b.close) / b.close * 100)) AS perchange, ";
+				// "positionlength". Is 0 if the metric exit never hits and it runs to the latest start.
+				q += "(SELECT COUNT(*) FROM bar b3 WHERE b3.symbol = b.symbol AND b3.start > b.start AND b3.start <= (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol AND (close - b.close) / b.close * 100 <= -" + ps.getSellValue() + " ORDER BY start) q ORDER BY start LIMIT 1)) AS positionlength, ";
 			} else {
 				// "metricsp500perchange"
-				q += "(SELECT (b2.adjclose - b1.adjclose) / b1.adjclose * 100 FROM basicr b1 INNER JOIN basicr b2 ON b1.symbol = b2.symbol AND b2.date = (SELECT q.date FROM (SELECT r.date, r.adjclose, m.value FROM basicr r INNER JOIN metric_" + ps.getSellMetric() + " m ON r.symbol = m.symbol AND r.date = m.date WHERE r.date > b.date AND r.symbol = b.symbol AND m.value " + ps.getSellOperator() + " " + ps.getSellValue() + " ORDER BY r.date LIMIT 1 ) q ORDER BY date DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.date = b.date) AS metricsp500perchange, ";			 
-				// "perchange" for any other exit. Will be based on the latest date if the metric exit never hits.
-				q += "COALESCE((((SELECT q.adjclose FROM (SELECT r.date, r.adjclose, m.value FROM basicr r INNER JOIN metric_" + ps.getSellMetric() + " m ON r.symbol = m.symbol AND r.date = m.date WHERE r.date > b.date AND r.symbol = b.symbol AND m.value " + ps.getSellOperator() + " " + ps.getSellValue() + " ORDER BY r.date LIMIT 1 ) q ORDER BY date DESC LIMIT 1) - b.adjclose) / b.adjclose * 100), (((SELECT q.adjclose FROM (SELECT date, adjclose FROM basicr WHERE date > b.date AND symbol = b.symbol ORDER BY date DESC LIMIT 1 ) q ORDER BY date DESC LIMIT 1) - b.adjclose) / b.adjclose * 100)) AS perchange, ";
-				// "positionlength". Is 0 if it the metric exit never hits and it runs to the latest date.
-				q += "countbusinessdays(b.date, (SELECT r.date FROM basicr r INNER JOIN metric_" + ps.getSellMetric() + " m ON r.symbol = m.symbol AND r.date = m.date WHERE r.date > b.date AND r.symbol = b.symbol AND m.value " + ps.getSellOperator() + " " + ps.getSellValue() + " ORDER BY r.date LIMIT 1)) AS positionlength, ";
+				q += "(SELECT (b2.close - b1.close) / b1.close * 100 FROM bar b1 INNER JOIN bar b2 ON b1.symbol = b2.symbol AND b2.start = (SELECT q.start FROM (SELECT r.start, r.close, m.value FROM bar r INNER JOIN (SELECT symbol, start, value FROM metrics WHERE name = '" + ps.getSellMetric() + "') m ON r.symbol = m.symbol AND r.start = m.start WHERE r.start > b.start AND r.symbol = b.symbol AND m.value " + ps.getSellOperator() + " " + ps.getSellValue() + " ORDER BY r.start LIMIT 1 ) q ORDER BY start DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.start = b.start) AS metricsp500perchange, ";			 
+				// "perchange" for any other exit. Will be based on the latest start if the metric exit never hits.
+				q += "COALESCE((((SELECT q.close FROM (SELECT r.start, r.close, m.value FROM bar r INNER JOIN (SELECT symbol, start, value FROM metrics WHERE name = '" + ps.getSellMetric() + "') m ON r.symbol = m.symbol AND r.start = m.start WHERE r.start > b.start AND r.symbol = b.symbol AND m.value " + ps.getSellOperator() + " " + ps.getSellValue() + " ORDER BY r.start LIMIT 1 ) q ORDER BY start DESC LIMIT 1) - b.close) / b.close * 100), (((SELECT q.close FROM (SELECT start, close FROM bar WHERE start > b.start AND symbol = b.symbol ORDER BY start DESC LIMIT 1 ) q ORDER BY start DESC LIMIT 1) - b.close) / b.close * 100)) AS perchange, ";
+				// "positionlength". Is 0 if it the metric exit never hits and it runs to the latest start.
+				q += "(SELECT COUNT(*) FROM bar b3 WHERE b3.symbol = b.symbol AND b3.start > b.start AND b3.start <= (SELECT r.start FROM bar r INNER JOIN (SELECT symbol, start, value FROM metrics WHERE name = '" + ps.getSellMetric() + "') m ON r.symbol = m.symbol AND r.start = m.start WHERE r.start > b.start AND r.symbol = b.symbol AND m.value " + ps.getSellOperator() + " " + ps.getSellValue() + " ORDER BY r.start LIMIT 1))  AS positionlength, "; 
 			}
 
 			// "latestdatepositionlength"
-			q += "countbusinessdays(b.date, (SELECT date FROM basicr WHERE date > b.date AND symbol = b.symbol ORDER BY date DESC LIMIT 1 )) AS latestdatepositionlength, ";
+			q += "(SELECT COUNT(*) FROM bar b4 WHERE b4.symbol = b.symbol AND b4.start > b.start AND b4.start <= (SELECT start FROM bar WHERE start > b.start AND symbol = b.symbol ORDER BY start DESC LIMIT 1 )) AS latestdatepositionlength, ";
 			// "endsp500perchange"
-			q += "(SELECT (b2.adjclose - b1.adjclose) / b1.adjclose * 100 FROM basicr b1 INNER JOIN basicr b2 ON b1.symbol = b2.symbol AND b2.date = (SELECT q.date FROM (SELECT date FROM basicr WHERE date > b.date AND symbol = b.symbol ORDER BY date DESC LIMIT 1) q ORDER BY date DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.date = b.date) AS endsp500perchange, ";
+			q += "(SELECT (b2.close - b1.close) / b1.close * 100 FROM bar b1 INNER JOIN bar b2 ON b1.symbol = b2.symbol AND b2.start = (SELECT q.start FROM (SELECT start FROM bar WHERE start > b.start AND symbol = b.symbol ORDER BY start DESC LIMIT 1) q ORDER BY start DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.start = b.start) AS endsp500perchange, ";
 			
 			// Stop Metric (% Down, # Days, or None)
 			if (ps.getStopMetric().equals(Constants.OTHER_SELL_METRIC_PERCENT_DOWN)) {
 				// "stopexitperchange"
-				q += "(((SELECT q.adjclose FROM (SELECT r.date, r.adjclose FROM basicr r WHERE r.date > b.date AND r.symbol = b.symbol AND (b.adjclose - r.adjclose) / b.adjclose * 100 >= " + ps.getStopValue() + " " + "ORDER BY r.date LIMIT 1 ) q ORDER BY date DESC LIMIT 1) - b.adjclose) / b.adjclose * 100) AS stopexitperchange, ";
+				q += "(((SELECT q.close FROM (SELECT r.start, r.close FROM bar r WHERE r.start > b.start AND r.symbol = b.symbol AND (b.close - r.close) / b.close * 100 >= " + ps.getStopValue() + " " + "ORDER BY r.start LIMIT 1 ) q ORDER BY start DESC LIMIT 1) - b.close) / b.close * 100) AS stopexitperchange, ";
 				// "stopexitpositionlength". Is 0 if the stop isn't hit.
-				q += "countbusinessdays(b.date, (SELECT q.date FROM (SELECT r.date, r.adjclose FROM basicr r WHERE r.date > b.date AND r.symbol = b.symbol AND (b.adjclose - r.adjclose) / b.adjclose * 100 >= " + ps.getStopValue() + " " + "ORDER BY r.date LIMIT 1 ) q ORDER BY date DESC LIMIT 1)) AS stopexitpositionlength, ";
+				q += "(SELECT COUNT(*) FROM bar b5 WHERE b5.symbol = b.symbol AND b5.start > b.start AND b5.start <= (SELECT q.start FROM (SELECT r.start, r.close FROM bar r WHERE r.start > b.start AND r.symbol = b.symbol AND (b.close - r.close) / b.close * 100 >= " + ps.getStopValue() + " " + "ORDER BY r.start LIMIT 1 ) q ORDER BY start DESC LIMIT 1)) AS stopexitpositionlength, ";
 				// "stopsp500perchange"
-				q += "(SELECT (b2.adjclose - b1.adjclose) / b1.adjclose * 100 FROM basicr b1 INNER JOIN basicr b2 ON b1.symbol = b2.symbol AND b2.date = (SELECT q.date FROM (SELECT r.date, r.adjclose FROM basicr r WHERE r.date > b.date AND r.symbol = b.symbol AND (b.adjclose - r.adjclose) / b.adjclose * 100 >= " + ps.getStopValue() + " ORDER BY r.date LIMIT 1 ) q ORDER BY date DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.date = b.date) AS stopsp500perchange ";
+				q += "(SELECT (b2.close - b1.close) / b1.close * 100 FROM bar b1 INNER JOIN bar b2 ON b1.symbol = b2.symbol AND b2.start = (SELECT q.start FROM (SELECT r.start, r.close FROM bar r WHERE r.start > b.start AND r.symbol = b.symbol AND (b.close - r.close) / b.close * 100 >= " + ps.getStopValue() + " ORDER BY r.start LIMIT 1 ) q ORDER BY start DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.start = b.start) AS stopsp500perchange ";
 			} else if (ps.getStopMetric().equals(Constants.OTHER_SELL_METRIC_PERCENT_UP)) {
 				// "stopexitperchange"
-				q += "(((SELECT q.adjclose FROM (SELECT r.date, r.adjclose FROM basicr r WHERE r.date > b.date AND r.symbol = b.symbol AND (r.adjclose - b.adjclose) / b.adjclose * 100 >= " + ps.getStopValue() + " " + "ORDER BY r.date LIMIT 1 ) q ORDER BY date DESC LIMIT 1) - b.adjclose) / b.adjclose * 100) AS stopexitperchange, ";
+				q += "(((SELECT q.close FROM (SELECT r.start, r.close FROM bar r WHERE r.start > b.start AND r.symbol = b.symbol AND (r.close - b.close) / b.close * 100 >= " + ps.getStopValue() + " " + "ORDER BY r.start LIMIT 1 ) q ORDER BY start DESC LIMIT 1) - b.close) / b.close * 100) AS stopexitperchange, ";
 				// "stopexitpositionlength". Is 0 if the stop isn't hit.
-				q += "countbusinessdays(b.date, (SELECT q.date FROM (SELECT r.date, r.adjclose FROM basicr r WHERE r.date > b.date AND r.symbol = b.symbol AND (r.adjclose - b.adjclose) / b.adjclose * 100 >= " + ps.getStopValue() + " " + "ORDER BY r.date LIMIT 1 ) q ORDER BY date DESC LIMIT 1)) AS stopexitpositionlength, ";
+				q += "(SELECT COUNT(*) FROM bar b5 WHERE b5.symbol = b.symbol AND b5.start > b.start AND b5.start <= (SELECT q.start FROM (SELECT r.start, r.close FROM bar r WHERE r.start > b.start AND r.symbol = b.symbol AND (r.close - b.close) / b.close * 100 >= " + ps.getStopValue() + " " + "ORDER BY r.start LIMIT 1 ) q ORDER BY start DESC LIMIT 1)) AS stopexitpositionlength, ";
 				// "stopsp500perchange"
-				q += "(SELECT (b2.adjclose - b1.adjclose) / b1.adjclose * 100 FROM basicr b1 INNER JOIN basicr b2 ON b1.symbol = b2.symbol AND b2.date = (SELECT q.date FROM (SELECT r.date, r.adjclose FROM basicr r WHERE r.date > b.date AND r.symbol = b.symbol AND (r.adjclose - b.adjclose) / b.adjclose * 100 >= " + ps.getStopValue() + " ORDER BY r.date LIMIT 1 ) q ORDER BY date DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.date = b.date) AS stopsp500perchange ";
+				q += "(SELECT (b2.close - b1.close) / b1.close * 100 FROM bar b1 INNER JOIN bar b2 ON b1.symbol = b2.symbol AND b2.start = (SELECT q.start FROM (SELECT r.start, r.close FROM bar r WHERE r.start > b.start AND r.symbol = b.symbol AND (r.close - b.close) / b.close * 100 >= " + ps.getStopValue() + " ORDER BY r.start LIMIT 1 ) q ORDER BY start DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.start = b.start) AS stopsp500perchange ";
 			} else if (ps.getStopMetric().equals("# Days")) {
 				// "stopexitperchange"
-				q += "((SELECT q.adjclose FROM (SELECT date, adjclose FROM basicr " + "WHERE date >= b.date AND symbol = b.symbol ORDER BY date LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY date DESC LIMIT 1) - b.adjclose) / b.adjclose * 100 AS stopexitperchange, ";
+				q += "((SELECT q.close FROM (SELECT start, close FROM bar " + "WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY start DESC LIMIT 1) - b.close) / b.close * 100 AS stopexitperchange, ";
 				// "stopexitpositionlength". Is 0 if the stop isn't hit
-				q += "CASE WHEN (countbusinessdays(b.date, (SELECT q.date FROM (SELECT date, adjclose FROM basicr WHERE date >= b.date AND symbol = b.symbol ORDER BY date LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY date DESC LIMIT 1))) = " + (ps.getStopValue()) + " THEN (countbusinessdays(b.date, (SELECT q.date FROM (SELECT date, adjclose FROM basicr WHERE date >= b.date AND symbol = b.symbol ORDER BY date LIMIT " + (ps.getStopValue() + 1) + " ) q ORDER BY date DESC LIMIT 1))) ELSE 0 END AS stopexitpositionlength, ";
+				q += "CASE WHEN (countbusinessdays(b.start, (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY start DESC LIMIT 1))) = " + (ps.getStopValue()) + " THEN (countbusinessdays(b.start, (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + " ) q ORDER BY start DESC LIMIT 1))) ELSE 0 END AS stopexitpositionlength, ";
+				q += "CASE WHEN (SELECT COUNT(*) FROM bar b5 WHERE b5.symbol = b.symbol AND b5.start > b.start AND b5.start <= (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY start DESC LIMIT 1)) = " + (ps.getStopValue()) + " THEN (SELECT COUNT(*) FROM bar b5 WHERE b5.symbol = b.symbol AND b5.start > b.start AND b5.start <= (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + " ) q ORDER BY start DESC LIMIT 1)) ELSE 0 AS stopexitpositionlength, ";
 				// "stopsp500perchange"
-				q += "(SELECT (b2.adjclose - b1.adjclose) / b1.adjclose * 100 FROM basicr b1 INNER JOIN basicr b2 ON b1.symbol = b2.symbol AND b2.date = (SELECT q.date FROM (SELECT date FROM basicr WHERE date >= b.date AND symbol = 'SPY' ORDER BY date LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY date DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.date = b.date) AS stopsp500perchange ";
+				q += "(SELECT (b2.close - b1.close) / b1.close * 100 FROM bar b1 INNER JOIN bar b2 ON b1.symbol = b2.symbol AND b2.start = (SELECT q.start FROM (SELECT start FROM bar WHERE start >= b.start AND symbol = 'SPY' ORDER BY start LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY start DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.start = b.start) AS stopsp500perchange ";
 			} else { // No Stop Loss Metric
 				q += "NULL AS stopexitperchange, 0 AS stopexitpositionlength, NULL AS stopsp500perchange ";
 			}
 			// END OF SELECT SECTION.
-			q += "FROM basicr b "
-					+ "INNER JOIN metric_"
-					+ ps.getyAxisMetric()
-					+ " y "
-					+ "ON b.symbol = y.symbol AND b.date = y.date "
-					+ "INNER JOIN metric_"
-					+ ps.getxAxisMetric()
-					+ " x "
-					+ "ON b.symbol = x.symbol AND b.date = x.date "
-					+ "INNER JOIN metric_priceboll20 psd "
-					+ "ON b.symbol = psd.symbol AND b.date = psd.date "
+			q += "FROM bar b "
+					+ "INNER JOIN (SELECT symbol, start, value FROM metrics WHERE name = '" + ps.getyAxisMetric() + "') y "
+					+ "ON b.symbol = y.symbol AND b.start = y.start "
+					+ "INNER JOIN (SELECT symbol, start, value FROM metrics WHERE name = '" + ps.getxAxisMetric() + "') x "
+					+ "ON b.symbol = x.symbol AND b.start = x.start "
+					+ "INNER JOIN (SELECT symbol, start, value FROM metrics WHERE name = 'priceboll20') psd "
+					+ "ON b.symbol = psd.symbol AND b.start = psd.start "
 					+ "WHERE b.symbol IN (SELECT DISTINCT symbol FROM indexlist WHERE ";
 			// Index List
 			String i = "";
@@ -146,17 +143,17 @@ public class QueryManager {
 					i = "index = 'Index' ";
 				}
 			}
-			q += i + ") " + "AND b.date >= '"
-					+ CalendarUtils.getSqlDateString(ps.getFromCal()) + "' AND b.date < '"
+			q += i + ") " + "AND b.start >= '"
+					+ CalendarUtils.getSqlDateString(ps.getFromCal()) + "' AND b.start < '"
 					+ CalendarUtils.getSqlDateString(ps.getToCal()) + "' "
-					+ "AND b.date < '"
+					+ "AND b.start < '"
 					+ CalendarUtils.getSqlDateString(latestDateInBasicr) + "' "
 					+ "AND x.value >= " + x + " AND x.value <= "
 					+ (x + xCellSize) + " " + "AND y.value >= " + y
 					+ " AND y.value <= " + (y + yCellSize) + " "
-					+ "AND b.volume >= " + ps.getMinLiquidity() + " / b.adjclose "
+					+ "AND b.volume >= " + ps.getMinLiquidity() + " / b.close "
 					+ "AND ABS(psd.value) <= " + ps.getMaxVolatility() + " "
-					+ "AND b.adjclose >= " + ps.getMinPrice() + " ";
+					+ "AND b.close >= " + ps.getMinPrice() + " ";
 			// Sector & Industry
 			if (!ps.getSector().equals("All")) {
 				q += "AND b.symbol IN (SELECT DISTINCT symbol FROM sectorandindustry WHERE sector = '" + ps.getSector() + "') ";
@@ -358,6 +355,32 @@ public class QueryManager {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			String q = "SELECT MAX(date) AS d FROM basicr";
+			Statement s = c.createStatement();
+			ResultSet rs = s.executeQuery(q);
+
+			Date d = null;
+			while (rs.next()) {
+				d = rs.getDate("d");
+			}
+
+			rs.close();
+			s.close();
+			c.close();
+			
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(d);
+			return cal;
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public static Calendar getMaxDateFromBar() {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "SELECT MAX(start) AS d FROM bar";
 			Statement s = c.createStatement();
 			ResultSet rs = s.executeQuery(q);
 
@@ -858,34 +881,6 @@ public class QueryManager {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			String q = "TRUNCATE TABLE " + Constants.INDEXLIST_TABLE;
-			Statement s = c.createStatement();
-			s.executeUpdate(q);
-			s.close();
-			c.close();
-		} 
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static void truncateBasicR() {
-		try {
-			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "TRUNCATE TABLE " + Constants.BASICR_TABLE;
-			Statement s = c.createStatement();
-			s.executeUpdate(q);
-			s.close();
-			c.close();
-		} 
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static void truncateBasicP() {
-		try {
-			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "TRUNCATE TABLE " + Constants.BASICP_TABLE;
 			Statement s = c.createStatement();
 			s.executeUpdate(q);
 			s.close();

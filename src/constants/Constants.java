@@ -9,24 +9,17 @@ public class Constants {
 	public static String USERNAME = "postgres";
 	public static String PASSWORD = "graham23";
 	
-	public static String BASICR_TABLE = "basicr"; // Research (Being phased out in favor of metric tables)
-	public static String BASICP_TABLE = "basicp"; // Production (Being phased out in favor of metric tables)
-	public static String BASICO_TABLE = "basico"; // Basic Options (Not used because it wasn't very predictive)
-	public static String BASICF_TABLE = "basicf"; // Fundamentals
-	public static String BAR_TABLE = "bar";
-	public static String METRICS_TABLE = "metrics";
+	public static enum BAR_SIZE {BAR_1M, BAR_2M, BAR_5M, BAR_10M, BAR_15M, BAR_30M, BAR_1H, BAR_2H, BAR_4H, BAR_6H, BAR_8H, BAR_12H, BAR_1D};
 	
-	public static String EXPANDEDR_TABLE = "expandedr"; // Research (Being phased out in favor of metric tables)
-	public static String EXPANDEDP_TABLE = "expandedp"; // Production (Being phased out in favor of metric tables)
-	public static String EXPANDEDO_TABLE = "expandedo"; // Expanded Options (Not used because it wasn't very predictive)
+	public static String BAR_TABLE = "bar";			// Replaces basicr.  This table only has bar data.  If you get a datasource that is tick-based, convert it to bars and put the data here.
+	public static String METRICS_TABLE = "metrics";	// Replaces all metric_ tables
 	
-	public static String INDEXLIST_TABLE = "indexlist"; // NYSE, Nasdaq, ETF, Index
+	public static String INDEXLIST_TABLE = "indexlist"; // NYSE, Nasdaq, ETF, Index, Bitcoin
 	public static String SECTORANDINDUSTRY_TABLE = "sectorandindustry";
 	
 	public static String REALTIMESYMBOLS_TABLE = "realtimesymbols";
 
-	public static enum BAR_SIZE {BAR_1M, BAR_2M, BAR_5M, BAR_10M, BAR_15M, BAR_30M, BAR_1H, BAR_2H, BAR_4H, BAR_6H, BAR_8H, BAR_12H, BAR_1D};
-	
+	// Datasource URLs.  These occasionally break and need to be fixed or replaced.
 	public static String YAHOO_NYSE_SYMBOL_URL = "http://finance.yahoo.com/q/cp?s=%5ENYA&c="; // "c" parameter = a page number (0+) // Broken as of 7/2/2015
 	public static String NYSE_SYMBOL_URL = "http://www1.nyse.com/indexes/nyaindex.csv";
 	public static String YAHOO_NASDAQ_SYMBOL_URL = "http://finance.yahoo.com/q/cp?s=%5EIXIC&c=";
