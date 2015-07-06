@@ -374,7 +374,7 @@ public class Constants {
 		STOP_METRICS.add("None");
 		STOP_METRICS.add("% Down");
 		STOP_METRICS.add("% Up");
-		STOP_METRICS.add("# Days");
+		STOP_METRICS.add("# Bars");
 	}
 	
 	public static String MAP_COLOR_OPTION_ALL_NUM_POSITIONS = "All - # Positions";
@@ -385,7 +385,7 @@ public class Constants {
 	public static String MAP_COLOR_OPTION_ALL_MEAN_WIN_PERCENT = "All - Mean Win %";
 	public static String MAP_COLOR_OPTION_ALL_MEAN_POSITION_DURATION = "All - Mean Position Duration";
 	public static String MAP_COLOR_OPTION_ALL_MAX_DRAWDOWN = "All - Max Drawdown %";
-	public static String MAP_COLOR_OPTION_ALL_GEOMEAN_PER_DAY = "All - Geo-Mean / Day Return";
+	public static String MAP_COLOR_OPTION_ALL_GEOMEAN_PER_DAY = "All - Geo-Mean / Bar Return";
 	public static String MAP_COLOR_OPTION_ALL_SHARPE_RATIO = "All - Sharpe Ratio";
 	public static String MAP_COLOR_OPTION_ALL_SORTINO_RATIO = "All - Sortino Ratio";
 	
@@ -393,7 +393,7 @@ public class Constants {
 	public static String MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_RETURN = "All - Alpha Geo-Mean Return";
 	public static String MAP_COLOR_OPTION_ALL_ALPHA_MEDIAN_RETURN = "All - Alpha Median Return";
 	public static String MAP_COLOR_OPTION_ALL_ALPHA_MEAN_WIN_PERCENT = "All - Alpha Mean Win %";
-	public static String MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_DAY = "All - Alpha Geo-Mean / Day";
+	public static String MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_DAY = "All - Alpha Geo-Mean / Bar";
 	
 	public static String MAP_COLOR_OPTION_METRIC_NUM_POSITIONS = "Metric - # Positions";
 	public static String MAP_COLOR_OPTION_METRIC_PERCENT_POSITIONS = "Metric - % Positions";
@@ -402,7 +402,7 @@ public class Constants {
 	public static String MAP_COLOR_OPTION_METRIC_MEDIAN_RETURN = "Metric - Median Return";
 	public static String MAP_COLOR_OPTION_METRIC_MEAN_WIN_PERCENT = "Metric - Mean Win %";
 	public static String MAP_COLOR_OPTION_METRIC_MEAN_POSITION_DURATION = "Metric - Mean Position Duration";
-	public static String MAP_COLOR_OPTION_METRIC_GEOMEAN_PER_DAY = "Metric - Geo-Mean / Day Return";
+	public static String MAP_COLOR_OPTION_METRIC_GEOMEAN_PER_DAY = "Metric - Geo-Mean / Bar Return";
 	
 	public static String MAP_COLOR_OPTION_STOP_NUM_POSITIONS = "Stop - # Positions";
 	public static String MAP_COLOR_OPTION_STOP_PERCENT_POSITIONS = "Stop - % Positions";
@@ -411,7 +411,7 @@ public class Constants {
 	public static String MAP_COLOR_OPTION_STOP_MEDIAN_RETURN = "Stop - Median Return";
 	public static String MAP_COLOR_OPTION_STOP_MEAN_WIN_PERCENT = "Stop - Mean Win %";
 	public static String MAP_COLOR_OPTION_STOP_MEAN_POSITION_DURATION = "Stop - Mean Position Duration";
-	public static String MAP_COLOR_OPTION_STOP_GEOMEAN_PER_DAY = "Stop - Geo-Mean / Day Return";
+	public static String MAP_COLOR_OPTION_STOP_GEOMEAN_PER_DAY = "Stop - Geo-Mean / Bar Return";
 	
 	public static String MAP_COLOR_OPTION_END_NUM_POSITIONS = "End - # Positions";
 	public static String MAP_COLOR_OPTION_END_PERCENT_POSITIONS = "End - % Positions";
@@ -420,7 +420,7 @@ public class Constants {
 	public static String MAP_COLOR_OPTION_END_MEDIAN_RETURN = "End - Median Return";
 	public static String MAP_COLOR_OPTION_END_MEAN_WIN_PERCENT = "End - Mean Win %";
 	public static String MAP_COLOR_OPTION_END_MEAN_POSITION_DURATION = "End - Mean Position Duration";
-	public static String MAP_COLOR_OPTION_END_GEOMEAN_PER_DAY = "End - Geo-Mean / Day Return";
+	public static String MAP_COLOR_OPTION_END_GEOMEAN_PER_DAY = "End - Geo-Mean / Bar Return";
 	
 	public static ArrayList<String> MAP_COLOR_OPTIONS = new ArrayList<String>();
 	static {

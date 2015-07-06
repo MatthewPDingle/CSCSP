@@ -17,16 +17,16 @@ public class MapEvaluatorSingleton {
 	private static int MAX_PERCENT_END_POSITION_FOR_CELL = 20;
 	
 	// Bullish Cell Criteria
-	private static float MIN_AGMPD = .14f;//.15f;
-	private static float MIN_GMPD = .32f;//.35f;
-	private static float MIN_SHARPE = .16f;//.20f;
-	public static float MIN_SCORE = 1.10f;//1.25f; // 3AGMPD + 2SHARPE + 1GMPD
+	private static float MIN_AGMPD = .012f; // .14f; 1D Bar Stocks
+	private static float MIN_GMPD = .012f; // .32f; 1D Bar Stocks
+	private static float MIN_SHARPE = .25f; /// .16f; 1D Bar Stocks
+	public static float MIN_SCORE = .6f; // 10AGMPD + 10GMPD + 1SHARPE for 15M Bar Bitcoin // 1.10f; (3AGMPD + 2SHARPE + 1GMPD) for 1D Bar Stocks
 	
 	// Bearish Cell Criteria
-	private static float MAX_AGMPD = -.15f;//-.25f;
-	private static float MAX_GMPD = -.05f;
-	private static float MAX_SHARPE = -.15f;//-.20f;
-	public static float MAX_SCORE = -.85f;//-1.25f; // 3AGMPD + 2SHARPE + 1GMPD
+	private static float MAX_AGMPD = -.012f; // -.15f; 1D Bar Stocks
+	private static float MAX_GMPD = -.012f; // -.05f; 1D Bar Stocks
+	private static float MAX_SHARPE = -.25f; // -.15f; 1D Bar Stocks
+	public static float MAX_SCORE = -.6f; // 10AGMPD + 10GMPD + 1SHARPE for 15M Bar Bitcoin // -.85f; // (3AGMPD + 2SHARPE + 1GMPD) for 1D Bar Stocks
 	
 	private static MapEvaluatorSingleton instance = null;
 
@@ -435,7 +435,8 @@ public class MapEvaluatorSingleton {
 			float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_DAY);
 			float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_DAY);
 			float sharpe = mvh.get(Constants.MAP_COLOR_OPTION_ALL_SHARPE_RATIO);			
-			float score = (3 * agmpd) + (2 * sharpe) + (1f * gmpd);
+//			float score = (3 * agmpd) + (2 * sharpe) + (1f * gmpd); // Stocks
+			float score = (10 * agmpd) + (1 * sharpe) + (10 * gmpd); // Bitcoin
 
 			if (numPositions < MIN_NUM_POSITIONS) {
 				return false;
@@ -464,7 +465,8 @@ public class MapEvaluatorSingleton {
 			float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_DAY);
 			float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_DAY);
 			float sharpe = mvh.get(Constants.MAP_COLOR_OPTION_ALL_SHARPE_RATIO);
-			float score = (3 * agmpd) + (2 * sharpe) + (1f * gmpd);
+//			float score = (3 * agmpd) + (2 * sharpe) + (1f * gmpd); // Stocks
+			float score = (10 * agmpd) + (1 * sharpe) + (10 * gmpd); // Bitcoin
 
 			if (numPositions < MIN_NUM_POSITIONS) {
 				return false;

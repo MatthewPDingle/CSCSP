@@ -26,3 +26,15 @@ Other Stuff to Add or Change
 - basicr might want to have a lastupdated timestamp column
 - Do I want do exit a position if I find that it appears in a high priority zone on an opposite map?
 - Also, do I want to keep a position that gets an exit criteria if it's still in a HP zone?
+
+
+
+New Stuff
+- Bar Types
+- Would be nice to be able to view charts and metrics by clicking on a cell
+- Normalized metrics
+- Neural network on a bunch of metrics
+- Re-write QueryManager.cellQuery() to be more understandable and verifiable.
+- Use of numtrades and vwap fields in bar data
+- Play with other bitcoin exchange data
+- Play with other bitcoin bar sizes

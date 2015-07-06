@@ -311,7 +311,7 @@ public class CellToolTip extends JWindow {
 							else if (colorOption.contains("%") || colorOption.contains("Mean Return") || colorOption.contains("Median")) {
 								text = String.format("%.1f", value) + "%";
 							}
-							else if (colorOption.contains("Geo-Mean / Day")) {
+							else if (colorOption.contains("Geo-Mean / Bar")) {
 								text = String.format("%.2f", value) + "%";
 							}
 							else if (colorOption.contains("Sharpe") || colorOption.contains("Sortino")) {
@@ -396,7 +396,7 @@ public class CellToolTip extends JWindow {
 						if (colorOption.contains("Drawdown")) {
 							y = 136;
 						}
-						if (colorOption.contains("Geo-Mean / Day")) {
+						if (colorOption.contains("Geo-Mean / Bar")) {
 							y = 152;
 						}
 						if (colorOption.contains("Sharpe")) {
@@ -429,7 +429,7 @@ public class CellToolTip extends JWindow {
 						else if (colorOption.contains("%") || colorOption.contains("Mean Return") || colorOption.contains("Median")) {
 							text = String.format("%.1f", value) + "%";
 						}
-						else if (colorOption.contains("Geo-Mean / Day")) {
+						else if (colorOption.contains("Geo-Mean / Bar")) {
 							text = String.format("%.2f", value) + "%";
 						}
 						else if (colorOption.contains("Sharpe") || colorOption.contains("Sortino")) {

@@ -85,8 +85,7 @@ public class QueryManager {
 				// "stopexitperchange"
 				q += "((SELECT q.close FROM (SELECT start, close FROM bar " + "WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY start DESC LIMIT 1) - b.close) / b.close * 100 AS stopexitperchange, ";
 				// "stopexitpositionlength". Is 0 if the stop isn't hit
-				q += "CASE WHEN (countbusinessdays(b.start, (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY start DESC LIMIT 1))) = " + (ps.getStopValue()) + " THEN (countbusinessdays(b.start, (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + " ) q ORDER BY start DESC LIMIT 1))) ELSE 0 END AS stopexitpositionlength, ";
-				q += "CASE WHEN (SELECT COUNT(*) FROM bar b5 WHERE b5.symbol = b.symbol AND b5.start > b.start AND b5.start <= (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY start DESC LIMIT 1)) = " + (ps.getStopValue()) + " THEN (SELECT COUNT(*) FROM bar b5 WHERE b5.symbol = b.symbol AND b5.start > b.start AND b5.start <= (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + " ) q ORDER BY start DESC LIMIT 1)) ELSE 0 AS stopexitpositionlength, ";
+				q += "CASE WHEN (SELECT COUNT(*) FROM bar b5 WHERE b5.symbol = b.symbol AND b5.start > b.start AND b5.start <= (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY start DESC LIMIT 1)) = " + (ps.getStopValue()) + " THEN (SELECT COUNT(*) FROM bar b5 WHERE b5.symbol = b.symbol AND b5.start > b.start AND b5.start <= (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + (ps.getStopValue() + 1) + " ) q ORDER BY start DESC LIMIT 1)) ELSE 0 END AS stopexitpositionlength, ";
 				// "stopsp500perchange"
 				q += "(SELECT (b2.close - b1.close) / b1.close * 100 FROM bar b1 INNER JOIN bar b2 ON b1.symbol = b2.symbol AND b2.start = (SELECT q.start FROM (SELECT start FROM bar WHERE start >= b.start AND symbol = 'SPY' ORDER BY start LIMIT " + (ps.getStopValue() + 1) + ") q ORDER BY start DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.start = b.start) AS stopsp500perchange ";
 			} else { // No Stop Loss Metric
@@ -162,7 +161,7 @@ public class QueryManager {
 				q += "AND b.symbol IN (SELECT DISTINCT symbol FROM sectorandindustry WHERE industry = '" + ps.getIndustry() + "') ";
 			}
 
-//			System.out.println(q);
+			System.out.println(q);
 
 			// Run Query
 			Connection c = ConnectionSingleton.getInstance().getConnection();
@@ -1095,7 +1094,7 @@ public class QueryManager {
 			String insertQuery = "INSERT INTO searchresults( "
 					+ "bullscore, bearscore, rundate, buy1, buy2, sell, sellop, sellvalue, stop, stopvalue, "
 					+ "fromdate, todate, xres, yres, liquidity, volatility, price, sector, "
-					+ "industry, nyse, nasdaq, djia, sp500, etf, \"index\") "
+					+ "industry, nyse, nasdaq, djia, sp500, etf, bitcoin) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 			PreparedStatement pst = c.prepareStatement(insertQuery);

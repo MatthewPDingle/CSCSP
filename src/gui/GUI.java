@@ -1130,7 +1130,7 @@ public class GUI {
 	
 	private JDateChooser getCalFrom() {
 		Calendar cFrom = Calendar.getInstance();
-		cFrom.add(Calendar.MONTH, -2);
+		cFrom.add(Calendar.MONTH, -3);
 		calFrom = new JDateChooser();
 		calFrom.setBounds(new Rectangle(36, 22, 90, 23));
 		calFrom.setDate(cFrom.getTime());
@@ -1352,7 +1352,7 @@ public class GUI {
 	}
 	
 	private JTextField getTxtMinLiquidity() {
-		txtMinLiquidity = new JTextField("2000000");
+		txtMinLiquidity = new JTextField("0"); // 2000000 Stocks
 		txtMinLiquidity.setBounds(new Rectangle(82, 22, 64, 23));
 		txtMinLiquidity.setAlignmentY(.5f);
 		txtMinLiquidity.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -1377,7 +1377,7 @@ public class GUI {
 	}
 	
 	private JTextField getTxtMaxVolatility() {
-		txtMaxVolatility = new JTextField("1.0");
+		txtMaxVolatility = new JTextField("10"); // 1.0 Stocks
 		txtMaxVolatility.setBounds(new Rectangle(82, 46, 40, 23));
 		txtMaxVolatility.setAlignmentY(.5f);
 		txtMaxVolatility.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -1629,7 +1629,7 @@ public class GUI {
 		chkNYSE = new JCheckBox("NYSE");
 		chkNYSE.setBounds(new Rectangle(1, 118, 55, 20));
 		chkNYSE.setFont(new Font("Dialog", Font.BOLD, 12));
-		chkNYSE.setSelected(true);
+		chkNYSE.setSelected(false);
 		ps.setNyse(chkNYSE.isSelected());
 		
 		chkNYSE.addActionListener(new ActionListener() {
@@ -1645,7 +1645,7 @@ public class GUI {
 		chkNasdaq = new JCheckBox("Nasdaq");
 		chkNasdaq.setBounds(new Rectangle(80, 118, 68, 20));
 		chkNasdaq.setFont(new Font("Dialog", Font.BOLD, 12));
-		chkNasdaq.setSelected(true);
+		chkNasdaq.setSelected(false);
 		ps.setNasdaq(chkNasdaq.isSelected());
 		
 		chkNasdaq.addActionListener(new ActionListener() {
@@ -1661,7 +1661,7 @@ public class GUI {
 		chkDJIA = new JCheckBox("DJIA");
 		chkDJIA.setBounds(new Rectangle(160, 118, 51, 20));
 		chkDJIA.setFont(new Font("Dialog", Font.BOLD, 12));
-		chkDJIA.setSelected(true);
+		chkDJIA.setSelected(false);
 		ps.setDjia(chkDJIA.isSelected());
 		
 		chkDJIA.addActionListener(new ActionListener() {
@@ -1677,7 +1677,7 @@ public class GUI {
 		chkSP500 = new JCheckBox("SP500");
 		chkSP500.setBounds(new Rectangle(1, 136, 66, 20));
 		chkSP500.setFont(new Font("Dialog", Font.BOLD, 12));
-		chkSP500.setSelected(true);
+		chkSP500.setSelected(false);
 		ps.setSp500(chkSP500.isSelected());
 		
 		chkSP500.addActionListener(new ActionListener() {
@@ -1707,9 +1707,9 @@ public class GUI {
 
 	public JCheckBox getChkBitcoin() {
 		chkBitcoin = new JCheckBox("Bitcoin");
-		chkBitcoin.setBounds(new Rectangle(160, 136, 60, 20));
+		chkBitcoin.setBounds(new Rectangle(160, 136, 75, 20));
 		chkBitcoin.setFont(new Font("Dialog", Font.BOLD, 12));
-		chkBitcoin.setSelected(false);
+		chkBitcoin.setSelected(true);
 		ps.setIndex(chkBitcoin.isSelected());
 		
 		chkBitcoin.addActionListener(new ActionListener() {

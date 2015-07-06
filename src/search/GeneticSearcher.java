@@ -93,7 +93,7 @@ public class GeneticSearcher {
 		int stopValue = 0;
 		
 		Calendar fromC = Calendar.getInstance();
-		fromC.add(Calendar.DATE, -70);
+		fromC.add(Calendar.DATE, -100);
 		
 		Calendar toC = Calendar.getInstance();
 		
@@ -162,17 +162,17 @@ public class GeneticSearcher {
 		params[8] = CalendarUtils.getGUIDateString(toC);
 		params[9] = "20";
 		params[10] = "20";
-		params[11] = "2000000";
-		params[12] = "1.0";
+		params[11] = "0"; // 2000000 for stocks
+		params[12] = "10"; // 1 for stocks
 		params[13] = "3.0";
 		params[14] = "All";
 		params[15] = "All";
-		params[16] = "true";
-		params[17] = "true";
-		params[18] = "true";
-		params[19] = "true";
+		params[16] = "false";
+		params[17] = "false";
+		params[18] = "false";
+		params[19] = "false";
 		params[20] = "false";
-		params[21] = "false";
+		params[21] = "true";
 
 		ParameterSingleton.getInstance().setRunFinished(false);
 		
