@@ -135,11 +135,11 @@ public class QueryManager {
 					i = "index = 'ETF' ";
 				}
 			}
-			if (ps.isIndex()) {
+			if (ps.isBitcoin()) {
 				if (one) {
-					i += "OR index = 'Index' ";
+					i += "OR index = 'Bitcoin' ";
 				} else {
-					i = "index = 'Index' ";
+					i = "index = 'Bitcoin' ";
 				}
 			}
 			q += i + ") " + "AND b.start >= '"
@@ -344,6 +344,88 @@ public class QueryManager {
 
 			return mc;
 		} 
+		catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
+	public static MapCell getDataForCells(Calendar latestDateInBar) {
+		try {
+			ParameterSingleton ps = ParameterSingleton.getInstance();
+			
+			// This query gets all the data needed for every map cell
+			String q = 	"SELECT b.*, m1.value AS m1v, m2.value AS m2v " +
+						"FROM bar b " +
+						"LEFT OUTER JOIN metrics m1 ON b.symbol = m1.symbol and b.start = m1.start AND b.duration = m1.duration " +
+						"LEFT OUTER JOIN metrics m2 ON b.symbol = m2.symbol and b.start = m2.start AND b.duration = m2.duration " +
+						"LEFT OUTER JOIN metrics m3 ON b.symbol = m3.symbol and b.start = m3.start AND b.duration = m3.duration " +
+						"WHERE by.symbol IN (SELECT DISTINCT symbol FROM indexlist WHERE ";
+			// Index List
+			String i = "";
+			boolean one = false;
+			if (ps.isNyse()) {
+				i = "index = 'NYSE' ";
+				one = true;
+			}
+			if (ps.isNasdaq()) {
+				if (one) {
+					i += "OR index = 'Nasdaq' ";
+				} else {
+					i = "index = 'Nasdaq' ";
+				}
+			}
+			if (ps.isDjia()) {
+				if (one) {
+					i += "OR index = 'DJIA' ";
+				} else {
+					i = "index = 'DJIA' ";
+				}
+			}
+			if (ps.isSp500()) {
+				if (one) {
+					i += "OR index = 'SP500' ";
+				} else {
+					i = "index = 'SP500' ";
+				}
+			}
+			if (ps.isEtf()) {
+				if (one) {
+					i += "OR index = 'ETF' ";
+				} else {
+					i = "index = 'ETF' ";
+				}
+			}
+			if (ps.isBitcoin()) {
+				if (one) {
+					i += "OR index = 'Bitcoin' ";
+				} else {
+					i = "index = 'Bitcoin' ";
+				}
+			}
+			q += i + ") AND m1.name = '" + ps.getxAxisMetric() + "' " +
+						"AND m2.name = '" + ps.getyAxisMetric() + "' " +
+						"AND m3.name = 'priceboll20' " +
+						"AND ABS(m3.value) <= " + ps.getMaxVolatility() + " " +
+						"AND b.close >= " + ps.getMinPrice() + " " +
+						"AND b.start >= '" + CalendarUtils.getSqlDateString(ps.getFromCal()) + "' " +
+						"AND b.start < '" + CalendarUtils.getSqlDateString(ps.getToCal()) + "' " +
+						"AND b.start < '" + CalendarUtils.getSqlDateString(latestDateInBar) + "'";
+			
+			// Run Query
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			Statement s = c.createStatement();
+			ResultSet rs = s.executeQuery(q);
+
+			// Iterate through the cell query results
+			while (rs.next()) {
+				
+			}
+			
+			MapCell mc = new MapCell();
+			return mc;
+		}
 		catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -615,7 +697,7 @@ public class QueryManager {
 				}
 				one = true;
 			}
-			if (ps.isIndex()) {
+			if (ps.isBitcoin()) {
 				if (one) {
 					i += "OR index = 'Index' ";
 				} else {
@@ -1126,7 +1208,7 @@ public class QueryManager {
 			pst.setBoolean(22, ps.isDjia());
 			pst.setBoolean(23, ps.isSp500());
 			pst.setBoolean(24, ps.isEtf());
-			pst.setBoolean(25, ps.isIndex());
+			pst.setBoolean(25, ps.isBitcoin());
 
 			pst.executeUpdate();
 			pst.close();

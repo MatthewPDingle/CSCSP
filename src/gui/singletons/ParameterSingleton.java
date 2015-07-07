@@ -34,7 +34,7 @@ public class ParameterSingleton {
 	private boolean djia = true;
 	private boolean sp500 = true;
 	private boolean etf = false;
-	private boolean index = false;
+	private boolean bitcoin = false;
 	
 	private boolean runFinished = false;
 	
@@ -256,12 +256,12 @@ public class ParameterSingleton {
 		this.etf = etf;
 	}
 
-	public boolean isIndex() {
-		return index;
+	public boolean isBitcoin() {
+		return bitcoin;
 	}
 
-	public void setIndex(boolean index) {
-		this.index = index;
+	public void setBitcoin(boolean bitcoin) {
+		this.bitcoin = bitcoin;
 	}
 
 	public boolean isRunFinished() {

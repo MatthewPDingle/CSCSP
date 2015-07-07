@@ -343,7 +343,7 @@ public class GUI {
 			
 			args[21] = args[21].replaceAll("\\.csm", "");
 			chkBitcoin.setSelected(Boolean.valueOf(args[21]));
-			ps.setIndex(Boolean.valueOf(args[21]));
+			ps.setBitcoin(Boolean.valueOf(args[21]));
 			
 			btnBuildMap.doClick();
 		}
@@ -435,7 +435,7 @@ public class GUI {
 			ps.setEtf(Boolean.valueOf(parts[20]));
 			
 			chkBitcoin.setSelected(Boolean.valueOf(parts[21]));
-			ps.setIndex(Boolean.valueOf(parts[21]));
+			ps.setBitcoin(Boolean.valueOf(parts[21]));
 			
 			ps.setMapColor(cbBasedOn.getSelectedItem().toString());
 			ps.setShowCellTooltips(chkShowCellToolTips.isSelected());
@@ -1613,7 +1613,7 @@ public class GUI {
 				sb.append(ps.isDjia() + " ");
 				sb.append(ps.isSp500() + " ");
 				sb.append(ps.isEtf() + " ");
-				sb.append(ps.isIndex());
+				sb.append(ps.isBitcoin());
 	
 				pnlMapCell.saveMaps(sb.toString(), bullishScore, bearishScore);
 			}
@@ -1710,11 +1710,11 @@ public class GUI {
 		chkBitcoin.setBounds(new Rectangle(160, 136, 75, 20));
 		chkBitcoin.setFont(new Font("Dialog", Font.BOLD, 12));
 		chkBitcoin.setSelected(true);
-		ps.setIndex(chkBitcoin.isSelected());
+		ps.setBitcoin(chkBitcoin.isSelected());
 		
 		chkBitcoin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				ps.setIndex(chkBitcoin.isSelected());
+				ps.setBitcoin(chkBitcoin.isSelected());
 			}
 		});
 		
