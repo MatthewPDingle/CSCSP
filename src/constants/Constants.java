@@ -358,13 +358,13 @@ public class Constants {
 		METRICS.add("mvol100");
 	}
 	
-	public static String OTHER_SELL_METRIC_NUM_TRADING_DAYS_LATER = "# Trading Days Later";
+	public static String OTHER_SELL_METRIC_NUM_BARS_LATER = "# Trading Days Later";
 	public static String OTHER_SELL_METRIC_PERCENT_UP = "% Up";
 	public static String OTHER_SELL_METRIC_PERCENT_DOWN = "% Down";
 	
 	public static ArrayList<String> OTHER_SELL_METRICS = new ArrayList<String>();
 	static {
-		OTHER_SELL_METRICS.add(OTHER_SELL_METRIC_NUM_TRADING_DAYS_LATER);
+		OTHER_SELL_METRICS.add(OTHER_SELL_METRIC_NUM_BARS_LATER);
 		OTHER_SELL_METRICS.add(OTHER_SELL_METRIC_PERCENT_UP);
 		OTHER_SELL_METRICS.add(OTHER_SELL_METRIC_PERCENT_DOWN);
 	}

@@ -9,6 +9,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -31,7 +32,7 @@ public class QueryManager {
 			ParameterSingleton ps = ParameterSingleton.getInstance();
 			
 			String q = "SELECT ";
-			if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_NUM_TRADING_DAYS_LATER)) {
+			if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_NUM_BARS_LATER)) {
 				// "metricsp500perchange"
 				q += "(SELECT (b2.close - b1.close) / b1.close * 100 FROM bar b1 INNER JOIN bar b2 ON b1.symbol = b2.symbol AND b2.start = (SELECT q.start FROM (SELECT start, close FROM bar WHERE start >= b.start AND symbol = b.symbol ORDER BY start LIMIT " + ((int) ps.getSellValue() + 1) + ") q ORDER BY start DESC LIMIT 1) WHERE b1.symbol = 'SPY' AND b1.start = b.start) AS metricsp500perchange, ";
 				// "perchange" when the sell metric is # Trading Days Later
@@ -161,7 +162,7 @@ public class QueryManager {
 				q += "AND b.symbol IN (SELECT DISTINCT symbol FROM sectorandindustry WHERE industry = '" + ps.getIndustry() + "') ";
 			}
 
-			System.out.println(q);
+//			System.out.println(q);
 
 			// Run Query
 			Connection c = ConnectionSingleton.getInstance().getConnection();
@@ -197,7 +198,7 @@ public class QueryManager {
 
 				// Mathy Time	
 				boolean latestExit = false;
-				if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_NUM_TRADING_DAYS_LATER)) {
+				if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_NUM_BARS_LATER)) {
 					if (latestDatePositionLength == positionLength 
 							&& (latestDatePositionLength <= stopExitPositionLength || stopExitPositionLength == 0)
 							&& latestDatePositionLength < ps.getSellValue()) {
@@ -351,17 +352,19 @@ public class QueryManager {
 	}
 	
 	
-	public static MapCell getDataForCells(Calendar latestDateInBar) {
+	public static ArrayList<HashMap<String, Object>> getDataForCells(Calendar latestDateInBar) {
+		ArrayList<HashMap<String, Object>> results = new ArrayList<HashMap<String, Object>>();
 		try {
 			ParameterSingleton ps = ParameterSingleton.getInstance();
 			
 			// This query gets all the data needed for every map cell
 			String q = 	"SELECT b.*, m1.value AS m1v, m2.value AS m2v " +
 						"FROM bar b " +
-						"LEFT OUTER JOIN metrics m1 ON b.symbol = m1.symbol and b.start = m1.start AND b.duration = m1.duration " +
-						"LEFT OUTER JOIN metrics m2 ON b.symbol = m2.symbol and b.start = m2.start AND b.duration = m2.duration " +
-						"LEFT OUTER JOIN metrics m3 ON b.symbol = m3.symbol and b.start = m3.start AND b.duration = m3.duration " +
-						"WHERE by.symbol IN (SELECT DISTINCT symbol FROM indexlist WHERE ";
+						"LEFT OUTER JOIN metrics m1 ON b.symbol = m1.symbol and b.start = m1.start AND b.duration = m1.duration " + // Buy X
+						"LEFT OUTER JOIN metrics m2 ON b.symbol = m2.symbol and b.start = m2.start AND b.duration = m2.duration " + // Buy Y
+						"LEFT OUTER JOIN metrics m3 ON b.symbol = m3.symbol and b.start = m3.start AND b.duration = m3.duration " + // Volatility
+						"LEFT OUTER JOIN metrics m4 ON b.symbol = m4.symbol and b.start = m4.start AND b.duration = m4.duraiton " + // Sell
+						"WHERE b.symbol IN (SELECT DISTINCT symbol FROM indexlist WHERE ";
 			// Index List
 			String i = "";
 			boolean one = false;
@@ -407,29 +410,50 @@ public class QueryManager {
 			q += i + ") AND m1.name = '" + ps.getxAxisMetric() + "' " +
 						"AND m2.name = '" + ps.getyAxisMetric() + "' " +
 						"AND m3.name = 'priceboll20' " +
+						"AND m4.name = '" + ps.getSellMetric() + "' " +
 						"AND ABS(m3.value) <= " + ps.getMaxVolatility() + " " +
 						"AND b.close >= " + ps.getMinPrice() + " " +
 						"AND b.start >= '" + CalendarUtils.getSqlDateString(ps.getFromCal()) + "' " +
 						"AND b.start < '" + CalendarUtils.getSqlDateString(ps.getToCal()) + "' " +
-						"AND b.start < '" + CalendarUtils.getSqlDateString(latestDateInBar) + "'";
+						"AND b.start < '" + CalendarUtils.getSqlDateString(latestDateInBar) + "' " +
+						"ORDER BY b.start";
+			
+//			System.out.println(q);
 			
 			// Run Query
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			Statement s = c.createStatement();
 			ResultSet rs = s.executeQuery(q);
-
+			
 			// Iterate through the cell query results
 			while (rs.next()) {
-				
+				HashMap<String, Object> barHash = new HashMap<String, Object>();
+				barHash.put("symbol", rs.getString("symbol"));
+				barHash.put("open", rs.getFloat("open"));
+				barHash.put("close", rs.getFloat("close"));
+				barHash.put("high", rs.getFloat("high"));
+				barHash.put("low", rs.getFloat("low"));
+				barHash.put("vwap", rs.getFloat("vwap"));
+				barHash.put("volume", rs.getFloat("volume"));
+				barHash.put("numtrades", rs.getInt("numtrades"));
+				barHash.put("change", rs.getFloat("change"));
+				barHash.put("gap", rs.getFloat("gap"));
+				barHash.put("start", rs.getTimestamp("start"));
+				barHash.put("end", rs.getTimestamp("end"));
+				barHash.put("duration", rs.getString("duration"));
+				barHash.put("partial", rs.getBoolean("partial"));
+				barHash.put("m1v", rs.getFloat("m1v")); // Metric 1 Buy X Value
+				barHash.put("m2v", rs.getFloat("m2v")); // Metric 2 Buy Y Value
+				barHash.put("m4v", rs.getFloat("m4v")); // Metric 4 Sell Value
+				results.add(barHash);
 			}
 			
 			MapCell mc = new MapCell();
-			return mc;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
+		return results;
 	}
 
 	public static Calendar getMaxDateFromBasicr() {

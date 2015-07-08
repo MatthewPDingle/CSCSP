@@ -1,11 +1,16 @@
 package gui.threads;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+
+import dbio.QueryManager;
 
 public class MUTCoordinator {
 
 	private static MUTCoordinator mut = null;
 	private ArrayList<Cell> cells = null;
+	private ArrayList<HashMap<String, Object>> mapData = null;
 	
 	protected MUTCoordinator() {
 		cells = new ArrayList<Cell>();
@@ -21,7 +26,18 @@ public class MUTCoordinator {
 	public void addCell(float xMetricPosition, float yMetricPosition, int xArrayPos, int yArrayPos) {
 		cells.add(new Cell(xMetricPosition, yMetricPosition, xArrayPos, yArrayPos));
 	}
+	
+	public void loadRawDataIntoMemory() {
+		Calendar latestDateInBar = QueryManager.getMaxDateFromBar();
+		mapData = QueryManager.getDataForCells(latestDateInBar);
+	}
 
+	public ArrayList<HashMap<String, Object>> getCopyOfMapData() {
+//		ArrayList<HashMap<String, Object>> copy = new ArrayList<HashMap<String, Object>>();
+//		copy.addAll(mapData);
+		return mapData;
+	}
+	
 	public synchronized Cell getNextAvailableCell() {
 		if (cells.size() > 0)
 			return (Cell)cells.remove(0);

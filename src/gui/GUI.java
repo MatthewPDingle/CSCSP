@@ -1803,6 +1803,8 @@ public class GUI {
 					}
 					xArrayPos++;
 				}
+				// The MUTCoordinator will also have a copy of all the map data needed to calculate the cell specifics
+				mutCoordinator.loadRawDataIntoMemory();
 				
 				// Start up the threads
 				for (int a = 0; a < NUM_MAP_THREADS; a++) {
