@@ -128,7 +128,7 @@ public class GeneticSearcher {
 
 			// Stop
 			stop = getRandomStopWeightedByFitness(searchType);
-			if (!stop.equals("None")) {
+			if (!stop.equals(Constants.STOP_METRIC_NONE)) {
 				stopValue = getRandomIntFromList(stopDiscreteValueList.get(stop));
 			}
 			
@@ -137,7 +137,7 @@ public class GeneticSearcher {
 //			buy2 = "rsi5";
 //			sell = "williamsr50";
 //			sellValue = 80;
-			stop = "# Days";
+			stop = Constants.STOP_METRIC_NUM_BARS;
 			stopValue = 14;
 			
 			used = QueryManager.seeIfSearchComboHasBeenUsed(buy1, buy2, sell, sellOp, sellValue, stop, (float)stopValue, 
@@ -443,10 +443,10 @@ public class GeneticSearcher {
 		ArrayList<String> genePool = new ArrayList<String>();
 		for (String metric:Constants.STOP_METRICS) {
 			float fitness = 0f;
-			if (type.equals("bull") && !metric.equals("% Down")) {
+			if (type.equals("bull") && !metric.equals(Constants.OTHER_SELL_METRIC_PERCENT_DOWN)) {
 				fitness = bullishStopMetricFitnessHash.get(metric);
 			}
-			else if (type.equals("bear") && !metric.equals("% Up")) {
+			else if (type.equals("bear") && !metric.equals(Constants.OTHER_SELL_METRIC_PERCENT_UP)) {
 				fitness = bearishStopMetricFitnessHash.get(metric);
 			}
 			if (fitness < 10) {
@@ -468,17 +468,17 @@ public class GeneticSearcher {
 		dayVariants.add(1);
 		dayVariants.add(5);
 		dayVariants.add(10);
-		stopDiscreteValueLists.put("# Days", dayVariants);
+		stopDiscreteValueLists.put(Constants.STOP_METRIC_NUM_BARS, dayVariants);
 		
 		ArrayList<Integer> percentVariants = new ArrayList<Integer>();
 		percentVariants.add(2);
 		percentVariants.add(5);
 		percentVariants.add(10);
 		percentVariants.add(15);
-		stopDiscreteValueLists.put("% Down", percentVariants);
-		stopDiscreteValueLists.put("% Up", percentVariants);
+		stopDiscreteValueLists.put(Constants.STOP_METRIC_PERCENT_DOWN, percentVariants);
+		stopDiscreteValueLists.put(Constants.STOP_METRIC_PERCENT_UP, percentVariants);
 		
-		stopDiscreteValueLists.put("None", new ArrayList<Integer>());
+		stopDiscreteValueLists.put(Constants.STOP_METRIC_NONE, new ArrayList<Integer>());
 		
 		return stopDiscreteValueLists;
 	}

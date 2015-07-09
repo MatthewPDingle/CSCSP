@@ -27,6 +27,17 @@ import constants.Constants.BAR_SIZE;
 
 public class QueryManager {
 
+	/**
+	 * The stop part seems to be broken as of CSCSP .38 on 7/8/2015.
+	 * This method is deprecated as of CSCSP .38 in favor of the getDataForCells method below.
+	 * 
+	 * @param x
+	 * @param xCellSize
+	 * @param y
+	 * @param yCellSize
+	 * @param latestDateInBasicr
+	 * @return
+	 */
 	public static MapCell cellQuery(float x, float xCellSize, float y, float yCellSize, Calendar latestDateInBasicr) {
 		try {
 			ParameterSingleton ps = ParameterSingleton.getInstance();
@@ -358,12 +369,12 @@ public class QueryManager {
 			ParameterSingleton ps = ParameterSingleton.getInstance();
 			
 			// This query gets all the data needed for every map cell
-			String q = 	"SELECT b.*, m1.value AS m1v, m2.value AS m2v " +
+			String q = 	"SELECT b.*, m1.value AS m1v, m2.value AS m2v, m4.value AS m4v, (SELECT close FROM bar WHERE symbol = 'SPY' AND start <= b.start ORDER BY start DESC LIMIT 1) AS alphaclose " +
 						"FROM bar b " +
 						"LEFT OUTER JOIN metrics m1 ON b.symbol = m1.symbol and b.start = m1.start AND b.duration = m1.duration " + // Buy X
 						"LEFT OUTER JOIN metrics m2 ON b.symbol = m2.symbol and b.start = m2.start AND b.duration = m2.duration " + // Buy Y
 						"LEFT OUTER JOIN metrics m3 ON b.symbol = m3.symbol and b.start = m3.start AND b.duration = m3.duration " + // Volatility
-						"LEFT OUTER JOIN metrics m4 ON b.symbol = m4.symbol and b.start = m4.start AND b.duration = m4.duraiton " + // Sell
+						"LEFT OUTER JOIN metrics m4 ON b.symbol = m4.symbol and b.start = m4.start AND b.duration = m4.duration " + // Sell
 						"WHERE b.symbol IN (SELECT DISTINCT symbol FROM indexlist WHERE ";
 			// Index List
 			String i = "";
@@ -445,10 +456,13 @@ public class QueryManager {
 				barHash.put("m1v", rs.getFloat("m1v")); // Metric 1 Buy X Value
 				barHash.put("m2v", rs.getFloat("m2v")); // Metric 2 Buy Y Value
 				barHash.put("m4v", rs.getFloat("m4v")); // Metric 4 Sell Value
+				barHash.put("alphaclose", rs.getFloat("alphaclose")); // Alpha baseline - SPY by default.
 				results.add(barHash);
 			}
 			
-			MapCell mc = new MapCell();
+			rs.close();
+			s.close();
+			c.close();
 		}
 		catch (Exception e) {
 			e.printStackTrace();

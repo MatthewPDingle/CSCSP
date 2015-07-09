@@ -358,7 +358,7 @@ public class Constants {
 		METRICS.add("mvol100");
 	}
 	
-	public static String OTHER_SELL_METRIC_NUM_BARS_LATER = "# Trading Days Later";
+	public static String OTHER_SELL_METRIC_NUM_BARS_LATER = "# Bars Later";
 	public static String OTHER_SELL_METRIC_PERCENT_UP = "% Up";
 	public static String OTHER_SELL_METRIC_PERCENT_DOWN = "% Down";
 	
@@ -369,12 +369,17 @@ public class Constants {
 		OTHER_SELL_METRICS.add(OTHER_SELL_METRIC_PERCENT_DOWN);
 	}
 	
+	public static String STOP_METRIC_NONE = "None";
+	public static String STOP_METRIC_PERCENT_DOWN = "% Down";
+	public static String STOP_METRIC_PERCENT_UP = "% Up";
+	public static String STOP_METRIC_NUM_BARS = "# Bars";
+	
 	public static ArrayList<String> STOP_METRICS = new ArrayList<String>();
 	static {
-		STOP_METRICS.add("None");
-		STOP_METRICS.add("% Down");
-		STOP_METRICS.add("% Up");
-		STOP_METRICS.add("# Bars");
+		STOP_METRICS.add(STOP_METRIC_NONE);
+		STOP_METRICS.add(STOP_METRIC_PERCENT_DOWN);
+		STOP_METRICS.add(STOP_METRIC_PERCENT_UP);
+		STOP_METRICS.add(STOP_METRIC_NUM_BARS);
 	}
 	
 	public static String MAP_COLOR_OPTION_ALL_NUM_POSITIONS = "All - # Positions";

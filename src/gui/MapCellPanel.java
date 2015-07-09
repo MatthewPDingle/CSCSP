@@ -469,7 +469,9 @@ public class MapCellPanel extends JPanel implements ComponentListener, Runnable,
 			if (mcs.getMapCells().size() == 0) return;
 			
 			// Draw Map Cells
-			synchronized(mcs.getMapCells()) {
+			ArrayList<MapCell> mapCells = new ArrayList<MapCell>();
+			mapCells.addAll(mcs.getMapCells());
+			synchronized(mapCells) {
 				// So I know the size of each cell
 				float xCellSize100Scale2 = 0f;
 				float yCellSize100Scale2 = 0f;
@@ -478,7 +480,7 @@ public class MapCellPanel extends JPanel implements ComponentListener, Runnable,
 				float xMetricScale = 0f;
 				float yMetricScale = 0f;
 
-				for (MapCell mapCell:mcs.getMapCells()) {					
+				for (MapCell mapCell:mapCells) {					
 					// This is the cell size stuff mentioned just above
 					xCellSize100Scale2 = mapCell.getMetricValueHash().get("Map X Cell Size 100 Scale");
 					yCellSize100Scale2 = mapCell.getMetricValueHash().get("Map Y Cell Size 100 Scale");
