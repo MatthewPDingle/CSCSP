@@ -55,7 +55,7 @@ public class GeneticSearcher {
 		searcher.bearMetricDiscreteValueList = loadBearMetricDiscreteValueLists();
 		searcher.stopDiscreteValueList = loadStopDiscreteValueLists();
 		
-		for (int a = 0; a < 2000; a++) {
+		for (int a = 0; a < 4000; a++) {
 			if (a % 2 == 1) {
 				searcher.searchType = "bull";
 			}
@@ -93,7 +93,7 @@ public class GeneticSearcher {
 		int stopValue = 0;
 		
 		Calendar fromC = Calendar.getInstance();
-		fromC.add(Calendar.DATE, -100);
+		fromC.add(Calendar.DATE, -200);
 		
 		Calendar toC = Calendar.getInstance();
 		
@@ -127,7 +127,8 @@ public class GeneticSearcher {
 			}
 
 			// Stop
-			stop = getRandomStopWeightedByFitness(searchType);
+//			stop = getRandomStopWeightedByFitness(searchType);
+			stop = Constants.STOP_METRIC_NUM_BARS;
 			if (!stop.equals(Constants.STOP_METRIC_NONE)) {
 				stopValue = getRandomIntFromList(stopDiscreteValueList.get(stop));
 			}
@@ -137,8 +138,8 @@ public class GeneticSearcher {
 //			buy2 = "rsi5";
 //			sell = "williamsr50";
 //			sellValue = 80;
-			stop = Constants.STOP_METRIC_NUM_BARS;
-			stopValue = 14;
+//			stop = Constants.STOP_METRIC_NUM_BARS;
+//			stopValue = 14;
 			
 			used = QueryManager.seeIfSearchComboHasBeenUsed(buy1, buy2, sell, sellOp, sellValue, stop, (float)stopValue, 
 					new java.sql.Date(fromC.getTime().getTime()), new java.sql.Date(toC.getTime().getTime()));
@@ -465,16 +466,16 @@ public class GeneticSearcher {
 		HashMap<String, ArrayList<Integer>> stopDiscreteValueLists = new HashMap<String, ArrayList<Integer>>();
 	
 		ArrayList<Integer> dayVariants = new ArrayList<Integer>();
-		dayVariants.add(1);
-		dayVariants.add(5);
-		dayVariants.add(10);
+		dayVariants.add(4);
+		dayVariants.add(12);
+		dayVariants.add(24);
 		stopDiscreteValueLists.put(Constants.STOP_METRIC_NUM_BARS, dayVariants);
 		
 		ArrayList<Integer> percentVariants = new ArrayList<Integer>();
 		percentVariants.add(2);
-		percentVariants.add(5);
+		percentVariants.add(4);
+		percentVariants.add(7);
 		percentVariants.add(10);
-		percentVariants.add(15);
 		stopDiscreteValueLists.put(Constants.STOP_METRIC_PERCENT_DOWN, percentVariants);
 		stopDiscreteValueLists.put(Constants.STOP_METRIC_PERCENT_UP, percentVariants);
 		
