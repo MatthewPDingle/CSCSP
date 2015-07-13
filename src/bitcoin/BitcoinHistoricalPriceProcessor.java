@@ -30,7 +30,7 @@ public class BitcoinHistoricalPriceProcessor {
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_2M);
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_5M);
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_10M);
-		createBars("bitfinexUSD", BAR_SIZE.BAR_15M);
+//		createBars("bitfinexUSD", BAR_SIZE.BAR_15M);
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_30M);
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_1H);
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_2H);

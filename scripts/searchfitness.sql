@@ -7,7 +7,8 @@ CREATE TABLE searchfitness
   type character varying(64) NOT NULL,
   metric character varying(64) NOT NULL,
   value real,
-  fitness real NOT NULL
+  bullfitness real NOT NULL,
+  bearfitness real NOT NULL
 )
 WITH (
   OIDS=FALSE
