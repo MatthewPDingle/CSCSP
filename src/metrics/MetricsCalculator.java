@@ -136,6 +136,40 @@ public class MetricsCalculator {
 	}
 	
 	/**
+	 * Normalizes the metric values so that they range from 0 to 100.
+	 * 
+	 * This initial implementation is going to be inefficient as fuck.
+	 * 
+	 * @param metricSequence
+	 */
+	public static void normalizeMetricValues(LinkedList<Metric> metricSequence) {
+		// Get the min and max denormalized values first
+		float minValue = 1000000000f;
+		float maxValue = -1000000000f;
+		for (Metric metric:metricSequence) {
+			float value = metric.getValue();
+			if (value < minValue) {
+				minValue = value;
+			}
+			if (value > maxValue) {
+				maxValue = value;
+			}
+		}
+		
+		// Normalize based on the range
+		float denormalizedRange = maxValue - minValue;
+		float scaleFactor = 100f / denormalizedRange;
+		for (Metric metric:metricSequence) {
+			// Shift unscaled values so the min becomes zero, then apply scale
+			float value = metric.getValue();
+			float zeroBasedValue = value - minValue;
+			float normalizedValue = zeroBasedValue * scaleFactor;
+			metric.setValue(normalizedValue);
+			System.out.println(normalizedValue);
+		}
+	}
+	
+	/**
 	 * Related to DV, AV is exponentially weighted with a weight of parameter "weight"
 	 * 
 	 * @param metricSequence
