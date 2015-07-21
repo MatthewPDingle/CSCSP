@@ -7,6 +7,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.LinkedList;
 
 import utils.ConnectionSingleton;
@@ -27,10 +28,10 @@ public class MetricsCalculator {
 	public static void main (String[] args) {
 		try {
 			System.out.println("Dropping Metric Table");
-//			QueryManager.dropMetricTable();
+			QueryManager.dropMetricTable();
 			
 			System.out.println("Creating Metric Table");
-//			QueryManager.createMetricTable();
+			QueryManager.createMetricTable();
 			
 			System.out.println("Loading Metric Sequence Data");
 			MetricsCalculator mc = new MetricsCalculator();
@@ -50,7 +51,7 @@ public class MetricsCalculator {
 			}
 			
 			System.out.println("Creating Metric Index");
-//			QueryManager.createMetricTableIndexes();
+			QueryManager.createMetricTableIndexes();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -146,14 +147,25 @@ public class MetricsCalculator {
 		// Get the min and max denormalized values first
 		float minValue = 1000000000f;
 		float maxValue = -1000000000f;
+		ArrayList<Float> values = new ArrayList<Float>(); 
 		for (Metric metric:metricSequence) {
-			float value = metric.getValue();
-			if (value < minValue) {
-				minValue = value;
+			Float value = metric.getValue();
+			if (value != null) {
+				if (value < minValue) {
+					minValue = value;
+				}
+				if (value > maxValue) {
+					maxValue = value;
+				}
 			}
-			if (value > maxValue) {
-				maxValue = value;
-			}
+			if (value != null) 
+				values.add(value);
+		}
+		// For lists greater than 1000, toss out the 10 most extreme on each end.
+		if (values.size() > 1000) {
+			Collections.sort(values);
+			minValue = values.get(10);
+			maxValue = values.get(values.size() - 10);
 		}
 		
 		// Normalize based on the range
@@ -161,11 +173,12 @@ public class MetricsCalculator {
 		float scaleFactor = 100f / denormalizedRange;
 		for (Metric metric:metricSequence) {
 			// Shift unscaled values so the min becomes zero, then apply scale
-			float value = metric.getValue();
-			float zeroBasedValue = value - minValue;
-			float normalizedValue = zeroBasedValue * scaleFactor;
-			metric.setValue(normalizedValue);
-			System.out.println(normalizedValue);
+			Float value = metric.getValue();
+			if (value != null) {
+				float zeroBasedValue = value - minValue;
+				float normalizedValue = zeroBasedValue * scaleFactor;
+				metric.setValue(normalizedValue);
+			}
 		}
 	}
 	
@@ -216,7 +229,7 @@ public class MetricsCalculator {
 		  	yesterdaysAdjClose = adjClose;
 		  	c++;
 	  	}
-	  	
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -267,7 +280,7 @@ public class MetricsCalculator {
 		  	yesterdaysAdjClose = adjClose;
 		  	c++;
 	  	}
-	  	
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -318,7 +331,7 @@ public class MetricsCalculator {
 		  	yesterdaysAdjClose = adjClose;
 		  	c++;
 	  	}
-	  	
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -357,7 +370,7 @@ public class MetricsCalculator {
 		  	yesterdaysDV = todaysDV;
 		  	c++;
 	  	}
-	  	
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -397,7 +410,7 @@ public class MetricsCalculator {
 		  	yesterdaysEV = todaysEV;
 		  	c++;
 	  	}
-	  	
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -437,7 +450,7 @@ public class MetricsCalculator {
 		  	yesterdaysFV = todaysFV;
 		  	c++;
 	  	}
-	  	
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -495,7 +508,7 @@ public class MetricsCalculator {
 			previousMACDPeriodEMA = macdPeriodEMA;
 			c++;
 		}
-		
+		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 	
@@ -543,7 +556,7 @@ public class MetricsCalculator {
 			previousLongPeriodEMA = longPeriodEMA;
 			c++;
 		}
-		
+		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 	
@@ -588,7 +601,7 @@ public class MetricsCalculator {
 			yesterday2 = yesterday;
 			yesterday = metric;
 		}
-		
+		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 	
@@ -624,7 +637,7 @@ public class MetricsCalculator {
 		  	yesterdaysDVol = todaysDVol;
 		  	c++;
 	  	}
-	  	
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -682,7 +695,7 @@ public class MetricsCalculator {
 
 	  		metric.setName("breakout" + period);
 	  	}
-	
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -715,7 +728,7 @@ public class MetricsCalculator {
 			
 			yesterday = metric;
 		}
-		
+		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 	
@@ -762,7 +775,7 @@ public class MetricsCalculator {
 				periodsAdjCloses.remove();
 			}
 		}
-		
+		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 	
@@ -837,7 +850,7 @@ public class MetricsCalculator {
 				periodsAdjCloses.remove();
 			}
 		}
-		
+		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 	
@@ -878,7 +891,7 @@ public class MetricsCalculator {
 		  	lastAvgDown = avgDown;
 		  	c++;
 	  	}
-	  	
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -915,6 +928,7 @@ public class MetricsCalculator {
 	  		}
 	  		metric.setName("rsi" + period);
 	  	}
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -960,6 +974,7 @@ public class MetricsCalculator {
 	  		}
 	  		metric.setName("mfi" + period);
 	  	}
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -996,7 +1011,7 @@ public class MetricsCalculator {
 				}
 			}
 		}
-		
+		normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -1031,7 +1046,7 @@ public class MetricsCalculator {
 				}
 			}
 		}
-		
+		normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -1064,7 +1079,7 @@ public class MetricsCalculator {
 				}
 			}
 		}
-		
+		normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -1100,7 +1115,7 @@ public class MetricsCalculator {
 				}
 			}
 		}
-		
+		normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -1134,7 +1149,7 @@ public class MetricsCalculator {
 				}
 			}
 		}
-		
+		normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 	
@@ -1179,6 +1194,7 @@ public class MetricsCalculator {
 	  		}
 	  		metric.setName("rsi" + period + "alpha");
 	  	}
+	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
 		
@@ -1263,7 +1279,7 @@ public class MetricsCalculator {
 		  		periodsAdjCloses.remove();
 		  	}
 		}
-
+		
 		return metricSequence;
 	}
 	
@@ -1310,7 +1326,7 @@ public class MetricsCalculator {
 		  		periodsAdjCloses.remove();
 		  	}
 		}
-
+		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 	
@@ -1358,7 +1374,7 @@ public class MetricsCalculator {
 		  		periodGPCs.remove();
 		  	}
 		}
-
+		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 	
@@ -1408,7 +1424,7 @@ public class MetricsCalculator {
 		  		periodIDPCs.remove();
 		  	}
 		}
-
+		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 	
@@ -1455,7 +1471,7 @@ public class MetricsCalculator {
 		  		periodsVolumes.remove();
 		  	}
 		}
-
+		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 	
@@ -1565,6 +1581,7 @@ public class MetricsCalculator {
 		  		periodsAdjCloses.remove();
 		  	}
 		}
+//		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 	
@@ -1600,7 +1617,7 @@ public class MetricsCalculator {
 		  		periodsVolumes.remove();
 		  	}
 		}
-		
+//		normalizeMetricValues(metricSequence);
 		return metricSequence;
 	}
 }

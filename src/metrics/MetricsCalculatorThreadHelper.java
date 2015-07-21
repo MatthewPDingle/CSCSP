@@ -21,6 +21,7 @@ public class MetricsCalculatorThreadHelper extends Thread {
 				}
 				System.out.println("Processing " + symbol);
 
+				
 				// Going one symbol at a time.  Calculate and
 				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedDVEMA(metricSequence, 75));
 				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedDVEMA(metricSequence, 50));

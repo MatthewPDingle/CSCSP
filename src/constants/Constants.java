@@ -37,59 +37,61 @@ public class Constants {
 	
 	public static HashMap<String, Float> METRIC_MIN_MAX_VALUE = new HashMap<String, Float>();
 	static {
-		METRIC_MIN_MAX_VALUE.put("min_av10ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_av10ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_av25ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_av25ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_av50ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_av50ema", 4f);		
-		METRIC_MIN_MAX_VALUE.put("min_av75ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_av75ema", 4f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_bv10ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_bv10ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_bv25ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_bv25ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_bv50ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_bv50ema", 4f);		
-		METRIC_MIN_MAX_VALUE.put("min_bv75ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_bv75ema", 4f);
+		// All these are -4 to 4 when not normalized
+		METRIC_MIN_MAX_VALUE.put("min_av10ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_av10ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_av25ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_av25ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_av50ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_av50ema", 100f);		
+		METRIC_MIN_MAX_VALUE.put("min_av75ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_av75ema", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_cv10ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_cv10ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_cv25ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_cv25ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_cv50ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_cv50ema", 4f);		
-		METRIC_MIN_MAX_VALUE.put("min_cv75ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_cv75ema", 4f);
+		METRIC_MIN_MAX_VALUE.put("min_bv10ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_bv10ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_bv25ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_bv25ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_bv50ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_bv50ema", 100f);		
+		METRIC_MIN_MAX_VALUE.put("min_bv75ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_bv75ema", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_dv10ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_dv10ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_dv25ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_dv25ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_dv50ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_dv50ema", 4f);		
-		METRIC_MIN_MAX_VALUE.put("min_dv75ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_dv75ema", 4f);
+		METRIC_MIN_MAX_VALUE.put("min_cv10ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_cv10ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_cv25ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_cv25ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_cv50ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_cv50ema", 100f);		
+		METRIC_MIN_MAX_VALUE.put("min_cv75ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_cv75ema", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_ev10ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_ev10ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_ev25ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_ev25ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_ev50ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_ev50ema", 4f);		
-		METRIC_MIN_MAX_VALUE.put("min_ev75ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_ev75ema", 4f);
+		METRIC_MIN_MAX_VALUE.put("min_dv10ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_dv10ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_dv25ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_dv25ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_dv50ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_dv50ema", 100f);		
+		METRIC_MIN_MAX_VALUE.put("min_dv75ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_dv75ema", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_fv10ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_fv10ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_fv25ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_fv25ema", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_fv50ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_fv50ema", 4f);		
-		METRIC_MIN_MAX_VALUE.put("min_fv75ema", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_fv75ema", 4f);
+		METRIC_MIN_MAX_VALUE.put("min_ev10ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_ev10ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_ev25ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_ev25ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_ev50ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_ev50ema", 100f);		
+		METRIC_MIN_MAX_VALUE.put("min_ev75ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_ev75ema", 100f);
+		
+		METRIC_MIN_MAX_VALUE.put("min_fv10ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_fv10ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_fv25ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_fv25ema", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_fv50ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_fv50ema", 100f);		
+		METRIC_MIN_MAX_VALUE.put("min_fv75ema", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_fv75ema", 100f);
 		
 		METRIC_MIN_MAX_VALUE.put("min_consecutiveupdays", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_consecutiveupdays", 10f);
@@ -97,12 +99,14 @@ public class Constants {
 		METRIC_MIN_MAX_VALUE.put("min_consecutivedowndays", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_consecutivedowndays", 10f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_dv2", -6f);
-		METRIC_MIN_MAX_VALUE.put("max_dv2", 6f);
+		// These DVs are -6 to 6 when not normalized
+		METRIC_MIN_MAX_VALUE.put("min_dv2", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_dv2", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_dvfading4", -6f);
-		METRIC_MIN_MAX_VALUE.put("max_dvfading4", 6f);
+		METRIC_MIN_MAX_VALUE.put("min_dvfading4", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_dvfading4", 100f);
 		
+		// RSI and MFI are 0 to 100 when not normalized
 		METRIC_MIN_MAX_VALUE.put("min_rsi14", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_rsi14", 100f);
 		METRIC_MIN_MAX_VALUE.put("min_rsi5", 0f);
@@ -133,6 +137,7 @@ public class Constants {
 		METRIC_MIN_MAX_VALUE.put("min_rsi75ema", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_rsi75ema", 100f);
 		
+		// Don't normalized standard deviations?  Default values are 0 - 6
 		METRIC_MIN_MAX_VALUE.put("min_pricesd20", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_pricesd20", 6f);
 		METRIC_MIN_MAX_VALUE.put("min_pricesd50", 0f);
@@ -151,56 +156,60 @@ public class Constants {
 		METRIC_MIN_MAX_VALUE.put("min_volumesd200", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_volumesd200", 6f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_priceboll20", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_priceboll20", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_priceboll50", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_priceboll50", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_priceboll100", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_priceboll100", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_priceboll200", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_priceboll200", 4f);
+		// Bolls are all -4 to 4 when not normalized
+		METRIC_MIN_MAX_VALUE.put("min_priceboll20", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_priceboll20", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_priceboll50", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_priceboll50", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_priceboll100", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_priceboll100", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_priceboll200", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_priceboll200", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_gapboll10", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_gapboll10", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_gapboll20", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_gapboll20", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_gapboll50", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_gapboll50", 4f);
+		METRIC_MIN_MAX_VALUE.put("min_gapboll10", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_gapboll10", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_gapboll20", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_gapboll20", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_gapboll50", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_gapboll50", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_intradayboll10", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_intradayboll10", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_intradayboll20", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_intradayboll20", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_intradayboll50", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_intradayboll50", 4f);
+		METRIC_MIN_MAX_VALUE.put("min_intradayboll10", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_intradayboll10", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_intradayboll20", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_intradayboll20", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_intradayboll50", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_intradayboll50", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_volumeboll20", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_volumeboll20", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_volumeboll50", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_volumeboll50", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_volumeboll100", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_volumeboll100", 4f);
-		METRIC_MIN_MAX_VALUE.put("min_volumeboll200", -4f);
-		METRIC_MIN_MAX_VALUE.put("max_volumeboll200", 4f);
+		METRIC_MIN_MAX_VALUE.put("min_volumeboll20", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_volumeboll20", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_volumeboll50", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_volumeboll50", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_volumeboll100", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_volumeboll100", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_volumeboll200", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_volumeboll200", 100f);
 		
+		// Dvol is 0 - 8 when not normalized
 		METRIC_MIN_MAX_VALUE.put("min_dvol10ema", 0f);
-		METRIC_MIN_MAX_VALUE.put("max_dvol10ema", 8f);
+		METRIC_MIN_MAX_VALUE.put("max_dvol10ema", 100f);
 		METRIC_MIN_MAX_VALUE.put("min_dvol25ema", 0f);
-		METRIC_MIN_MAX_VALUE.put("max_dvol25ema", 8f);
+		METRIC_MIN_MAX_VALUE.put("max_dvol25ema", 100f);
 		METRIC_MIN_MAX_VALUE.put("min_dvol50ema", 0f);
-		METRIC_MIN_MAX_VALUE.put("max_dvol50ema", 8f);
+		METRIC_MIN_MAX_VALUE.put("max_dvol50ema", 100f);
 		METRIC_MIN_MAX_VALUE.put("min_dvol75ema", 0f);
-		METRIC_MIN_MAX_VALUE.put("max_dvol75ema", 8f);
+		METRIC_MIN_MAX_VALUE.put("max_dvol75ema", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_breakout20", -1f);
-		METRIC_MIN_MAX_VALUE.put("max_breakout20", 1f);
-		METRIC_MIN_MAX_VALUE.put("min_breakout50", -1f);
-		METRIC_MIN_MAX_VALUE.put("max_breakout50", 1f);
-		METRIC_MIN_MAX_VALUE.put("min_breakout100", -1f);
-		METRIC_MIN_MAX_VALUE.put("max_breakout100", 1f);
-		METRIC_MIN_MAX_VALUE.put("min_breakout200", -1f);
-		METRIC_MIN_MAX_VALUE.put("max_breakout200", 1f);
+		// Breakout is -1 - 1 when not normalized
+		METRIC_MIN_MAX_VALUE.put("min_breakout20", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_breakout20", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_breakout50", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_breakout50", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_breakout100", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_breakout100", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_breakout200", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_breakout200", 100f);
 		
+		// WilliamsR is 0 - 100 when not normalized
 		METRIC_MIN_MAX_VALUE.put("min_williamsr10", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_williamsr10", 100f);
 		METRIC_MIN_MAX_VALUE.put("min_williamsr20", 0f);
@@ -215,34 +224,39 @@ public class Constants {
 		METRIC_MIN_MAX_VALUE.put("min_williamsralpha50", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_williamsralpha50", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_macd12_26_9", -10f);
-		METRIC_MIN_MAX_VALUE.put("max_macd12_26_9", 10f);
-		METRIC_MIN_MAX_VALUE.put("min_macd20_40_9", -10f);
-		METRIC_MIN_MAX_VALUE.put("max_macd20_40_9", 10f);
-		METRIC_MIN_MAX_VALUE.put("min_macd40_80_9", -10f);
-		METRIC_MIN_MAX_VALUE.put("max_macd40_80_9", 10f);
+		// MACD is -10 to 10 when not normalized
+		METRIC_MIN_MAX_VALUE.put("min_macd12_26_9", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_macd12_26_9", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_macd20_40_9", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_macd20_40_9", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_macd40_80_9", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_macd40_80_9", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_macddivergence12_26_9", -2.5f);
-		METRIC_MIN_MAX_VALUE.put("max_macddivergence12_26_9", 2.5f);
-		METRIC_MIN_MAX_VALUE.put("min_macddivergence20_40_9", -2.5f);
-		METRIC_MIN_MAX_VALUE.put("max_macddivergence20_40_9", 2.5f);
-		METRIC_MIN_MAX_VALUE.put("min_macddivergence40_80_9", -2.5f);
-		METRIC_MIN_MAX_VALUE.put("max_macddivergence40_80_9", 2.5f);
+		// MACD Divergence is -2.5 to 2.5 when not normalized
+		METRIC_MIN_MAX_VALUE.put("min_macddivergence12_26_9", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_macddivergence12_26_9", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_macddivergence20_40_9", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_macddivergence20_40_9", 100f);
+		METRIC_MIN_MAX_VALUE.put("min_macddivergence40_80_9", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_macddivergence40_80_9", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_psar", -10f);
-		METRIC_MIN_MAX_VALUE.put("max_psar", 10f);
+		// PSAR is -10 to 10 when not normalized
+		METRIC_MIN_MAX_VALUE.put("min_psar", 0f);
+		METRIC_MIN_MAX_VALUE.put("max_psar", 100f);
 		
+		// Ultimate & Aroon oscillators are 0 to 100 when not normalized
 		METRIC_MIN_MAX_VALUE.put("min_ultimateoscillator", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_ultimateoscillator", 100f);
 		
 		METRIC_MIN_MAX_VALUE.put("min_aroonoscillator", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_aroonoscillator", 100f);
 		
-		METRIC_MIN_MAX_VALUE.put("min_cci10", -100f);
+		// CCI is -100 to 100 when not normalized
+		METRIC_MIN_MAX_VALUE.put("min_cci10", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_cci10", 100f);
-		METRIC_MIN_MAX_VALUE.put("min_cci20", -100f);
+		METRIC_MIN_MAX_VALUE.put("min_cci20", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_cci20", 100f);
-		METRIC_MIN_MAX_VALUE.put("min_cci40", -100f);
+		METRIC_MIN_MAX_VALUE.put("min_cci40", 0f);
 		METRIC_MIN_MAX_VALUE.put("max_cci40", 100f);
 	}
 	
