@@ -471,7 +471,7 @@ public class MapCellPanel extends JPanel implements ComponentListener, Runnable,
 			// Draw Map Cells
 			ArrayList<MapCell> mapCells = new ArrayList<MapCell>();
 			mapCells.addAll(mcs.getMapCells());
-			synchronized(mapCells) {
+			synchronized(mcs) {
 				// So I know the size of each cell
 				float xCellSize100Scale2 = 0f;
 				float yCellSize100Scale2 = 0f;
@@ -490,8 +490,8 @@ public class MapCellPanel extends JPanel implements ComponentListener, Runnable,
 					yMetricScale = mapCell.getMetricValueHash().get("Map Y Metric Scale");
 				}
 				
-				MapCell[][]mapCellGrid = mcs.getGridVersion(mcs.getRequestedMapCellList(ps.isSmoothMap()));
-				
+				MapCell[][] mapCellGrid = mcs.getGridVersion(mcs.getRequestedMapCellList(ps.isSmoothMap()));
+
 				// Recalculate High & Low Metrics for coloring
 				recalculateHighAndLowMetrics();
 
@@ -844,7 +844,7 @@ public class MapCellPanel extends JPanel implements ComponentListener, Runnable,
 	@Override
 	public void updateUI() {
 		super.updateUI();
-		repaint();
+//		repaint();
 	}
 
 	public String getLegendMax() {

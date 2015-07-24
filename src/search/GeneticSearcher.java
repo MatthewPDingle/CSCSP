@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Random;
 
 import utils.CalendarUtils;
-
 import constants.Constants;
 import dbio.QueryManager;
 
@@ -64,6 +63,7 @@ public class GeneticSearcher {
 			}
 			System.out.println("----- #" + a + " as " + searcher.searchType + " search -----");
 			searcher.search(a);
+			System.gc();
 		}
 	}
 	
