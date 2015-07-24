@@ -5,15 +5,15 @@ import java.util.Calendar;
 
 import dbio.QueryManager;
 
-public class UpdateBasic {
+public class UpdateStocksInBar {
 
 	private static int NUM_THREADS = 16;
 	
 	public static void main(String[] args) {
 		System.out.println("Starting at " + Calendar.getInstance().getTime().toString());
 		
-		// Delete everything in bar table
-		QueryManager.truncateBar();
+		// Delete stocks in bar table
+		QueryManager.deleteStocksFromBar();
 		
 		// Get symbol list from the index table
 		ArrayList<String> symbols = QueryManager.getUniqueListOfSymbols();
@@ -44,6 +44,6 @@ public class UpdateBasic {
 		}
 
 		// Cleanup any junk that Yahoo gave on holidays
-		QueryManager.deleteHolidaysFromBasicR();
+		QueryManager.deleteHolidaysForStocksFromBar();
 	}
 }

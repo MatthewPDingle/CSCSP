@@ -1377,7 +1377,7 @@ public class GUI {
 	}
 	
 	private JTextField getTxtMaxVolatility() {
-		txtMaxVolatility = new JTextField("10"); // 1.0 Stocks
+		txtMaxVolatility = new JTextField("100"); // 1.0 Stocks
 		txtMaxVolatility.setBounds(new Rectangle(82, 46, 40, 23));
 		txtMaxVolatility.setAlignmentY(.5f);
 		txtMaxVolatility.setFont(new Font("Dialog", Font.BOLD, 12));

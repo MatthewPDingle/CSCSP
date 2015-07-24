@@ -1010,10 +1010,12 @@ public class QueryManager {
 		}
 	}
 
-	public static void truncateBar() {
+	public static void deleteStocksFromBar() {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "TRUNCATE TABLE " + Constants.BAR_TABLE;
+			String q = "DELETE FROM " + Constants.BAR_TABLE + " b " +
+					   "INNER JOIN indexlist i ON b.symbol = i.symbol " +
+					   "WHERE i.index = 'NYSE' OR i.index = 'Nasdaq' OR i.index = 'DJIA' OR i.index = 'SP500' OR i.index = 'ETF' OR i.index = 'Stock Index'";
 			Statement s = c.createStatement();
 			s.executeUpdate(q);
 			s.close();
@@ -1457,10 +1459,13 @@ public class QueryManager {
 		}
 	}
 	
-	public static void deleteHolidaysFromBasicR() {
+	public static void deleteHolidaysForStocksFromBar() {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = 	"DELETE FROM basicr WHERE date IN (SELECT * FROM " +
+			String q = 	"DELETE FROM bar b " +
+						"INNER JOIN indexlist i ON b.symbol = i.symbol " +
+						"WHERE i.index = 'NYSE' OR i.index = 'Nasdaq' OR i.index = 'DJIA' OR i.index = 'SP500' OR i.index = 'ETF' OR i.index = 'Stock Index' " +
+						"AND b.date IN (SELECT * FROM " +
 						  	"(SELECT * FROM generate_series('2012-01-01'::date, now()::date, '1 day') AS alldates) t " +
 						  	"WHERE alldates NOT IN (SELECT * FROM tradingdays))";
 

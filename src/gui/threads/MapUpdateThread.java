@@ -34,9 +34,7 @@ public class MapUpdateThread extends Thread {
 			float yMetricMin = Constants.METRIC_MIN_MAX_VALUE.get("min_" + ps.getyAxisMetric());
 			float yMetricMax = Constants.METRIC_MIN_MAX_VALUE.get("max_" + ps.getyAxisMetric());
 			float yCellSize = (yMetricMax - yMetricMin) / (float)ps.getyRes();
-			
-//			Calendar latestDateInBar = QueryManager.getMaxDateFromBar();
-			
+					
 			MUTCoordinator mutCoordinator = MUTCoordinator.getInstance();	
 			ArrayList<HashMap<String, Object>> mapData = mutCoordinator.getCopyOfMapData();
 			
