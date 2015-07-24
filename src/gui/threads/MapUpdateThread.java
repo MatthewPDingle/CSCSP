@@ -332,7 +332,7 @@ public class MapUpdateThread extends Thread {
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_MEAN_WIN_PERCENT,		CalcUtils.getWinPercent(allPerchangesList));
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_MEAN_POSITION_DURATION,	CalcUtils.getMean(allTradeDurations));
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_MAX_DRAWDOWN,			CalcUtils.getMaxDrawdownPercent(allPerchangesList));
-				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_DAY,			allGeomeanPerDay);
+				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_BAR,			allGeomeanPerDay);
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_SHARPE_RATIO, 			sharpe);
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_SORTINO_RATIO, 			sortino);
 				
@@ -340,7 +340,7 @@ public class MapUpdateThread extends Thread {
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_ALPHA_MEAN_RETURN,		CalcUtils.getMean(allAlphaPerchangesList));
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_ALPHA_MEDIAN_RETURN, 	CalcUtils.getMedian(allAlphaPerchangesList));
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_ALPHA_MEAN_WIN_PERCENT,  CalcUtils.getWinPercent(allAlphaPerchangesList));
-				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_DAY,   allAlphaGeomeanPerDay);
+				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_BAR,   allAlphaGeomeanPerDay);
 				
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_METRIC_NUM_POSITIONS,		(float) numMetricExits);
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_METRIC_PERCENT_POSITIONS,	numMetricExits / (float) numResults * 100f);
@@ -349,7 +349,7 @@ public class MapUpdateThread extends Thread {
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_METRIC_MEDIAN_RETURN,		CalcUtils.getMedian(metricPerchangesList));
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_METRIC_MEAN_WIN_PERCENT,		CalcUtils.getWinPercent(metricPerchangesList));
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_METRIC_MEAN_POSITION_DURATION,CalcUtils.getMean(metricTradeDurations));
-				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_METRIC_GEOMEAN_PER_DAY,		metricGeomeanPerDay);
+				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_METRIC_GEOMEAN_PER_BAR,		metricGeomeanPerDay);
 
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_STOP_NUM_POSITIONS,			(float) numStopExits);
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_STOP_PERCENT_POSITIONS,		numStopExits / (float) numResults * 100f);
@@ -358,7 +358,7 @@ public class MapUpdateThread extends Thread {
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_STOP_MEDIAN_RETURN,			CalcUtils.getMedian(stopPerchangesList));
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_STOP_MEAN_WIN_PERCENT,		CalcUtils.getWinPercent(stopPerchangesList));
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_STOP_MEAN_POSITION_DURATION,	CalcUtils.getMean(stopTradeDurations));
-				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_STOP_GEOMEAN_PER_DAY,		stopGeomeanPerDay);
+				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_STOP_GEOMEAN_PER_BAR,		stopGeomeanPerDay);
 
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_END_NUM_POSITIONS,			(float) numLatestExits);
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_END_PERCENT_POSITIONS,		numLatestExits / (float) numResults * 100f);
@@ -367,7 +367,7 @@ public class MapUpdateThread extends Thread {
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_END_MEDIAN_RETURN,			CalcUtils.getMedian(latestPerchangesList));
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_END_MEAN_WIN_PERCENT,		CalcUtils.getWinPercent(latestPerchangesList));
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_END_MEAN_POSITION_DURATION,	CalcUtils.getMean(latestTradeDurations));
-				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_END_GEOMEAN_PER_DAY,			endGeomeanPerDay);
+				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_END_GEOMEAN_PER_BAR,			endGeomeanPerDay);
 				
 				
 				

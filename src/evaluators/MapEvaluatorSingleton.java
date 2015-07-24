@@ -204,8 +204,8 @@ public class MapEvaluatorSingleton {
 					HashMap<String, Float> mvh = mc.getMetricValueHash();
 		
 					float numPositions = mvh.get(Constants.MAP_COLOR_OPTION_ALL_NUM_POSITIONS);
-					float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_DAY);
-					float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_DAY);
+					float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_BAR);
+					float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_BAR);
 					float sharpe = mvh.get(Constants.MAP_COLOR_OPTION_ALL_SHARPE_RATIO);
 					
 					totalNumPositions += numPositions;
@@ -251,8 +251,8 @@ public class MapEvaluatorSingleton {
 					HashMap<String, Float> mvh = mc.getMetricValueHash();
 		
 					float numPositions = mvh.get(Constants.MAP_COLOR_OPTION_ALL_NUM_POSITIONS);
-					float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_DAY);
-					float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_DAY);
+					float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_BAR);
+					float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_BAR);
 					float sharpe = mvh.get(Constants.MAP_COLOR_OPTION_ALL_SHARPE_RATIO);
 					
 					totalNumPositions += numPositions;
@@ -296,8 +296,8 @@ public class MapEvaluatorSingleton {
 			for (MapCell mc:bestGroup) {
 				HashMap<String, Float> mvh = mc.getMetricValueHash();
 
-				float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_DAY);
-				float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_DAY);
+				float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_BAR);
+				float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_BAR);
 				float sharpe = mvh.get(Constants.MAP_COLOR_OPTION_ALL_SHARPE_RATIO);
 				
 				totalWSharpe += sharpe;
@@ -432,8 +432,8 @@ public class MapEvaluatorSingleton {
 			if (mvh.get(Constants.MAP_COLOR_OPTION_END_PERCENT_POSITIONS) > MAX_PERCENT_END_POSITION_FOR_CELL) return false;
 			
 			float numPositions = mvh.get(Constants.MAP_COLOR_OPTION_ALL_NUM_POSITIONS);
-			float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_DAY);
-			float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_DAY);
+			float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_BAR);
+			float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_BAR);
 			float sharpe = mvh.get(Constants.MAP_COLOR_OPTION_ALL_SHARPE_RATIO);			
 //			float score = (3 * agmpd) + (2 * sharpe) + (1f * gmpd); // Stocks
 			float score = (10 * agmpd) + (1 * sharpe) + (10 * gmpd); // Bitcoin
@@ -462,8 +462,8 @@ public class MapEvaluatorSingleton {
 			if (mvh.get(Constants.MAP_COLOR_OPTION_END_PERCENT_POSITIONS) > MAX_PERCENT_END_POSITION_FOR_CELL) return false;
 			
 			float numPositions = mvh.get(Constants.MAP_COLOR_OPTION_ALL_NUM_POSITIONS);
-			float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_DAY);
-			float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_DAY);
+			float agmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_BAR);
+			float gmpd = mvh.get(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_BAR);
 			float sharpe = mvh.get(Constants.MAP_COLOR_OPTION_ALL_SHARPE_RATIO);
 //			float score = (3 * agmpd) + (2 * sharpe) + (1f * gmpd); // Stocks
 			float score = (10 * agmpd) + (1 * sharpe) + (10 * gmpd); // Bitcoin

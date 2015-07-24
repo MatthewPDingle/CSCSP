@@ -895,7 +895,7 @@ public class GUI {
 		if (frame == null) {
 			frame = new JFrame();
 			frame.setSize(new Dimension(822, 638));
-			frame.setTitle("Chip Swinger Championship Stock Picker .38");
+			frame.setTitle("Chip Swinger Championship Stock Picker .39");
 			frame.setContentPane(panel);
 			frame.setVisible(true);
 			frame.addWindowListener(new java.awt.event.WindowAdapter() {
@@ -1011,7 +1011,7 @@ public class GUI {
 	
 	public JComboBox getCbBasedOn() {
 		cbBasedOn = new JComboBox(Constants.MAP_COLOR_OPTIONS.toArray());
-		cbBasedOn.setSelectedItem(Constants.MAP_COLOR_OPTION_ALL_ALPHA_GEOMEAN_PER_DAY);
+		cbBasedOn.setSelectedItem(Constants.MAP_COLOR_OPTION_ALL_GEOMEAN_PER_BAR);
 		cbBasedOn.setBounds(new Rectangle(58, 22, 179, 22));
 		cbBasedOn.setFont(new Font("Dialog", Font.BOLD, 12));
 		ps.setMapColor(cbBasedOn.getSelectedItem().toString());
