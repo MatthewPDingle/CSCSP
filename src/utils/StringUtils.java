@@ -1,7 +1,13 @@
-package data.downloaders.okcoin;
+package utils;
 
-public class StringUtil {
-	
+public class StringUtils {
+
+	/**
+	 * Checks to see if the string is null, empty, or written out as "null"
+	 * 
+	 * @param str
+	 * @return
+	 */
 	public static boolean isEmpty(String str) {
 		if (str == null) {
 			return true; 

@@ -1,13 +1,16 @@
 package utils;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
+
+import constants.Constants;
 
 public class CalendarUtils {
-	
+
 	public static long difference(Calendar c1, Calendar c2, int unit) { 
 		differenceCheckUnit(unit); 
 		Map<Integer, Long> unitEstimates = differenceGetUnitEstimates(); 
@@ -63,6 +66,242 @@ public class CalendarUtils {
 		} 
 		c.add(unit, (int) increment); 
 	} 
+	
+	public static Calendar getBarStart(Calendar c, Constants.BAR_SIZE barSize) {
+		Calendar periodStart = Calendar.getInstance();
+		periodStart.setTime(c.getTime());
+		periodStart.set(Calendar.SECOND, 0);
+		periodStart.set(Calendar.MILLISECOND, 0);
+		Calendar periodEnd = Calendar.getInstance();
+		periodEnd.setTime(periodStart.getTime());
+		
+		try {
+			int unroundedMinute = 0;
+			int unroundedHour = 0;
+			int remainder = 0;
+			switch (barSize) {
+				case BAR_1M:
+					periodEnd.add(Calendar.MINUTE, 1);
+					break;
+				case BAR_2M:
+					unroundedMinute = periodStart.get(Calendar.MINUTE);
+					remainder = unroundedMinute % 2;
+					periodStart.add(Calendar.MINUTE, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.MINUTE, 2);
+					break;
+				case BAR_5M:
+					unroundedMinute = periodStart.get(Calendar.MINUTE);
+					remainder = unroundedMinute % 5;
+					periodStart.add(Calendar.MINUTE, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.MINUTE, 5);
+					break;
+				case BAR_10M:
+					unroundedMinute = periodStart.get(Calendar.MINUTE);
+					remainder = unroundedMinute % 10;
+					periodStart.add(Calendar.MINUTE, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.MINUTE, 10);
+					break;
+				case BAR_15M:
+					unroundedMinute = periodStart.get(Calendar.MINUTE);
+					remainder = unroundedMinute % 15;
+					periodStart.add(Calendar.MINUTE, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.MINUTE, 15);
+					break;
+				case BAR_30M:
+					unroundedMinute = periodStart.get(Calendar.MINUTE);
+					remainder = unroundedMinute % 30;
+					periodStart.add(Calendar.MINUTE, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.MINUTE, 30);
+					break;
+				case BAR_1H:
+					periodStart.set(Calendar.MINUTE, 0);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 1);
+					break;
+				case BAR_2H:
+					periodStart.set(Calendar.MINUTE, 0);
+					unroundedHour = periodStart.get(Calendar.HOUR_OF_DAY);
+					remainder = unroundedHour % 2;
+					periodStart.add(Calendar.HOUR_OF_DAY, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 2);
+					break;
+				case BAR_4H:
+					periodStart.set(Calendar.MINUTE, 0);
+					unroundedHour = periodStart.get(Calendar.HOUR_OF_DAY);
+					remainder = unroundedHour % 4;
+					periodStart.add(Calendar.HOUR_OF_DAY, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 4);
+					break;
+				case BAR_6H:
+					periodStart.set(Calendar.MINUTE, 0);
+					unroundedHour = periodStart.get(Calendar.HOUR_OF_DAY);
+					remainder = unroundedHour % 6;
+					periodStart.add(Calendar.HOUR_OF_DAY, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 6);
+					break;
+				case BAR_8H:
+					periodStart.set(Calendar.MINUTE, 0);
+					unroundedHour = periodStart.get(Calendar.HOUR_OF_DAY);
+					remainder = unroundedHour % 8;
+					periodStart.add(Calendar.HOUR_OF_DAY, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 8);
+					break;
+				case BAR_12H:
+					periodStart.set(Calendar.MINUTE, 0);
+					unroundedHour = periodStart.get(Calendar.HOUR_OF_DAY);
+					remainder = unroundedHour % 12;
+					periodStart.add(Calendar.HOUR_OF_DAY, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 12);
+					break;
+				case BAR_1D:
+					periodStart.set(Calendar.MINUTE, 0);
+					periodStart.set(Calendar.HOUR_OF_DAY, 0);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 24);
+					break;
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return periodStart;
+	}
+	
+	public static Calendar getBarEnd(Calendar c, Constants.BAR_SIZE barSize) {
+		Calendar periodStart = Calendar.getInstance();
+		periodStart.setTime(c.getTime());
+		periodStart.set(Calendar.SECOND, 0);
+		periodStart.set(Calendar.MILLISECOND, 0);	
+		Calendar periodEnd = Calendar.getInstance();
+		periodEnd.setTime(periodStart.getTime());
+		
+		try {
+			int unroundedMinute = 0;
+			int unroundedHour = 0;
+			int remainder = 0;
+			switch (barSize) {
+				case BAR_1M:
+					periodEnd.add(Calendar.MINUTE, 1);
+					break;
+				case BAR_2M:
+					unroundedMinute = periodStart.get(Calendar.MINUTE);
+					remainder = unroundedMinute % 2;
+					periodStart.add(Calendar.MINUTE, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.MINUTE, 2);
+					break;
+				case BAR_5M:
+					unroundedMinute = periodStart.get(Calendar.MINUTE);
+					remainder = unroundedMinute % 5;
+					periodStart.add(Calendar.MINUTE, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.MINUTE, 5);
+					break;
+				case BAR_10M:
+					unroundedMinute = periodStart.get(Calendar.MINUTE);
+					remainder = unroundedMinute % 10;
+					periodStart.add(Calendar.MINUTE, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.MINUTE, 10);
+					break;
+				case BAR_15M:
+					unroundedMinute = periodStart.get(Calendar.MINUTE);
+					remainder = unroundedMinute % 15;
+					periodStart.add(Calendar.MINUTE, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.MINUTE, 15);
+					break;
+				case BAR_30M:
+					unroundedMinute = periodStart.get(Calendar.MINUTE);
+					remainder = unroundedMinute % 30;
+					periodStart.add(Calendar.MINUTE, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.MINUTE, 30);
+					break;
+				case BAR_1H:
+					periodStart.set(Calendar.MINUTE, 0);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 1);
+					break;
+				case BAR_2H:
+					periodStart.set(Calendar.MINUTE, 0);
+					unroundedHour = periodStart.get(Calendar.HOUR_OF_DAY);
+					remainder = unroundedHour % 2;
+					periodStart.add(Calendar.HOUR_OF_DAY, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 2);
+					break;
+				case BAR_4H:
+					periodStart.set(Calendar.MINUTE, 0);
+					unroundedHour = periodStart.get(Calendar.HOUR_OF_DAY);
+					remainder = unroundedHour % 4;
+					periodStart.add(Calendar.HOUR_OF_DAY, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 4);
+					break;
+				case BAR_6H:
+					periodStart.set(Calendar.MINUTE, 0);
+					unroundedHour = periodStart.get(Calendar.HOUR_OF_DAY);
+					remainder = unroundedHour % 6;
+					periodStart.add(Calendar.HOUR_OF_DAY, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 6);
+					break;
+				case BAR_8H:
+					periodStart.set(Calendar.MINUTE, 0);
+					unroundedHour = periodStart.get(Calendar.HOUR_OF_DAY);
+					remainder = unroundedHour % 8;
+					periodStart.add(Calendar.HOUR_OF_DAY, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 8);
+					break;
+				case BAR_12H:
+					periodStart.set(Calendar.MINUTE, 0);
+					unroundedHour = periodStart.get(Calendar.HOUR_OF_DAY);
+					remainder = unroundedHour % 12;
+					periodStart.add(Calendar.HOUR_OF_DAY, -remainder);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 12);
+					break;
+				case BAR_1D:
+					periodStart.set(Calendar.MINUTE, 0);
+					periodStart.set(Calendar.HOUR_OF_DAY, 0);
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.HOUR_OF_DAY, 24);
+					break;
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return periodEnd;
+	}
+	
+	public static boolean areSame(Calendar c1, Calendar c2) {
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd hh:mm:ss");
+			String c1s = sdf.format(c1.getTime());
+			String c2s = sdf.format(c2.getTime());
+			if (c1s.equals(c2s)) {
+				return true;
+			}
+			return false;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return true;
+		}
+	}
 	
 	/**
 	 * Converts a SQL Date object into yyyy-MM-dd format

@@ -21,16 +21,16 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 
-public class OKCoin {
+public class OKCoinAPI {
 
-	private static OKCoin instance = new OKCoin();
+	private static OKCoinAPI instance = new OKCoinAPI();
 	private static HttpClient client;
 
-	private OKCoin() {
+	private OKCoinAPI() {
 		client = HttpClientBuilder.create().build();
 	}
 
-	public static OKCoin getInstance() {
+	public static OKCoinAPI getInstance() {
 		return instance;
 	}
 

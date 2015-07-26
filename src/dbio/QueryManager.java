@@ -9,7 +9,6 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -24,6 +23,7 @@ import utils.CalendarUtils;
 import utils.ConnectionSingleton;
 import constants.Constants;
 import constants.Constants.BAR_SIZE;
+import data.Bar;
 
 public class QueryManager {
 
@@ -1782,6 +1782,85 @@ public class QueryManager {
 			
 			s.executeUpdate();
 			s.close();
+			c.close();
+		}
+		catch (Exception e) {
+			System.err.println("Fear not - it's probably just duplicate times causing a PK violation because of FUCKING daylight savings");
+			e.printStackTrace();
+		}
+	}
+	
+	public static void insertOrUpdateIntoBar(Bar bar) {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+		
+			// First see if this bar exists in the DB
+			String q = "SELECT partial FROM bar WHERE symbol = ? AND start = ? AND duration = ?";
+			PreparedStatement s = c.prepareStatement(q);
+			s.setString(1, bar.symbol);
+			s.setTimestamp(2, new java.sql.Timestamp(bar.periodStart.getTime().getTime()));
+			s.setString(3, bar.duration.toString());
+			
+			ResultSet rs = s.executeQuery();
+			boolean exists = false;
+			boolean partial = false;
+			while (rs.next()) {
+				exists = true;
+				partial = rs.getBoolean("partial");
+				break;
+			}
+			s.close();
+		
+			// If it doesn't exist, insert it
+			if (!exists) {
+				String q2 = "INSERT INTO bar(symbol, open, close, high, low, vwap, volume, numtrades, change, gap, start, \"end\", duration, partial) " + 
+							"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+				PreparedStatement s2 = c.prepareStatement(q2);
+				s2.setString(1, bar.symbol);
+				s2.setFloat(2, bar.open);
+				s2.setFloat(3, bar.close);
+				s2.setFloat(4, bar.high);
+				s2.setFloat(5, bar.low);
+				s2.setFloat(6, bar.vwap);
+				s2.setFloat(7, bar.volume);
+				s2.setInt(8, bar.numTrades);
+				s2.setFloat(9, bar.change);
+				s2.setFloat(10, bar.gap);
+				s2.setTimestamp(11, new java.sql.Timestamp(bar.periodStart.getTime().getTime()));
+				s2.setTimestamp(12, new java.sql.Timestamp(bar.periodEnd.getTime().getTime()));
+				s2.setString(13, bar.duration.toString());
+				s2.setBoolean(14, bar.partial);
+				
+				s2.executeUpdate();
+				s2.close();
+			}
+			// It exists and it's partial, so we need to update it.
+			else if (partial) {
+				String q3 = "UPDATE bar SET symbol = ?, open = ?, close = ?, high = ?, low = ?, vwap = ?, volume = ?, numtrades = ?, change = ?, gap = ?, start = ?, \"end\" = ?, duration = ?, partial = ? " +
+							"WHERE symbol = ? AND start = ? AND duration = ?";
+				PreparedStatement s3 = c.prepareStatement(q3);
+				s3.setString(1, bar.symbol);
+				s3.setFloat(2, bar.open);
+				s3.setFloat(3, bar.close);
+				s3.setFloat(4, bar.high);
+				s3.setFloat(5, bar.low);
+				s3.setFloat(6, bar.vwap);
+				s3.setFloat(7, bar.volume);
+				s3.setInt(8, bar.numTrades);
+				s3.setFloat(9, bar.change);
+				s3.setFloat(10, bar.gap);
+				s3.setTimestamp(11, new java.sql.Timestamp(bar.periodStart.getTime().getTime()));
+				s3.setTimestamp(12, new java.sql.Timestamp(bar.periodEnd.getTime().getTime()));
+				s3.setString(13, bar.duration.toString());
+				s3.setBoolean(14, bar.partial);
+				s3.setString(15, bar.symbol);
+				s3.setTimestamp(16, new java.sql.Timestamp(bar.periodStart.getTime().getTime()));
+				s3.setString(17, bar.duration.toString());
+				
+				s3.executeUpdate();
+				s3.close();
+			}
+			
 			c.close();
 		}
 		catch (Exception e) {
