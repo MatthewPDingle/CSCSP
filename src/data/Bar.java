@@ -12,18 +12,18 @@ public class Bar {
 	public float close;
 	public float high;
 	public float low;
-	public float vwap;
+	public Float vwap;
 	public float volume;
-	public int numTrades;
-	public float change;
-	public float gap;
+	public Integer numTrades;
+	public Float change;
+	public Float gap;
 	public Calendar periodStart;
 	public Calendar periodEnd;
 	public Constants.BAR_SIZE duration;
 	public boolean partial;
 
 	public Bar(String symbol, float open, float close, float high, float low,
-			float vwap, float volume, int numTrades, float change, float gap,
+			Float vwap, float volume, Integer numTrades, Float change, Float gap,
 			Calendar periodStart, Calendar periodEnd, BAR_SIZE duration,
 			boolean partial) {
 		super();

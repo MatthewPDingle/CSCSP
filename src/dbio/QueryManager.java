@@ -9,6 +9,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -1795,7 +1796,7 @@ public class QueryManager {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 		
 			// First see if this bar exists in the DB
-			String q = "SELECT partial FROM bar WHERE symbol = ? AND start = ? AND duration = ?";
+			String q = "SELECT partial, numtrades FROM bar WHERE symbol = ? AND start = ? AND duration = ?";
 			PreparedStatement s = c.prepareStatement(q);
 			s.setString(1, bar.symbol);
 			s.setTimestamp(2, new java.sql.Timestamp(bar.periodStart.getTime().getTime()));
@@ -1804,12 +1805,19 @@ public class QueryManager {
 			ResultSet rs = s.executeQuery();
 			boolean exists = false;
 			boolean partial = false;
+			Object numTrades = null;
 			while (rs.next()) {
 				exists = true;
 				partial = rs.getBoolean("partial");
+				numTrades = rs.getObject("numtrades");
 				break;
 			}
 			s.close();
+			
+			// If there are no trades for this existing bar, say its partial so it can be updated with bar data that contains this (if coming from tick data)
+			if (numTrades == null) {
+				partial = true;
+			}
 		
 			// If it doesn't exist, insert it
 			if (!exists) {
@@ -1823,9 +1831,24 @@ public class QueryManager {
 				s2.setFloat(5, bar.low);
 				s2.setFloat(6, bar.vwap);
 				s2.setFloat(7, bar.volume);
-				s2.setInt(8, bar.numTrades);
-				s2.setFloat(9, bar.change);
-				s2.setFloat(10, bar.gap);
+				if (bar.numTrades == null) {
+					s2.setNull(8, Types.INTEGER);
+				}
+				else {
+					s2.setInt(8, bar.numTrades);
+				}
+				if (bar.change == null) {
+					s2.setNull(9, Types.FLOAT);
+				}
+				else {
+					s2.setFloat(9, bar.change);
+				}
+				if (bar.gap == null) {
+					s2.setNull(10, Types.FLOAT);
+				}
+				else {
+					s2.setFloat(10, bar.gap);
+				}
 				s2.setTimestamp(11, new java.sql.Timestamp(bar.periodStart.getTime().getTime()));
 				s2.setTimestamp(12, new java.sql.Timestamp(bar.periodEnd.getTime().getTime()));
 				s2.setString(13, bar.duration.toString());
@@ -1846,9 +1869,24 @@ public class QueryManager {
 				s3.setFloat(5, bar.low);
 				s3.setFloat(6, bar.vwap);
 				s3.setFloat(7, bar.volume);
-				s3.setInt(8, bar.numTrades);
-				s3.setFloat(9, bar.change);
-				s3.setFloat(10, bar.gap);
+				if (bar.numTrades == null) {
+					s3.setNull(8, Types.INTEGER);
+				}
+				else {
+					s3.setInt(8, bar.numTrades);
+				}
+				if (bar.change == null) {
+					s3.setNull(9, Types.FLOAT);
+				}
+				else {
+					s3.setFloat(9, bar.change);
+				}
+				if (bar.gap == null) {
+					s3.setNull(10, Types.FLOAT);
+				}
+				else {
+					s3.setFloat(10, bar.gap);
+				}
 				s3.setTimestamp(11, new java.sql.Timestamp(bar.periodStart.getTime().getTime()));
 				s3.setTimestamp(12, new java.sql.Timestamp(bar.periodEnd.getTime().getTime()));
 				s3.setString(13, bar.duration.toString());

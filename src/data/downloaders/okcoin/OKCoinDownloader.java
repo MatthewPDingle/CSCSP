@@ -5,27 +5,34 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+
 import utils.CalendarUtils;
 import utils.StringUtils;
 
 import com.google.gson.Gson;
 
 import constants.Constants;
+import constants.Constants.BAR_SIZE;
 import data.Bar;
 import data.Converter;
 import data.Tick;
 import dbio.QueryManager;
 
 
-public class Downloader {
+public class OKCoinDownloader {
 
 	public static void main(String[] args) {
 
-		ArrayList<Bar> bars = getMostRecentBarsFromTickHistory(Constants.BAR_SIZE.BAR_5M);
+		ArrayList<Bar> bars = getMostRecentBarsFromBarHistory(BAR_SIZE.BAR_15M, 48);
 		for (Bar bar : bars) {
 			QueryManager.insertOrUpdateIntoBar(bar);
-			System.out.println(bar);
 		}
+		
+//		ArrayList<Bar> bars = getMostRecentBarsFromTickHistory(Constants.BAR_SIZE.BAR_15M);
+//		for (Bar bar : bars) {
+//			QueryManager.insertOrUpdateIntoBar(bar);
+//		}
 	}
 
 	/**
@@ -103,45 +110,129 @@ public class Downloader {
 				Bar bar = Converter.ticksToBar(barTicks, barStart, barEnd, barSize, previousClose, true);
 				bars.add(bar);
 			}
+			
+			LogManager.getLogger("data.downloader").info("Got " + bars.size() + " bars from OKCoin tick history");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+			LogManager.getLogger("data.downloader").error(e.getStackTrace().toString());
 		}
 		
 		return bars;
 	}
 	
-	public static void barTest() {
-		String json = getBarHistoryJSON(OKCoinConstants.SYMBOL_BTCUSD, OKCoinConstants.BAR_DURATION_15M, "100");
-		System.out.println(json);
-		List<List> list = new Gson().fromJson(json, List.class);
-		for (List bar : list) {
-			String timeMS = bar.get(0).toString();
-			timeMS = timeMS.replace(".", "");
-			if (timeMS.contains("E")) {
-				timeMS = timeMS.substring(0, timeMS.indexOf("E"));
+	/**
+	 * Note: 2M, 10M, 8H bars are not supported on OKCoin's API
+	 * 
+	 * @param barSize
+	 * @return
+	 */
+	public static ArrayList<Bar> getMostRecentBarsFromBarHistory(Constants.BAR_SIZE barSize, int barCount) {
+		ArrayList<Bar> bars = new ArrayList<Bar>();
+		try {
+			String okBarDuration = OKCoinConstants.BAR_DURATION_15M; 
+			int barMinutes = 0;
+			switch (barSize) {
+				case BAR_1M:
+					okBarDuration = OKCoinConstants.BAR_DURATION_1M;
+					barMinutes = 1;
+					break;
+				case BAR_5M:
+					okBarDuration = OKCoinConstants.BAR_DURATION_5M;
+					barMinutes = 5;
+					break;
+				case BAR_15M:
+					okBarDuration = OKCoinConstants.BAR_DURATION_15M;
+					barMinutes = 15;
+					break;
+				case BAR_30M:
+					okBarDuration = OKCoinConstants.BAR_DURATION_30M;
+					barMinutes = 30;
+					break;
+				case BAR_1H:
+					okBarDuration = OKCoinConstants.BAR_DURATION_1H;
+					barMinutes = 60;
+					break;
+				case BAR_2H:
+					okBarDuration = OKCoinConstants.BAR_DURATION_2H;
+					barMinutes = 120;
+					break;
+				case BAR_4H:
+					okBarDuration = OKCoinConstants.BAR_DURATION_4H;
+					barMinutes = 240;
+					break;
+				case BAR_6H:
+					okBarDuration = OKCoinConstants.BAR_DURATION_6H;
+					barMinutes = 360;
+					break;
+				case BAR_12H:
+					okBarDuration = OKCoinConstants.BAR_DURATION_12H;
+					barMinutes = 720;
+					break;
+				case BAR_1D:
+					okBarDuration = OKCoinConstants.BAR_DURATION_1D;
+					barMinutes = 1440;
+					break;
+				default:
+					break;
 			}
-			while (timeMS.length() < 10) {
-				timeMS = timeMS + "0";
+			String json = getBarHistoryJSON(OKCoinConstants.SYMBOL_BTCUSD, okBarDuration, new Integer(barCount + 1).toString());
+			List<List> list = new Gson().fromJson(json, List.class);
+			
+			Float previousClose = null;
+			
+			// From oldest to newest
+			for (List jsonBar : list) {
+				String timeMS = jsonBar.get(0).toString();
+				timeMS = timeMS.replace(".", "");
+				if (timeMS.contains("E")) {
+					timeMS = timeMS.substring(0, timeMS.indexOf("E"));
+				}
+				while (timeMS.length() < 10) {
+					timeMS = timeMS + "0";
+				}
+				long ms = Long.parseLong(timeMS) * 1000;
+				Calendar periodStart = Calendar.getInstance();
+				periodStart.setTimeInMillis(ms);
+				Calendar periodEnd = Calendar.getInstance();
+				periodEnd.setTime(periodStart.getTime());
+				periodEnd.add(Calendar.MINUTE, barMinutes);
+				float open = Float.parseFloat(jsonBar.get(1).toString());
+				float high = Float.parseFloat(jsonBar.get(2).toString());
+				float low = Float.parseFloat(jsonBar.get(3).toString());
+				float close = Float.parseFloat(jsonBar.get(4).toString());
+				float volume = Float.parseFloat(jsonBar.get(5).toString());
+				float vwapEstimate = (open + close + high + low) / 4f;
+				Float change = null;
+				Float gap = null;
+				if (previousClose != null) {
+					change = close - previousClose; 
+					gap = open - previousClose;
+				}
+			
+				Bar bar = new Bar("okcoinBTCUSD", open, close, high, low, vwapEstimate, volume, null, change, gap, periodStart, periodEnd, barSize, false);
+				bars.add(bar);
+				
+				previousClose = close;
 			}
-			long ms = Long.parseLong(timeMS) * 1000;
-			Calendar timestamp = Calendar.getInstance();
-			timestamp.setTimeInMillis(ms);
-			float open = Float.parseFloat(bar.get(1).toString());
-			float high = Float.parseFloat(bar.get(2).toString());
-			float low = Float.parseFloat(bar.get(3).toString());
-			float close = Float.parseFloat(bar.get(4).toString());
-			float volume = Float.parseFloat(bar.get(5).toString());
-			System.out.println(timestamp.getTime().toString());
-			System.out.println(open);
-			System.out.println(high);
-			System.out.println(low);
-			System.out.println(close);
-			System.out.println(volume);
+			
+			// Set the most recent one to partial and toss the oldest one (we got one more bar than we needed)
+			if (bars.size() > 0) {
+				bars.get(bars.size() - 1).partial = true;
+				bars.remove(0);
+			}
+			
+			LogManager.getLogger("data.downloader").info("Got " + bars.size() + " bars from OKCoin bar history");
 		}
+		catch (Exception e) {
+			e.printStackTrace();
+			LogManager.getLogger("data.downloader").error(e.getStackTrace().toString());
+		}
+		
+		return bars;
 	}
 	
-	public static String getTickHistoryJSON(String symbol, String since) {
+	private static String getTickHistoryJSON(String symbol, String since) {
 		String result = "";
 		try {
 			OKCoinAPI okCoin = OKCoinAPI.getInstance();
@@ -166,7 +257,7 @@ public class Downloader {
 		return result;
 	}
 	
-	public static String getBarHistoryJSON(String symbol, String type, String numBarsBack) {
+	private static String getBarHistoryJSON(String symbol, String type, String numBarsBack) {
 		String result = "";
 		try {
 			OKCoinAPI okCoin = OKCoinAPI.getInstance();

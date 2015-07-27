@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn" name="Logger" packages="">
+	<Properties>
+		<Property name="master">logs/master.log</Property>
+		<Property name="cscsp">logs/cscsp.log</Property>
+		<Property name="data.downloader">logs/data.downloader.log</Property>
+	</Properties>
+	<Appenders>
+    	<File name="master" fileName="${master}">
+  			<PatternLayout>
+    			<Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+      		</PatternLayout>
+    	</File>
+    	<File name="cscsp" fileName="${cscsp}">
+  			<PatternLayout>
+    			<Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+      		</PatternLayout>
+    	</File>
+    	<File name="data.downloader" fileName="${data.downloader}">
+  			<PatternLayout>
+    			<Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+      		</PatternLayout>
+    	</File>
+  	</Appenders>
+  	<Loggers>
+  		<Root level="INFO">
+            <AppenderRef ref="master" />
+        </Root>
+        <Logger name="cscsp" additivity="TRUE" level="INFO">
+  			<AppenderRef ref="cscsp"/>
+  		</Logger>
+  		<Logger name="data.downloader" additivity="TRUE" level="INFO">
+  			<AppenderRef ref="data.downloader"/>
+  		</Logger>
+  	</Loggers>
+</Configuration>

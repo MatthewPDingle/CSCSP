@@ -18,9 +18,10 @@ public class BitcoinHistoricalPriceProcessor {
 
 	public static void main(String[] args) {
 		
-		String filename = "data/bitfinexUSD.csv.gz";
+//		String filename = "data/bitfinexUSD.csv.gz";
+		String filename = "data/okcoinCNY.csv.gz";
 		
-//		processArchiveFile(filename);
+		processArchiveFile(filename);
 		
 //		for (BAR_SIZE barSize : BAR_SIZE.values()) {
 //			createBars("bitfinexUSD", barSize);
@@ -30,7 +31,7 @@ public class BitcoinHistoricalPriceProcessor {
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_2M);
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_5M);
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_10M);
-		createBars("bitfinexUSD", BAR_SIZE.BAR_15M);
+//		createBars("okcoinCNY", BAR_SIZE.BAR_15M);
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_30M);
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_1H);
 //		createBars("bitfinexUSD", BAR_SIZE.BAR_2H);
