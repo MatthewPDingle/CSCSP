@@ -24,15 +24,15 @@ public class OKCoinDownloader {
 
 	public static void main(String[] args) {
 
-		ArrayList<Bar> bars = getMostRecentBarsFromBarHistory(BAR_SIZE.BAR_15M, 48);
+		ArrayList<Bar> bars = getMostRecentBarsFromBarHistory(OKCoinConstants.SYMBOL_BTCUSD, BAR_SIZE.BAR_15M, 48);
 		for (Bar bar : bars) {
 			QueryManager.insertOrUpdateIntoBar(bar);
 		}
 		
-//		ArrayList<Bar> bars = getMostRecentBarsFromTickHistory(Constants.BAR_SIZE.BAR_15M);
-//		for (Bar bar : bars) {
-//			QueryManager.insertOrUpdateIntoBar(bar);
-//		}
+		ArrayList<Bar> bars2 = getMostRecentBarsFromTickHistory(OKCoinConstants.SYMBOL_BTCUSD, Constants.BAR_SIZE.BAR_15M);
+		for (Bar bar : bars2) {
+			QueryManager.insertOrUpdateIntoBar(bar);
+		}
 	}
 
 	/**
@@ -43,10 +43,10 @@ public class OKCoinDownloader {
 	 * @return
 	 */
 	
-	public static ArrayList<Bar> getMostRecentBarsFromTickHistory(Constants.BAR_SIZE barSize) {
+	public static ArrayList<Bar> getMostRecentBarsFromTickHistory(String symbol, Constants.BAR_SIZE barSize) {
 		ArrayList<Bar> bars = new ArrayList<Bar>();
 		try {
-			String json = getTickHistoryJSON(OKCoinConstants.SYMBOL_BTCUSD, "6000");
+			String json = getTickHistoryJSON(symbol, "6000");
 			List<Map> list = new Gson().fromJson(json, List.class);
 			
 			// From oldest to newest
@@ -127,7 +127,7 @@ public class OKCoinDownloader {
 	 * @param barSize
 	 * @return
 	 */
-	public static ArrayList<Bar> getMostRecentBarsFromBarHistory(Constants.BAR_SIZE barSize, int barCount) {
+	public static ArrayList<Bar> getMostRecentBarsFromBarHistory(String symbol, Constants.BAR_SIZE barSize, int barCount) {
 		ArrayList<Bar> bars = new ArrayList<Bar>();
 		try {
 			String okBarDuration = OKCoinConstants.BAR_DURATION_15M; 
@@ -176,7 +176,7 @@ public class OKCoinDownloader {
 				default:
 					break;
 			}
-			String json = getBarHistoryJSON(OKCoinConstants.SYMBOL_BTCUSD, okBarDuration, new Integer(barCount + 1).toString());
+			String json = getBarHistoryJSON(symbol, okBarDuration, new Integer(barCount + 1).toString());
 			List<List> list = new Gson().fromJson(json, List.class);
 			
 			Float previousClose = null;
@@ -249,7 +249,11 @@ public class OKCoinDownloader {
 				}
 				param += "since=" + since;
 			}
-			result = okCoin.requestHttpGet(OKCoinConstants.URL, "/trades.do", param);
+			String url = OKCoinConstants.URL_USA;
+			if (symbol != null && symbol.endsWith("cny")) {
+				url = OKCoinConstants.URL_CHINA;
+			}
+			result = okCoin.requestHttpGet(url, "/trades.do", param);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -280,7 +284,11 @@ public class OKCoinDownloader {
 				}
 				param += "size=" + numBarsBack;
 			}
-			result = okCoin.requestHttpGet(OKCoinConstants.URL, "/kline.do", param);
+			String url = OKCoinConstants.URL_USA;
+			if (symbol != null && symbol.endsWith("cny")) {
+				url = OKCoinConstants.URL_CHINA;
+			}
+			result = okCoin.requestHttpGet(url, "/kline.do", param);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
