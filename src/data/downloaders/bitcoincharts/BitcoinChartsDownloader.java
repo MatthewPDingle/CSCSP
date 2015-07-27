@@ -13,7 +13,8 @@ public class BitcoinChartsDownloader {
 
 	public static void main(String[] args) {
 
-		downloadArchive(BitcoinChartsConstants.FILE_TICK_HISTORY_KRAKEN_BTC_EUR);
+//		downloadArchive(BitcoinChartsConstants.FILE_TICK_HISTORY_KRAKEN_BTC_EUR);
+//		Converter.processArchiveFileIntoTicks(BitcoinChartsConstants.FILE_TICK_HISTORY_KRAKEN_BTC_EUR);
 		Converter.processTickDataIntoBars("krakenBTCEUR", BAR_SIZE.BAR_15M);
 	}
 

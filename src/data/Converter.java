@@ -267,7 +267,8 @@ public class Converter {
 				previousclose = close;
 				
 				// Insert the bar data into the bitcoinbar table
-				QueryManager.insertIntoBar(bitcoinSymbol, open, close, high, low, vwap, volumeSum, numTrades, change, gap, periodStart, periodEnd, barSize, false);
+				Bar bar = new Bar(bitcoinSymbol, open, close, high, low, new Float(vwap), volumeSum, new Integer(numTrades), new Float(change), new Float(gap), periodStart, periodEnd, barSize, false);
+				QueryManager.insertOrUpdateIntoBar(bar);
 				numBarsProcessed++;
 				
 				// Move forward the bar window by the bar size and repeat
@@ -324,12 +325,15 @@ public class Converter {
 	}
 	
 	/**
-	 * Reads the file archive and inserts the data into the bitcointick table
+	 * Reads the file archive and inserts the data into the bitcointick table.
+	 * It first checks the bitcointick table for previous data and gets the time of the latest tick data for the symbol.
+	 * Only data in the file after that time gets imported into bitcointick.  T
 	 * 
 	 * @param filename
 	 */
 	public static void processArchiveFileIntoTicks(String filename) {
 		int numTicks = 0;
+		int numOldIgnoredTicks = 0;
 		try {
 			String tickSymbol = "unknownBTC";
 			if (filename.equals(BitcoinChartsConstants.FILE_TICK_HISTORY_BITFINEX_BTC_USD)) {
@@ -354,7 +358,9 @@ public class Converter {
 				tickSymbol = "okcoinBTCCNY";
 			}
 			
-			InputStream fileStream = new FileInputStream(filename);
+			Calendar latestTick = QueryManager.getBitcoinTickLatestTick(tickSymbol);
+			
+			InputStream fileStream = new FileInputStream("data/" + filename);
 			InputStream gzipStream = new GZIPInputStream(fileStream);
 			Reader decoder = new InputStreamReader(gzipStream);
 			BufferedReader br = new BufferedReader(decoder);
@@ -369,22 +375,31 @@ public class Converter {
 				float volume = Float.parseFloat(pieces[2]);
 				Calendar c = Calendar.getInstance();
 				c.setTimeInMillis(msTime);
-				numTicks++;
 				
-				String record = "'" + tickSymbol + "', " + price + ", " + volume + ", '" + CalendarUtils.getSqlDateTimeString(c) + "'";
-				recordBuffer.add(record);
-				
-				if (recordBuffer.size() >= 100) {
-					QueryManager.insertIntoBitcoinTick(recordBuffer);
-					recordBuffer.clear();
+				// Only insert ticks newer than what we already have data for in the database
+				if (c.after(latestTick)) {
+					numTicks++;
+					String record = "'" + tickSymbol + "', " + price + ", " + volume + ", '" + CalendarUtils.getSqlDateTimeString(c) + "'";
+					recordBuffer.add(record);
+					if (recordBuffer.size() >= 100) {
+						QueryManager.insertIntoBitcoinTick(recordBuffer);
+						recordBuffer.clear();
+					}
+				}
+				else {
+					numOldIgnoredTicks++;
 				}
 			}
 			
-			LogManager.getLogger("data").info("Converter.processArchiveFileIntoTicks processed " + numTicks + " ticks into the tick table from " + filename);
+			// Insert remaining buffered ticks
+			QueryManager.insertIntoBitcoinTick(recordBuffer);
+			recordBuffer.clear();
+			
+			LogManager.getLogger("data").info("Converter.processArchiveFileIntoTicks processed " + numTicks + " ticks into the tick table.  " + numOldIgnoredTicks + " ticks were ignored because data was already in the DB.  Data from " + filename);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			LogManager.getLogger("data").error("Converter.processArchiveFileIntoTicks failed processing ticks.  " + numTicks + " were imported before failure.  Data from " + filename);
+			LogManager.getLogger("data").error("Converter.processArchiveFileIntoTicks failed processing ticks.  " + numTicks + " were imported before failure.  " + numOldIgnoredTicks + " were ignored because data was already in the DB.  Data from " + filename);
 			LogManager.getLogger("data").error(e.getStackTrace().toString());
 		}
 	}

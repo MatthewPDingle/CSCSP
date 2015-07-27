@@ -1740,6 +1740,7 @@ public class QueryManager {
 	
 	public static Calendar getBitcoinTickLatestTick(String symbol) {
 		Calendar latestTick = Calendar.getInstance();
+		latestTick.set(2000, 0, 1); // Just make it old in case there isn't any tick data
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			String q = "SELECT timestamp FROM bitcointick WHERE symbol = ? ORDER BY \"timestamp\" DESC LIMIT 1";
@@ -1791,6 +1792,11 @@ public class QueryManager {
 		}
 	}
 	
+	/**
+	 * Inserts if the bar does not exist. Updates if it's marked as partial or if the numTrades column doesn't have data (i.e. the record didn't have tick data when it was made)
+	 * 
+	 * @param bar
+	 */
 	public static void insertOrUpdateIntoBar(Bar bar) {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
@@ -1956,9 +1962,10 @@ public class QueryManager {
 			
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			String q = "SELECT * FROM bitcointick " + 
-						"WHERE \"timestamp\" >= '" + CalendarUtils.getSqlDateTimeString(periodStart) + "' AND \"timestamp\" < '" + CalendarUtils.getSqlDateTimeString(periodEnd) + "' ORDER BY \"timestamp\" ";
+						"WHERE symbol = ? AND \"timestamp\" >= '" + CalendarUtils.getSqlDateTimeString(periodStart) + "' AND \"timestamp\" < '" + CalendarUtils.getSqlDateTimeString(periodEnd) + "' ORDER BY \"timestamp\" ";
 			PreparedStatement s = c.prepareStatement(q);
-					
+			s.setString(1, symbol);
+			
 			ResultSet rs = s.executeQuery();
 			while (rs.next()) {
 				HashMap<String, Object> record = new HashMap<String, Object>();
