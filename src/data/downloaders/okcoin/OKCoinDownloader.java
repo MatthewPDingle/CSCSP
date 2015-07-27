@@ -43,10 +43,24 @@ public class OKCoinDownloader {
 	 * @return
 	 */
 	
-	public static ArrayList<Bar> getMostRecentBarsFromTickHistory(String symbol, Constants.BAR_SIZE barSize) {
+	public static ArrayList<Bar> getMostRecentBarsFromTickHistory(String okCoinSymbol, Constants.BAR_SIZE barSize) {
 		ArrayList<Bar> bars = new ArrayList<Bar>();
 		try {
-			String json = getTickHistoryJSON(symbol, "6000");
+			String tickSymbol = "okcoin";
+			if (okCoinSymbol.equals(OKCoinConstants.SYMBOL_BTCUSD)) {
+				tickSymbol = "okcoinBTCUSD";
+			}
+			else if (okCoinSymbol.equals(OKCoinConstants.SYMBOL_BTCCNY)) {
+				tickSymbol = "okcoinBTCCNY";
+			}
+			else if (okCoinSymbol.equals(OKCoinConstants.SYMBOL_LTCUSD)) {
+				tickSymbol = "okcoinLTCUSD";
+			}
+			else if (okCoinSymbol.equals(OKCoinConstants.SYMBOL_LTCCNY)) {
+				tickSymbol = "okcoinLTCCNY";
+			}
+			
+			String json = getTickHistoryJSON(okCoinSymbol, "6000");
 			List<Map> list = new Gson().fromJson(json, List.class);
 			
 			// From oldest to newest
@@ -65,7 +79,7 @@ public class OKCoinDownloader {
 				Calendar timestamp = Calendar.getInstance();
 				timestamp.setTimeInMillis(ms);
 				float price = Float.parseFloat(map.get("price").toString());
-				Tick tick = new Tick("okcoinBTCUSD", price, volume, timestamp);
+				Tick tick = new Tick(tickSymbol, price, volume, timestamp);
 				ticks.add(tick);
 			}
 			
@@ -127,9 +141,23 @@ public class OKCoinDownloader {
 	 * @param barSize
 	 * @return
 	 */
-	public static ArrayList<Bar> getMostRecentBarsFromBarHistory(String symbol, Constants.BAR_SIZE barSize, int barCount) {
+	public static ArrayList<Bar> getMostRecentBarsFromBarHistory(String okCoinSymbol, Constants.BAR_SIZE barSize, int barCount) {
 		ArrayList<Bar> bars = new ArrayList<Bar>();
 		try {
+			String barSymbol = "okcoin";
+			if (okCoinSymbol.equals(OKCoinConstants.SYMBOL_BTCUSD)) {
+				barSymbol = "okcoinBTCUSD";
+			}
+			else if (okCoinSymbol.equals(OKCoinConstants.SYMBOL_BTCCNY)) {
+				barSymbol = "okcoinBTCCNY";
+			}
+			else if (okCoinSymbol.equals(OKCoinConstants.SYMBOL_LTCUSD)) {
+				barSymbol = "okcoinLTCUSD";
+			}
+			else if (okCoinSymbol.equals(OKCoinConstants.SYMBOL_LTCCNY)) {
+				barSymbol = "okcoinLTCCNY";
+			}
+			
 			String okBarDuration = OKCoinConstants.BAR_DURATION_15M; 
 			int barMinutes = 0;
 			switch (barSize) {
@@ -176,7 +204,7 @@ public class OKCoinDownloader {
 				default:
 					break;
 			}
-			String json = getBarHistoryJSON(symbol, okBarDuration, new Integer(barCount + 1).toString());
+			String json = getBarHistoryJSON(okCoinSymbol, okBarDuration, new Integer(barCount + 1).toString());
 			List<List> list = new Gson().fromJson(json, List.class);
 			
 			Float previousClose = null;
@@ -210,7 +238,7 @@ public class OKCoinDownloader {
 					gap = open - previousClose;
 				}
 			
-				Bar bar = new Bar("okcoinBTCUSD", open, close, high, low, vwapEstimate, volume, null, change, gap, periodStart, periodEnd, barSize, false);
+				Bar bar = new Bar(barSymbol, open, close, high, low, vwapEstimate, volume, null, change, gap, periodStart, periodEnd, barSize, false);
 				bars.add(bar);
 				
 				previousClose = close;
