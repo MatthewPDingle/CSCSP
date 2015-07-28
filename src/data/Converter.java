@@ -205,7 +205,7 @@ public class Converter {
 			
 			float previousclose = 0;
 			while (periodStart.getTimeInMillis() < latestTick.getTimeInMillis()) {
-				System.out.println("Processing bar between " + periodStart.getTime().toString() + " and " + periodEnd.getTime().toString());
+//				System.out.println("Processing bar between " + periodStart.getTime().toString() + " and " + periodEnd.getTime().toString());
 				
 				// Get the tick data from the database
 				ArrayList<HashMap<String, Object>> recordsInBar = QueryManager.getBitcoinTickData(bitcoinSymbol, periodStart, barSize);
@@ -262,7 +262,7 @@ public class Converter {
 					gap = 0;
 				}
 				
-				System.out.println("Inserting a bar with " + numTrades + " trades at a vwap of " + vwap);
+//				System.out.println("Inserting a bar with " + numTrades + " trades at a vwap of " + vwap);
 				
 				previousclose = close;
 				

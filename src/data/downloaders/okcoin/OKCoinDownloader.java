@@ -24,13 +24,16 @@ public class OKCoinDownloader {
 
 	public static void main(String[] args) {
 
-		ArrayList<Bar> bars = getMostRecentBarsFromBarHistory(OKCoinConstants.SYMBOL_BTCUSD, BAR_SIZE.BAR_15M, 48);
-		for (Bar bar : bars) {
-			QueryManager.insertOrUpdateIntoBar(bar);
-		}
+//		ArrayList<Bar> bars = getMostRecentBarsFromBarHistory(OKCoinConstants.SYMBOL_BTCCNY, BAR_SIZE.BAR_15M, 2000, null);
+//		for (Bar bar : bars) {
+////			System.out.println(bar);
+//			QueryManager.insertOrUpdateIntoBar(bar);
+//		}
 		
-		ArrayList<Bar> bars2 = getMostRecentBarsFromTickHistory(OKCoinConstants.SYMBOL_BTCUSD, Constants.BAR_SIZE.BAR_15M);
+		
+		ArrayList<Bar> bars2 = getMostRecentBarsFromTickHistory(OKCoinConstants.SYMBOL_BTCCNY, Constants.BAR_SIZE.BAR_15M, "5000");
 		for (Bar bar : bars2) {
+//			System.out.println(bar);
 			QueryManager.insertOrUpdateIntoBar(bar);
 		}
 	}
@@ -39,11 +42,13 @@ public class OKCoinDownloader {
 	 * Returns the most recent bars in order of oldest to newest
 	 * The newest bar may be "partial" if the full bar duration has not passed yet.
 	 * 
+	 * @param okCoinSymbol
 	 * @param barSize
+	 * @param sinceID
 	 * @return
 	 */
 	
-	public static ArrayList<Bar> getMostRecentBarsFromTickHistory(String okCoinSymbol, Constants.BAR_SIZE barSize) {
+	public static ArrayList<Bar> getMostRecentBarsFromTickHistory(String okCoinSymbol, Constants.BAR_SIZE barSize, String sinceID) {
 		ArrayList<Bar> bars = new ArrayList<Bar>();
 		try {
 			String tickSymbol = "okcoin";
@@ -60,7 +65,7 @@ public class OKCoinDownloader {
 				tickSymbol = "okcoinLTCCNY";
 			}
 			
-			String json = getTickHistoryJSON(okCoinSymbol, "6000");
+			String json = getTickHistoryJSON(okCoinSymbol, sinceID);
 			List<Map> list = new Gson().fromJson(json, List.class);
 			
 			// From oldest to newest
@@ -137,11 +142,12 @@ public class OKCoinDownloader {
 	
 	/**
 	 * Note: 2M, 10M, 8H bars are not supported on OKCoin's API
+	 * It appears that the max barCount = 1682
 	 * 
 	 * @param barSize
 	 * @return
 	 */
-	public static ArrayList<Bar> getMostRecentBarsFromBarHistory(String okCoinSymbol, Constants.BAR_SIZE barSize, int barCount) {
+	public static ArrayList<Bar> getMostRecentBarsFromBarHistory(String okCoinSymbol, Constants.BAR_SIZE barSize, int barCount, Calendar since) {
 		ArrayList<Bar> bars = new ArrayList<Bar>();
 		try {
 			String barSymbol = "okcoin";
@@ -204,7 +210,7 @@ public class OKCoinDownloader {
 				default:
 					break;
 			}
-			String json = getBarHistoryJSON(okCoinSymbol, okBarDuration, new Integer(barCount + 1).toString());
+			String json = getBarHistoryJSON(okCoinSymbol, okBarDuration, new Integer(barCount + 1).toString(), since);
 			List<List> list = new Gson().fromJson(json, List.class);
 			
 			Float previousClose = null;
@@ -260,6 +266,16 @@ public class OKCoinDownloader {
 		return bars;
 	}
 	
+	/**
+	 * Gets JSON for individual ticks.  Supposedly it returns the 600 most recent ticks
+	 * starting from the "since" parameter.  Since is an OKCoin transaction id (tid).
+	 * "Since" does not seem to work, but you have to supply a number like 5000 if you want to get 600 results.
+	 * If you don't provide a "Since" parameter, you get a lot fewer results.
+	 * 
+	 * @param symbol
+	 * @param since DOES NOT SEEM TO WORK
+	 * @return
+	 */
 	private static String getTickHistoryJSON(String symbol, String since) {
 		String result = "";
 		try {
@@ -289,7 +305,17 @@ public class OKCoinDownloader {
 		return result;
 	}
 	
-	private static String getBarHistoryJSON(String symbol, String type, String numBarsBack) {
+	/**
+	 * Gets JSON for numBars following the since Calendar
+	 * If no since is provided, it gets the most recent numBars
+	 * 
+	 * @param symbol
+	 * @param type
+	 * @param numBars
+	 * @param since DOES NOT SEEM TO WORK
+	 * @return
+	 */
+	private static String getBarHistoryJSON(String symbol, String type, String numBars, Calendar since) {
 		String result = "";
 		try {
 			OKCoinAPI okCoin = OKCoinAPI.getInstance();
@@ -306,11 +332,18 @@ public class OKCoinDownloader {
 				}
 				param += "type=" + type;
 			}
-			if (!StringUtils.isEmpty(numBarsBack)) {
+			if (!StringUtils.isEmpty(numBars)) {
 				if (!param.equals("")) {
 					param += "&";
 				}
-				param += "size=" + numBarsBack;
+				param += "size=" + numBars;
+			}
+			if (since != null) {
+				if (!param.equals("")) {
+					param += "&";
+				}
+				long sinceMS = since.getTimeInMillis();
+				param += "since=" + sinceMS;
 			}
 			String url = OKCoinConstants.URL_USA;
 			if (symbol != null && symbol.endsWith("cny")) {
