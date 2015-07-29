@@ -1,5 +1,6 @@
 package gui.singletons;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class ParameterSingleton {
@@ -35,6 +36,7 @@ public class ParameterSingleton {
 	private boolean sp500 = true;
 	private boolean etf = false;
 	private boolean bitcoin = false;
+	private ArrayList<String> symbols = new ArrayList<String>();
 	
 	private boolean runFinished = false;
 	
@@ -286,5 +288,13 @@ public class ParameterSingleton {
 
 	public void setFind(String find) {
 		this.find = find;
+	}
+
+	public ArrayList<String> getSymbols() {
+		return symbols;
+	}
+
+	public void setSymbols(ArrayList<String> symbols) {
+		this.symbols = symbols;
 	}
 }

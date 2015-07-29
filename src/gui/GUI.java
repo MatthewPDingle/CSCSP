@@ -34,9 +34,11 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
@@ -142,6 +144,7 @@ public class GUI {
 	private JCheckBox chkSP500 = null;
 	private JCheckBox chkETF = null;
 	private JCheckBox chkBitcoin = null;
+	private JList listSymbols = null;
 	
 	// Stop Loss Panel
 	private JPanel pnlStopLoss = null;
@@ -221,7 +224,7 @@ public class GUI {
 			gui.pnlMapCell.setWorldDimensions(new Dimension(Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT));
 			gui.pnlMapCell.setDefaultWorldView();
 			gui.pnlMapCell.setCurrentWorldView();
-			gui.pnlMapCell.zoom(-80.5);
+			gui.pnlMapCell.zoom(-83.5);
 			gui.pnlMapCell.panWorldViewToCellsLocation();
 			gui.pnlMapCell.updateUI();
 			gui.pnlMapCell.repaint();
@@ -656,7 +659,7 @@ public class GUI {
 		lblMinNumResults.setFont(new Font("Dialog", Font.BOLD, 12));
 		
 		lblFind = new JLabel();
-		lblFind.setBounds(new Rectangle(160, 83, 44, 22));
+		lblFind.setBounds(new Rectangle(130, 83, 44, 22));
 		lblFind.setText("Find");
 		lblFind.setForeground(colorGreen);
 		lblFind.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -676,7 +679,7 @@ public class GUI {
 		// Filters Panel
 		pnlFilters = new JPanel();
 		pnlFilters.setLayout(null);
-		pnlFilters.setBounds(new Rectangle(2, 405, 240, 157));
+		pnlFilters.setBounds(new Rectangle(2, 405, 240, 257));
 		pnlFilters.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		
 		lblFilters = new JLabel();
@@ -688,18 +691,18 @@ public class GUI {
 		lblFilters.setFont(new Font("Dialog", Font.BOLD, 12));
 		
 		lblMinLiquidity = new JLabel();
-		lblMinLiquidity.setBounds(new Rectangle(3, 22, 115, 22));
-		lblMinLiquidity.setText("Min Liquidity");
+		lblMinLiquidity.setBounds(new Rectangle(3, 22, 80, 22));
+		lblMinLiquidity.setText("Mn Liq");
 		lblMinLiquidity.setFont(new Font("Dialog", Font.BOLD, 12));
 		
 		lblMaxVolatility = new JLabel();
-		lblMaxVolatility.setBounds(new Rectangle(3, 46, 115, 22));
-		lblMaxVolatility.setText("Max Volatility");
+		lblMaxVolatility.setBounds(new Rectangle(98, 22, 80, 22));
+		lblMaxVolatility.setText("Mx Vol");
 		lblMaxVolatility.setFont(new Font("Dialog", Font.BOLD, 12));
 			
 		lblMinPrice = new JLabel();
-		lblMinPrice.setBounds(new Rectangle(148, 46, 60, 22));
-		lblMinPrice.setText("Min Price");
+		lblMinPrice.setBounds(new Rectangle(167, 22, 60, 22));
+		lblMinPrice.setText("Mn Prc");
 		lblMinPrice.setFont(new Font("Dialog", Font.BOLD, 12));
 			
 		lblSector = new JLabel();
@@ -729,11 +732,12 @@ public class GUI {
 		pnlFilters.add(getChkSP500());
 		pnlFilters.add(getChkETF());
 		pnlFilters.add(getChkBitcoin());
+		pnlFilters.add(getListSymbols());
 		
 		// Legend Panel
 		pnlLegend = new JPanel();
 		pnlLegend.setLayout(null);
-		pnlLegend.setBounds(new Rectangle(244, 564, 230, 34));
+		pnlLegend.setBounds(new Rectangle(244, 664, 230, 34));
 		pnlLegend.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		
 		lblBlue = new JLabel();
@@ -857,7 +861,7 @@ public class GUI {
 		// Eval panel
 		pnlEval = new JPanel();
 		pnlEval.setLayout(null);
-		pnlEval.setBounds(new Rectangle(476, 564, 328, 34));
+		pnlEval.setBounds(new Rectangle(576, 664, 328, 34));
 		pnlEval.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		
 		lblMapBullishScore = new JLabel();
@@ -894,7 +898,7 @@ public class GUI {
 	public JFrame getJFrame() {
 		if (frame == null) {
 			frame = new JFrame();
-			frame.setSize(new Dimension(822, 638));
+			frame.setSize(new Dimension(922, 738));
 			frame.setTitle("Chip Swinger Championship Stock Picker .39");
 			frame.setContentPane(panel);
 			frame.setVisible(true);
@@ -1168,7 +1172,7 @@ public class GUI {
 	private JButton getBtnBuildMap() {
 		if (btnBuildMap == null) {
 			btnBuildMap = new JButton();
-			btnBuildMap.setBounds(new Rectangle(2, 564, 240, 34));
+			btnBuildMap.setBounds(new Rectangle(2, 664, 240, 34));
 			btnBuildMap.setText("Run Simulation / Build Map");
 			btnBuildMap.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent actionEvent) {
@@ -1199,7 +1203,7 @@ public class GUI {
 						
 						pnlMapCell.setDefaultWorldView();
 						pnlMapCell.setCurrentWorldView();
-						pnlMapCell.zoom(-80.5);
+						pnlMapCell.zoom(-83.5);
 						pnlMapCell.panWorldViewToCellsLocation();
 						
 						mapWorker = new MapWorker();
@@ -1318,7 +1322,7 @@ public class GUI {
 	
 	private JTextField getTxtFind() {
 		txtFind = new JTextField("");
-		txtFind.setBounds(new Rectangle(186, 83, 52, 23));
+		txtFind.setBounds(new Rectangle(156, 83, 82, 23));
 		txtFind.setAlignmentY(.5f);
 		txtFind.setFont(new Font("Dialog", Font.BOLD, 12));
 		ps.setFind(txtFind.getText());
@@ -1353,7 +1357,7 @@ public class GUI {
 	
 	private JTextField getTxtMinLiquidity() {
 		txtMinLiquidity = new JTextField("0"); // 2000000 Stocks
-		txtMinLiquidity.setBounds(new Rectangle(82, 22, 64, 23));
+		txtMinLiquidity.setBounds(new Rectangle(42, 22, 54, 23));
 		txtMinLiquidity.setAlignmentY(.5f);
 		txtMinLiquidity.setFont(new Font("Dialog", Font.BOLD, 12));
 		ps.setMinLiquidity(new Integer(txtMinLiquidity.getText()));
@@ -1378,7 +1382,7 @@ public class GUI {
 	
 	private JTextField getTxtMaxVolatility() {
 		txtMaxVolatility = new JTextField("100"); // 1.0 Stocks
-		txtMaxVolatility.setBounds(new Rectangle(82, 46, 40, 23));
+		txtMaxVolatility.setBounds(new Rectangle(138, 22, 26, 23));
 		txtMaxVolatility.setAlignmentY(.5f);
 		txtMaxVolatility.setFont(new Font("Dialog", Font.BOLD, 12));
 		ps.setMaxVolatility(new Float(txtMaxVolatility.getText()));
@@ -1403,7 +1407,7 @@ public class GUI {
 	
 	private JTextField getTxtMinPrice() {
 		txtMinPrice = new JTextField("3.00");
-		txtMinPrice.setBounds(new Rectangle(206, 46, 32, 23));
+		txtMinPrice.setBounds(new Rectangle(208, 22, 30, 23));
 		txtMinPrice.setAlignmentY(.5f);
 		txtMinPrice.setFont(new Font("Dialog", Font.BOLD, 12));
 		ps.setMinPrice(new Float(txtMinPrice.getText()));
@@ -1556,6 +1560,18 @@ public class GUI {
 		return txtYRes;
 	}
 	
+	private JList getListSymbols() {
+		listSymbols = new JList();
+		listSymbols.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		listSymbols.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+		listSymbols.setBounds(new Rectangle(3, 154, 200, 96));
+		ArrayList<String> symbols = QueryManager.getBitcoinIndexList();
+		listSymbols.setListData(symbols.toArray());
+//		ps.setSymbols((ArrayList<String>)listSymbols.getSelectedValuesList());
+
+		return listSymbols;
+	}
+	
 	private MapCellPanel getMapCellPanel() {
 		MapCellPanel mcp = new MapCellPanel(Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT, this);
 		mcp.setBounds(new Rectangle(244, 2, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT));
@@ -1567,7 +1583,7 @@ public class GUI {
 		mcp.setVisible(true);
 		mcp.setDefaultWorldView();
 		mcp.setCurrentWorldView();
-		mcp.zoom(-80.5);
+		mcp.zoom(-83.5);
 		mcp.resetBuffer();
 		mcp.repaint();
 		return mcp;

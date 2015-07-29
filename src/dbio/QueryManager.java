@@ -1206,6 +1206,27 @@ public class QueryManager {
 		Collections.sort(list);
 		return list;
 	}
+	
+	public static ArrayList<String> getBitcoinIndexList() {
+		ArrayList<String> list = new ArrayList<String>();
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "SELECT symbol FROM indexlist WHERE index = 'Bitcoin'";
+			Statement s = c.createStatement();
+			ResultSet rs = s.executeQuery(q);
+			while (rs.next()) {
+				list.add(rs.getString("symbol"));
+			}
+			rs.close();
+			s.close();
+			c.close();
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		Collections.sort(list);
+		return list;
+	}
 
 	public static void saveSearchResults(float bullScore, float bearScore) {
 		try {
