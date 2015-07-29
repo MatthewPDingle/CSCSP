@@ -1696,20 +1696,22 @@ public class QueryManager {
 	
 	public static void insertIntoBitcoinTick(ArrayList<String> records) {
 		try {
-			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "INSERT INTO bitcointick(symbol, price, volume, \"timestamp\") VALUES ";
-			StringBuilder sb = new StringBuilder();
-			for (String record : records) {
-				sb.append("(" + record + "), ");
+			if (records != null && records.size() > 0) {
+				Connection c = ConnectionSingleton.getInstance().getConnection();
+				String q = "INSERT INTO bitcointick(symbol, price, volume, \"timestamp\") VALUES ";
+				StringBuilder sb = new StringBuilder();
+				for (String record : records) {
+					sb.append("(" + record + "), ");
+				}
+				String valuesPart = sb.toString();
+				valuesPart = valuesPart.substring(0, valuesPart.length() - 2);
+				q = q + valuesPart;
+	
+				Statement s = c.createStatement();
+				s.executeUpdate(q);
+				s.close();
+				c.close();
 			}
-			String valuesPart = sb.toString();
-			valuesPart = valuesPart.substring(0, valuesPart.length() - 2);
-			q = q + valuesPart;
-
-			Statement s = c.createStatement();
-			s.executeUpdate(q);
-			s.close();
-			c.close();
 		}
 		catch (Exception e) {
 			e.printStackTrace();

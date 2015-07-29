@@ -392,8 +392,10 @@ public class Converter {
 			}
 			
 			// Insert remaining buffered ticks
-			QueryManager.insertIntoBitcoinTick(recordBuffer);
-			recordBuffer.clear();
+			if (recordBuffer.size() > 0) {
+				QueryManager.insertIntoBitcoinTick(recordBuffer);
+				recordBuffer.clear();
+			}
 			
 			LogManager.getLogger("data").info("Converter.processArchiveFileIntoTicks processed " + numTicks + " ticks into the tick table.  " + numOldIgnoredTicks + " ticks were ignored because data was already in the DB.  Data from " + filename);
 		}
