@@ -419,7 +419,20 @@ public class QueryManager {
 					i = "index = 'Bitcoin' ";
 				}
 			}
-			q += i + ") AND m1.name = '" + ps.getxAxisMetric() + "' " +
+			q += i + ") ";
+			
+			ArrayList<String> symbols = ps.getSymbols();
+			String symbolsClause = "";
+			if (symbols != null) {
+				symbolsClause = "AND b.symbol IN (";
+				for (String symbol : symbols) {
+					symbolsClause += "'" + symbol + "',";
+				}
+				symbolsClause = symbolsClause.substring(0, symbolsClause.length() - 1) + ") ";
+			}
+			
+						q += symbolsClause +
+						"AND m1.name = '" + ps.getxAxisMetric() + "' " +
 						"AND m2.name = '" + ps.getyAxisMetric() + "' " +
 						"AND m3.name = 'priceboll20' " +
 						"AND m4.name = '" + ps.getSellMetric() + "' " +
@@ -430,7 +443,7 @@ public class QueryManager {
 						"AND b.start < '" + CalendarUtils.getSqlDateString(latestDateInBar) + "' " +
 						"ORDER BY b.start";
 			
-//			System.out.println(q);
+			System.out.println(q);
 			
 			// Run Query
 			Connection c = ConnectionSingleton.getInstance().getConnection();
@@ -1207,15 +1220,30 @@ public class QueryManager {
 		return list;
 	}
 	
-	public static ArrayList<String> getBitcoinIndexList() {
+	public static ArrayList<String> getDistinctSymbolDurations(ArrayList<String> indexes) {
 		ArrayList<String> list = new ArrayList<String>();
 		try {
+			if (indexes == null || indexes.size() == 0) {
+				return list;
+			}
+			
+			String indexClause = "WHERE i.index IN (";
+			for (String index : indexes) {
+				indexClause += "'" + index + "',";
+			}
+			indexClause = indexClause.substring(0, indexClause.length() - 1) + ")";
+		
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "SELECT symbol FROM indexlist WHERE index = 'Bitcoin'";
+			String q = "SELECT b.symbol, b.duration, COUNT(b.*) AS barcount " +
+						"FROM bar b " +
+						"INNER JOIN indexlist i ON b.symbol = i.symbol " +
+						indexClause +
+						"GROUP BY b.symbol, b.duration " + 
+						"ORDER BY b.symbol, b.duration";
 			Statement s = c.createStatement();
 			ResultSet rs = s.executeQuery(q);
 			while (rs.next()) {
-				list.add(rs.getString("symbol"));
+				list.add(rs.getString("duration") + " - " + rs.getString("symbol") + " (" + rs.getInt("barcount") + ")");
 			}
 			rs.close();
 			s.close();

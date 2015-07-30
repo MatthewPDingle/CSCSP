@@ -15,7 +15,7 @@ public class Metric {
 	private Float value;
 	
 	// Auxiliary
-	private long volume = 0;
+	private double volume = 0;
 	private float adjOpen = 0f;
 	private float adjClose = 0f;
 	private float adjHigh = 0f;
@@ -25,7 +25,7 @@ public class Metric {
 	private float spyAdjClose = 0f;
 	private float spyChange = 0f;
 
-	public Metric(String symbol, Calendar start, Calendar end, String duration, long volume, float adjOpen, float adjClose,
+	public Metric(String symbol, Calendar start, Calendar end, String duration, double volume, float adjOpen, float adjClose,
 			float adjHigh, float adjLow, float gap, float change, float spyAdjClose, float spyChange) {
 		super();
 		this.symbol = symbol;
@@ -91,11 +91,11 @@ public class Metric {
 		this.value = value;
 	}
 
-	public long getVolume() {
+	public double getVolume() {
 		return volume;
 	}
 
-	public void setVolume(long volume) {
+	public void setVolume(double volume) {
 		this.volume = volume;
 	}
 

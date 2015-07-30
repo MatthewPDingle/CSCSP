@@ -59,7 +59,7 @@ public class MetricsCalculator {
 	
 	public void loadMetricSequenceData() {
 		try {
-			String q1 = "SELECT symbol, to_char(MAX(start::date) + INTEGER '-" + metricSpanInDays + "', 'YYYY-MM-DD') AS baseDate FROM " + Constants.BAR_TABLE + " WHERE symbol = 'bitfinexUSD' GROUP BY symbol";
+			String q1 = "SELECT symbol, to_char(MAX(start::date) + INTEGER '-" + metricSpanInDays + "', 'YYYY-MM-DD') AS baseDate FROM " + Constants.BAR_TABLE + " GROUP BY symbol";
 			Connection c1 = ConnectionSingleton.getInstance().getConnection();
 			Statement s1 = c1.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			ResultSet rs1 = s1.executeQuery(q1);
@@ -70,30 +70,15 @@ public class MetricsCalculator {
 				String baseDate = rs1.getString("baseDate"); // X days before latest date
 
 				String alphaComparison = "SPY";
-				if (symbol.equals("bitfinexUSD")) {
-					alphaComparison = "bitfinexUSD";
-				}
-				if (symbol.equals("bitstampUSD")) {
-					alphaComparison = "bitstampUSD";
-				}
-				if (symbol.equals("btceUSD")) {
-					alphaComparison = "btceUSD";
-				}
-				if (symbol.equals("btcnCNY")) {
-					alphaComparison = "btcnCNY";
-				}
-				if (symbol.equals("krakenEUR")) {
-					alphaComparison = "krakenEUR";
-				}
-				if (symbol.equals("okcoinCNY")) {
-					alphaComparison = "okcoinCNY";
-				}
+//				if (TickConstants.BITCOIN_TICK_NAMES.contains(symbol)) {
+//					alphaComparison = symbol;
+//				}
 				
-				// Fill a "metricSequence" with the price data for the last X days + however many days I need stats for
-				String q2 = "SELECT r.*, r2.close AS spyadjclose, r2.change AS spychange " +
+				// Fill a "metricSequence" with the price data for the last X days + however many days I need stats for				
+				String q2 = "SELECT r.*, " +
+							"(SELECT close FROM bar WHERE symbol = '" + alphaComparison + "' AND start <= r.start ORDER BY start DESC LIMIT 1) AS alphaclose, " +
+							"(SELECT change FROM bar WHERE symbol = '" + alphaComparison + "' AND start <= r.start ORDER BY start DESC LIMIT 1) AS alphachange " +
 							"FROM bar r " +
-							"INNER JOIN bar r2 " +
-							"ON r.start = r2.start AND r2.symbol = '" + alphaComparison + "' " +
 							"WHERE r.symbol = '" + symbol + "' " +
 							"AND r.start >= '" + baseDate + "' " +
 							"ORDER BY start ASC";
@@ -110,17 +95,16 @@ public class MetricsCalculator {
 					end.setTime(dEnd);
 					end.set(Calendar.SECOND, 0);
 					String duration = rs2.getString("duration");
-					long volume = rs2.getLong("volume");
+					double volume = rs2.getDouble("volume");
 					float adjOpen = rs2.getFloat("open");
 					float adjClose = rs2.getFloat("close");
 					float adjHigh = rs2.getFloat("high");
 					float adjLow = rs2.getFloat("low");	
-					float spyAdjClose = rs2.getFloat("spyadjclose");
-					float spyChange = rs2.getFloat("spychange");
+					float alphaClose = rs2.getFloat("alphaclose");
+					float alphaChange = rs2.getFloat("alphachange");
 					float gap = rs2.getFloat("gap");
 					float change = rs2.getFloat("change");
-					
-					metricSequence.add(new Metric(symbol, start, end, duration, volume, adjOpen, adjClose, adjHigh, adjLow, gap, change, spyAdjClose, spyChange));
+					metricSequence.add(new Metric(symbol, start, end, duration, volume, adjOpen, adjClose, adjHigh, adjLow, gap, change, alphaClose, alphaChange));
 				}
 				rs2.close();
 				msds.addMetricSequence(metricSequence);
@@ -169,7 +153,11 @@ public class MetricsCalculator {
 		
 		// Normalize based on the range
 		float denormalizedRange = maxValue - minValue;
-		float scaleFactor = 100f / denormalizedRange;
+		float scaleFactor = 1f;
+		if (denormalizedRange != 0) {
+			scaleFactor = 100f / denormalizedRange;
+		}
+		
 		for (Metric metric:metricSequence) {
 			// Shift unscaled values so the min becomes zero, then apply scale
 			Float value = metric.getValue();
@@ -742,6 +730,7 @@ public class MetricsCalculator {
 		// Initialize Variables
 		LinkedList<Float> periodsAdjCloses = new LinkedList<Float>();
 		
+		float lastWilliam = 50f;
 		for (Metric metric:metricSequence) {
 			float adjClose = metric.getAdjClose();
 
@@ -765,8 +754,15 @@ public class MetricsCalculator {
 				
 				float odin = periodsHigh - adjClose;
 				float shiva = periodsLow - periodsHigh;
-				float william = (odin / shiva * 100f) + 100f;
-
+				float william = 50f;
+				if (shiva != 0) {
+					william = (odin / shiva * 100f) + 100f;
+				}
+				else {
+					william = lastWilliam;
+				}
+				lastWilliam = william;
+				
 				// Set the WilliamsR value and add the day to the new day sequence
 				metric.setValue(william);
 				metric.setName("williamsr" + period);
@@ -790,6 +786,8 @@ public class MetricsCalculator {
 		LinkedList<Float> periodsAdjCloses = new LinkedList<Float>();
 		LinkedList<Float> periodsSPYAdjCloses = new LinkedList<Float>();
 		
+		float lastWilliam1 = 50f;
+		float lastWilliam2 = 50f;
 		for (Metric metric:metricSequence) {
 			float adjClose = metric.getAdjClose();
 			float spyAdjClose = metric.getAdjClose();
@@ -829,13 +827,27 @@ public class MetricsCalculator {
 				// WilliamsR for the stock
 				float a1 = periodsHigh - adjClose;
 				float b1 = periodsLow - periodsHigh;
-				float william1 = (a1 / b1 * 100f) + 100f;
+				float william1 = 50f;
+				if (b1 != 0) {
+					william1 = (a1 / b1 * 100f) + 100f;
+				}
+				else {
+					william1 = lastWilliam1;
+				}
+				lastWilliam1 = william1;
 				
 				// WilliamsR for the SPY
 				float a2 = spyPeriodsHigh - spyAdjClose;
 				float b2 = spyPeriodsLow - spyPeriodsHigh;
-				float william2 = (a2 / b2 * 100f) + 100f;
-
+				float william2 = 50f;
+				if (b2 != 0) {
+					william2 = (a2 / b2 * 100f) + 100f;
+				}
+				else {
+					william2 = lastWilliam2;
+				}
+				lastWilliam2 = william2;
+				
 				// Williams adjusted for Alpha (SPY)
 				float a3 = 50 - Math.abs(50 - william1);
 				float d3 = (william1 - william2) / 100f;
@@ -943,7 +955,7 @@ public class MetricsCalculator {
 	  		float sign = 1;
 	  		if (change < 0) sign = -1;
 	  		float typicalPrice = (adjClose + adjHigh + adjLow) / 3f;
-	  		float volume = metric.getVolume();
+	  		double volume = metric.getVolume();
 	  		
 	  		double moneyflow = typicalPrice * volume * sign;
 	  		moneyFlows.add(moneyflow);
@@ -1185,7 +1197,6 @@ public class MetricsCalculator {
 			  	}
 			  	
 			  	metric.setValue(rsi);
-	  			
 	  			changes.remove();
 	  		}
 	  		else {
@@ -1315,8 +1326,10 @@ public class MetricsCalculator {
 		  		}
 		  		float sd = (float)Math.sqrt(sumOfDifferenceFromAverageSquares / (float)period);
 		  		
-		  		// 
-		  		float boll = (adjClose - dma) / sd;
+		  		float boll = 0;
+		  		if (sd != 0) {
+		  			boll = (adjClose - dma) / sd;
+		  		}
 		  		
 		  		// Set this day's DMA value and add it to the new sequence
 		  		metric.setValue(boll);
@@ -1364,7 +1377,10 @@ public class MetricsCalculator {
 		  		}
 		  		float sd = (float)Math.sqrt(sumOfDifferenceFromAverageSquares / (float)period);
 		  		
-		  		float boll = (gpc - dma) / sd;
+		  		float boll = 0;
+		  		if (sd != 0) {
+		  			boll = (gpc - dma) / sd;
+		  		}
 		  		
 		  		// Set this day's DMA value and add it to the new sequence
 		  		metric.setValue(boll);
@@ -1414,7 +1430,10 @@ public class MetricsCalculator {
 		  		float sd = (float)Math.sqrt(sumOfDifferenceFromAverageSquares / (float)period);
 		  		
 		  		// 
-		  		float boll = (idpc - dma) / sd;
+		  		float boll = 0f;
+		  		if (sd != 0) {
+		  			boll = (idpc - dma) / sd;
+		  		}
 		  		
 		  		// Set this day's DMA value and add it to the new sequence
 		  		metric.setValue(boll);
@@ -1429,10 +1448,10 @@ public class MetricsCalculator {
 	
 	public static LinkedList<Metric> fillInVolumeBoll(LinkedList<Metric> metricSequence, int period) {
 		// Initialize Variables
-		LinkedList<Long> periodsVolumes = new LinkedList<Long>();
+		LinkedList<Double> periodsVolumes = new LinkedList<Double>();
 		
 		for (Metric metric:metricSequence) {
-			long volume = metric.getVolume();
+			double volume = metric.getVolume();
 
 			if (periodsVolumes.size() < (period - 1)) {
 		  		periodsVolumes.add(volume);
@@ -1442,26 +1461,29 @@ public class MetricsCalculator {
 		  	else {
 		  		// DMA
 		  		periodsVolumes.add(volume);
-		  		long volumeSum = 0;
-		  		for (Long price:periodsVolumes) {
-		  			volumeSum += price;
+		  		double volumeSum = 0;
+		  		for (Double pv : periodsVolumes) {
+		  			volumeSum += pv;
 		  		}
-		  		long dma = volumeSum / period;
+		  		double dma = volumeSum / period;
 		  		
 		  		// SD
-		  		long periodsVolumesSum = 0;
-		  		for (Long v:periodsVolumes) {
+		  		double periodsVolumesSum = 0;
+		  		for (Double v : periodsVolumes) {
 		  			periodsVolumesSum += v;
 		  		}
-		  		long averageVolume = periodsVolumesSum / period;
-		  		long sumOfDifferenceFromAverageSquares = 0;
-		  		for (Long v:periodsVolumes) {
+		  		double averageVolume = periodsVolumesSum / period;
+		  		double sumOfDifferenceFromAverageSquares = 0;
+		  		for (Double v : periodsVolumes) {
 		  			sumOfDifferenceFromAverageSquares += ((v - averageVolume) * (v - averageVolume));
 		  		}
 		  		float sd = (float)Math.sqrt(sumOfDifferenceFromAverageSquares / (float)period);
 		  		
 		  		// 
-		  		float boll = (volume - dma) / sd;
+		  		float boll = 0f;
+		  		if (sd != 0) {
+		  			boll = (float)((volume - dma) / sd);
+		  		}
 		  		
 		  		// Set this day's DMA value and add it to the new sequence
 		  		metric.setValue(boll);
@@ -1476,10 +1498,10 @@ public class MetricsCalculator {
 	
 	public static LinkedList<Metric> fillInVolumeDMAs(LinkedList<Metric> metricSequence, int period) {
 		// Initialize Variables
-		LinkedList<Long> periodsVolumes = new LinkedList<Long>();
+		LinkedList<Double> periodsVolumes = new LinkedList<Double>();
 		
 		for (Metric metric:metricSequence) {
-			long volume = metric.getVolume();
+			double volume = metric.getVolume();
 
 			if (periodsVolumes.size() < (period - 1)) {
 		  		periodsVolumes.add(volume);
@@ -1488,11 +1510,11 @@ public class MetricsCalculator {
 		  	}
 		  	else {
 		  		periodsVolumes.add(volume);
-		  		long volumeSum = 0;
-		  		for (Long price:periodsVolumes) {
-		  			volumeSum += price;
+		  		double volumeSum = 0;
+		  		for (Double pv : periodsVolumes) {
+		  			volumeSum += pv;
 		  		}
-		  		long dma = volumeSum / period;
+		  		double dma = volumeSum / period;
 		  		
 		  		// Set this day's DMA value and add it to the new sequence
 		  		metric.setValue((float)dma);
@@ -1586,10 +1608,10 @@ public class MetricsCalculator {
 	
 	public static LinkedList<Metric> fillInVolumeSDs(LinkedList<Metric> metricSequence, int period) {
 		// Initialize Variables
-		LinkedList<Long> periodsVolumes = new LinkedList<Long>();
+		LinkedList<Double> periodsVolumes = new LinkedList<Double>();
 		
 		for (Metric metric:metricSequence) {
-			long volume = metric.getVolume();
+			double volume = metric.getVolume();
 			
 			if (periodsVolumes.size() < (period - 1)) {
 		  		periodsVolumes.add(volume);
@@ -1598,13 +1620,13 @@ public class MetricsCalculator {
 		  	}
 		  	else {
 		  		periodsVolumes.add(volume);
-		  		long periodsVolumesSum = 0;
-		  		for (Long v:periodsVolumes) {
+		  		double periodsVolumesSum = 0;
+		  		for (Double v : periodsVolumes) {
 		  			periodsVolumesSum += v;
 		  		}
-		  		long averageVolume = periodsVolumesSum / period;
-		  		long sumOfDifferenceFromAverageSquares = 0;
-		  		for (Long v:periodsVolumes) {
+		  		double averageVolume = periodsVolumesSum / period;
+		  		double sumOfDifferenceFromAverageSquares = 0;
+		  		for (Double v : periodsVolumes) {
 		  			sumOfDifferenceFromAverageSquares += ((v - averageVolume) * (v - averageVolume));
 		  		}
 		  		float sd = (float)Math.sqrt(sumOfDifferenceFromAverageSquares / (float)period);

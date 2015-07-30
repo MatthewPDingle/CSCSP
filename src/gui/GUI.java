@@ -36,6 +36,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
@@ -43,6 +44,8 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import org.apache.commons.math3.util.Precision;
 
@@ -145,6 +148,7 @@ public class GUI {
 	private JCheckBox chkETF = null;
 	private JCheckBox chkBitcoin = null;
 	private JList listSymbols = null;
+	private JScrollPane listScroller = null;
 	
 	// Stop Loss Panel
 	private JPanel pnlStopLoss = null;
@@ -190,6 +194,8 @@ public class GUI {
 
 	private boolean runViaParams = false;
 
+	private ArrayList<String> indexFilterList = new ArrayList<String>();
+	
 	private static MapWorker mapWorker = null;
 	private static RealtimeTrackerWorker rttWorker = null;
 	private static int NUM_MAP_THREADS = 3;
@@ -706,12 +712,12 @@ public class GUI {
 		lblMinPrice.setFont(new Font("Dialog", Font.BOLD, 12));
 			
 		lblSector = new JLabel();
-		lblSector.setBounds(new Rectangle(3, 70, 80, 22));
+		lblSector.setBounds(new Rectangle(3, 56, 80, 22));
 		lblSector.setText("Sector");
 		lblSector.setFont(new Font("Dialog", Font.BOLD, 12));
 
 		lblIndustry = new JLabel();
-		lblIndustry.setBounds(new Rectangle(3, 94, 80, 22));
+		lblIndustry.setBounds(new Rectangle(3, 70, 80, 22));
 		lblIndustry.setText("Industry");
 		lblIndustry.setFont(new Font("Dialog", Font.BOLD, 12));
 
@@ -732,7 +738,7 @@ public class GUI {
 		pnlFilters.add(getChkSP500());
 		pnlFilters.add(getChkETF());
 		pnlFilters.add(getChkBitcoin());
-		pnlFilters.add(getListSymbols());
+		pnlFilters.add(getListScroller());
 		
 		// Legend Panel
 		pnlLegend = new JPanel();
@@ -899,7 +905,7 @@ public class GUI {
 		if (frame == null) {
 			frame = new JFrame();
 			frame.setSize(new Dimension(922, 738));
-			frame.setTitle("Chip Swinger Championship Stock Picker .39");
+			frame.setTitle("Chip Swinger Championship Stock Picker .40");
 			frame.setContentPane(panel);
 			frame.setVisible(true);
 			frame.addWindowListener(new java.awt.event.WindowAdapter() {
@@ -1103,7 +1109,7 @@ public class GUI {
 	private JComboBox getCbSector() {
 		cbSector = new JComboBox(QueryManager.getSectorList().toArray());
 		cbSector.setSelectedItem("All");
-		cbSector.setBounds(new Rectangle(58, 70, 179, 22));
+		cbSector.setBounds(new Rectangle(58, 46, 179, 22));
 		cbSector.setFont(new Font("Dialog", Font.BOLD, 12));
 		ps.setSector(cbSector.getSelectedItem().toString());
 		
@@ -1119,7 +1125,7 @@ public class GUI {
 	private JComboBox getCbIndustry() {
 		cbIndustry = new JComboBox(QueryManager.getIndustryList().toArray());
 		cbIndustry.setSelectedItem("All");
-		cbIndustry.setBounds(new Rectangle(58, 94, 179, 22));
+		cbIndustry.setBounds(new Rectangle(58, 70, 179, 22));
 		cbIndustry.setFont(new Font("Dialog", Font.BOLD, 12));
 		ps.setIndustry(cbIndustry.getSelectedItem().toString());
 		
@@ -1406,7 +1412,7 @@ public class GUI {
 	}
 	
 	private JTextField getTxtMinPrice() {
-		txtMinPrice = new JTextField("3.00");
+		txtMinPrice = new JTextField("0.00");
 		txtMinPrice.setBounds(new Rectangle(208, 22, 30, 23));
 		txtMinPrice.setAlignmentY(.5f);
 		txtMinPrice.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -1560,15 +1566,61 @@ public class GUI {
 		return txtYRes;
 	}
 	
+	private JScrollPane getListScroller() {
+		listScroller = new JScrollPane(getListSymbols());
+		listScroller.setBounds(new Rectangle(3, 132, 235, 123));
+		
+		return listScroller;
+	}
+	
 	private JList getListSymbols() {
 		listSymbols = new JList();
 		listSymbols.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		listSymbols.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-		listSymbols.setBounds(new Rectangle(3, 154, 200, 96));
-		ArrayList<String> symbols = QueryManager.getBitcoinIndexList();
+		listSymbols.setVisibleRowCount(-1);
+		
+		indexFilterList.clear();
+		if (chkNYSE.isSelected()) {
+			indexFilterList.add("NYSE");
+		}
+		if (chkNasdaq.isSelected()) {
+			indexFilterList.add("Nasdaq");
+		}
+		if (chkDJIA.isSelected()) {
+			indexFilterList.add("DJIA");
+		}
+		if (chkSP500.isSelected()) {
+			indexFilterList.add("SP500");
+		}
+		if (chkETF.isSelected()) {
+			indexFilterList.add("ETF");
+		}
+		if (chkBitcoin.isSelected()) {
+			indexFilterList.add("Bitcoin");
+		}
+		
+		ArrayList<String> symbols = QueryManager.getDistinctSymbolDurations(indexFilterList);
 		listSymbols.setListData(symbols.toArray());
-//		ps.setSymbols((ArrayList<String>)listSymbols.getSelectedValuesList());
-
+	    ps.setSymbols(new ArrayList<String>());
+		
+		listSymbols.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent e) {
+			    ArrayList<String> selectedTextList = (ArrayList<String>)listSymbols.getSelectedValuesList();
+			    ArrayList<String> selectedSymbols = new ArrayList<String>();
+			    
+			    if (selectedTextList != null) {
+			    	for (String selectedText : selectedTextList) {
+			    		String[] pieces1 = selectedText.split(" - ");
+			    		String duration = pieces1[0];
+			    		String[] pieces2 = pieces1[1].split(" \\(");
+			    		String symbol = pieces2[0];
+			    		selectedSymbols.add(symbol);
+			    	}
+			    }
+			    ps.setSymbols(selectedSymbols);
+			}
+		});
+		
 		return listSymbols;
 	}
 	
@@ -1643,7 +1695,7 @@ public class GUI {
 
 	public JCheckBox getChkNYSE() {
 		chkNYSE = new JCheckBox("NYSE");
-		chkNYSE.setBounds(new Rectangle(1, 118, 55, 20));
+		chkNYSE.setBounds(new Rectangle(1, 94, 55, 20));
 		chkNYSE.setFont(new Font("Dialog", Font.BOLD, 12));
 		chkNYSE.setSelected(false);
 		ps.setNyse(chkNYSE.isSelected());
@@ -1651,6 +1703,14 @@ public class GUI {
 		chkNYSE.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				ps.setNyse(chkNYSE.isSelected());
+				if (chkNYSE.isSelected()) {
+					indexFilterList.add("NYSE");
+				}
+				else {
+					indexFilterList.remove("NYSE");
+				}
+				ArrayList<String> symbols = QueryManager.getDistinctSymbolDurations(indexFilterList);
+				listSymbols.setListData(symbols.toArray());
 			}
 		});
 		
@@ -1659,7 +1719,7 @@ public class GUI {
 
 	public JCheckBox getChkNasdaq() {
 		chkNasdaq = new JCheckBox("Nasdaq");
-		chkNasdaq.setBounds(new Rectangle(80, 118, 68, 20));
+		chkNasdaq.setBounds(new Rectangle(80, 94, 68, 20));
 		chkNasdaq.setFont(new Font("Dialog", Font.BOLD, 12));
 		chkNasdaq.setSelected(false);
 		ps.setNasdaq(chkNasdaq.isSelected());
@@ -1667,6 +1727,14 @@ public class GUI {
 		chkNasdaq.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				ps.setNasdaq(chkNasdaq.isSelected());
+				if (chkNasdaq.isSelected()) {
+					indexFilterList.add("Nasdaq");
+				}
+				else {
+					indexFilterList.remove("Nasdaq");
+				}
+				ArrayList<String> symbols = QueryManager.getDistinctSymbolDurations(indexFilterList);
+				listSymbols.setListData(symbols.toArray());
 			}
 		});
 		
@@ -1675,7 +1743,7 @@ public class GUI {
 
 	public JCheckBox getChkDJIA() {
 		chkDJIA = new JCheckBox("DJIA");
-		chkDJIA.setBounds(new Rectangle(160, 118, 51, 20));
+		chkDJIA.setBounds(new Rectangle(160, 94, 51, 20));
 		chkDJIA.setFont(new Font("Dialog", Font.BOLD, 12));
 		chkDJIA.setSelected(false);
 		ps.setDjia(chkDJIA.isSelected());
@@ -1683,6 +1751,14 @@ public class GUI {
 		chkDJIA.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				ps.setDjia(chkDJIA.isSelected());
+				if (chkDJIA.isSelected()) {
+					indexFilterList.add("DJIA");
+				}
+				else {
+					indexFilterList.remove("DJIA");
+				}
+				ArrayList<String> symbols = QueryManager.getDistinctSymbolDurations(indexFilterList);
+				listSymbols.setListData(symbols.toArray());
 			}
 		});
 		
@@ -1691,7 +1767,7 @@ public class GUI {
 
 	public JCheckBox getChkSP500() {
 		chkSP500 = new JCheckBox("SP500");
-		chkSP500.setBounds(new Rectangle(1, 136, 66, 20));
+		chkSP500.setBounds(new Rectangle(1, 112, 66, 20));
 		chkSP500.setFont(new Font("Dialog", Font.BOLD, 12));
 		chkSP500.setSelected(false);
 		ps.setSp500(chkSP500.isSelected());
@@ -1699,6 +1775,14 @@ public class GUI {
 		chkSP500.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				ps.setSp500(chkSP500.isSelected());
+				if (chkSP500.isSelected()) {
+					indexFilterList.add("SP500");
+				}
+				else {
+					indexFilterList.remove("SP500");
+				}
+				ArrayList<String> symbols = QueryManager.getDistinctSymbolDurations(indexFilterList);
+				listSymbols.setListData(symbols.toArray());
 			}
 		});
 		
@@ -1707,7 +1791,7 @@ public class GUI {
 
 	public JCheckBox getChkETF() {
 		chkETF = new JCheckBox("ETF");
-		chkETF.setBounds(new Rectangle(80, 136, 45, 20));
+		chkETF.setBounds(new Rectangle(80, 112, 45, 20));
 		chkETF.setFont(new Font("Dialog", Font.BOLD, 12));
 		chkETF.setSelected(false);
 		ps.setEtf(chkETF.isSelected());
@@ -1715,6 +1799,14 @@ public class GUI {
 		chkETF.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				ps.setEtf(chkETF.isSelected());
+				if (chkETF.isSelected()) {
+					indexFilterList.add("ETF");
+				}
+				else {
+					indexFilterList.remove("ETF");
+				}
+				ArrayList<String> symbols = QueryManager.getDistinctSymbolDurations(indexFilterList);
+				listSymbols.setListData(symbols.toArray());
 			}
 		});
 		
@@ -1723,7 +1815,7 @@ public class GUI {
 
 	public JCheckBox getChkBitcoin() {
 		chkBitcoin = new JCheckBox("Bitcoin");
-		chkBitcoin.setBounds(new Rectangle(160, 136, 75, 20));
+		chkBitcoin.setBounds(new Rectangle(160, 112, 75, 20));
 		chkBitcoin.setFont(new Font("Dialog", Font.BOLD, 12));
 		chkBitcoin.setSelected(true);
 		ps.setBitcoin(chkBitcoin.isSelected());
@@ -1731,6 +1823,14 @@ public class GUI {
 		chkBitcoin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				ps.setBitcoin(chkBitcoin.isSelected());
+				if (chkBitcoin.isSelected()) {
+					indexFilterList.add("Bitcoin");
+				}
+				else {
+					indexFilterList.remove("Bitcoin");
+				}
+				ArrayList<String> symbols = QueryManager.getDistinctSymbolDurations(indexFilterList);
+				listSymbols.setListData(symbols.toArray());
 			}
 		});
 		
