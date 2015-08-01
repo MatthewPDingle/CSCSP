@@ -443,7 +443,7 @@ public class QueryManager {
 						"AND b.start < '" + CalendarUtils.getSqlDateString(latestDateInBar) + "' " +
 						"ORDER BY b.start";
 			
-			System.out.println(q);
+//			System.out.println(q);
 			
 			// Run Query
 			Connection c = ConnectionSingleton.getInstance().getConnection();
