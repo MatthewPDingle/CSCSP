@@ -364,8 +364,8 @@ public class QueryManager {
 	}
 	
 	
-	public static ArrayList<HashMap<String, Object>> getDataForCells(Calendar latestDateInBar) {
-		ArrayList<HashMap<String, Object>> results = new ArrayList<HashMap<String, Object>>();
+	public static HashMap<String, ArrayList<HashMap<String, Object>>> getMapDataForCells(Calendar latestDateInBar) {
+		HashMap<String, ArrayList<HashMap<String, Object>>> mapData = new HashMap<String, ArrayList<HashMap<String, Object>>>();
 		try {
 			ParameterSingleton ps = ParameterSingleton.getInstance();
 			
@@ -441,7 +441,7 @@ public class QueryManager {
 						"AND b.start >= '" + CalendarUtils.getSqlDateString(ps.getFromCal()) + "' " +
 						"AND b.start < '" + CalendarUtils.getSqlDateString(ps.getToCal()) + "' " +
 						"AND b.start < '" + CalendarUtils.getSqlDateString(latestDateInBar) + "' " +
-						"ORDER BY b.start";
+						"ORDER BY b.symbol, b.start";
 			
 //			System.out.println(q);
 			
@@ -451,7 +451,16 @@ public class QueryManager {
 			ResultSet rs = s.executeQuery(q);
 			
 			// Iterate through the cell query results
+			String workingSymbol = null;
+			ArrayList<HashMap<String, Object>> symbolResults = new ArrayList<HashMap<String, Object>>();
 			while (rs.next()) {
+				// On the first pass, set the workingSymbol to the first symbol in the resultset
+				String symbol = rs.getString("symbol");
+				if (workingSymbol == null) {
+					workingSymbol = symbol;
+				}
+				
+				// Package everything in this record into a barHash
 				HashMap<String, Object> barHash = new HashMap<String, Object>();
 				barHash.put("symbol", rs.getString("symbol"));
 				barHash.put("open", rs.getFloat("open"));
@@ -471,7 +480,20 @@ public class QueryManager {
 				barHash.put("m2v", rs.getFloat("m2v")); // Metric 2 Buy Y Value
 				barHash.put("m4v", rs.getFloat("m4v")); // Metric 4 Sell Value
 				barHash.put("alphaclose", rs.getFloat("alphaclose")); // Alpha baseline - SPY by default.
-				results.add(barHash);
+				
+				// If we're still dealing with the same symbol, add it to the symbolResults
+				if (symbol.equals(workingSymbol)) {
+					symbolResults.add(barHash);
+				}
+				else { // If it's a new symbol, add the last symbolResults to the mapData, clear out symbolResults, and set the new workingSymbol
+					mapData.put(symbol, symbolResults);
+					symbolResults = new ArrayList<HashMap<String, Object>>();
+					symbolResults.add(barHash);
+					workingSymbol = symbol;
+				}
+			}
+			if (symbolResults.size() > 0) {
+				mapData.put(workingSymbol, symbolResults);
 			}
 			
 			rs.close();
@@ -481,7 +503,7 @@ public class QueryManager {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-		return results;
+		return mapData;
 	}
 
 	public static Calendar getMaxDateFromBasicr() {

@@ -198,7 +198,7 @@ public class GUI {
 	
 	private static MapWorker mapWorker = null;
 	private static RealtimeTrackerWorker rttWorker = null;
-	private static int NUM_MAP_THREADS = 3;
+	private static int NUM_MAP_THREADS = 6;
 	private static MapUpdateThread[] muts = new MapUpdateThread[NUM_MAP_THREADS];
 	private static RealtimeTrackerThread rtt = null;
 	private static ParameterSingleton ps = ParameterSingleton.getInstance();

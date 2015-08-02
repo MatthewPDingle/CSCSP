@@ -1,16 +1,14 @@
 package gui.threads;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
+
+import constants.Constants;
 import gui.MapCell;
 import gui.singletons.ParameterSingleton;
 import gui.threads.MUTCoordinator.Cell;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-
 import utils.CalcUtils;
-import constants.Constants;
-import dbio.QueryManager;
 
 public class MapUpdateThread extends Thread {
 
@@ -36,208 +34,214 @@ public class MapUpdateThread extends Thread {
 			float yCellSize = (yMetricMax - yMetricMin) / (float)ps.getyRes();
 					
 			MUTCoordinator mutCoordinator = MUTCoordinator.getInstance();	
-			ArrayList<HashMap<String, Object>> mapData = mutCoordinator.getCopyOfMapData();
+			HashMap<String, ArrayList<HashMap<String, Object>>> mapData = mutCoordinator.getCopyOfMapData();
 			
 			Cell cell;
 			while ((cell = mutCoordinator.getNextAvailableCell()) != null && running) {
 				ArrayList<HashMap<String, Object>> trades = new ArrayList<HashMap<String, Object>>();
-				for (int bi = 0; bi < mapData.size(); bi++) { // Bar Index
-					HashMap<String, Object> bar = mapData.get(bi);
-					
-					HashMap<String, Object> tradeData = new HashMap<String, Object>();
-					
-					float m1v = (float)bar.get("m1v"); // Metric 1 (X) Value
-					float m2v = (float)bar.get("m2v"); // Metric 2 (Y) Value
-					
-					// If this bar is in the cell being processed, open a trade
-					if (m1v >= cell.xMetricPosition && m1v <= (cell.xMetricPosition + xCellSize) && m2v >= cell.yMetricPosition && m2v <= (cell.yMetricPosition + yCellSize)) {
-						float tradeOpen = (float)bar.get("close");
-						float alphaOpen = (float)bar.get("alphaclose");
-						tradeData.put("open", tradeOpen);
-						tradeData.put("alphaopen", alphaOpen);
-						tradeData.put("barindex", bi);
+			
+				Set<String> symbolKeys = mapData.keySet(); // Get a list of symbols in the mapData
+				for (String symbolKey : symbolKeys) {
+					// Pull out the list of bars for this symbol
+					ArrayList<HashMap<String, Object>> symbolMapData = mapData.get(symbolKey);
+					for (int bi = 0; bi < symbolMapData.size(); bi++) { // Bar Index
+						HashMap<String, Object> bar = symbolMapData.get(bi);
 						
-						// Find the end of this trade
-						// Via the regular sell metric
-						if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_NUM_BARS_LATER)) {
-							if (mapData.size() > (bi + (int)ps.getSellValue())) {
-								HashMap<String, Object> closeBar = mapData.get(bi + (int)ps.getSellValue());
-								float tradeClose = (float)closeBar.get("close");
-								float alphaClose = (float)closeBar.get("alphaclose");
-								tradeData.put("close", tradeClose);
-								tradeData.put("alphaclose", alphaClose);
-								tradeData.put("duration", ps.getSellValue());
-								tradeData.put("exitreason", "metric");
-							}
-						}
-						else if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_PERCENT_UP)) {
-							for (int rbi = bi + 1; rbi < mapData.size(); rbi++) { // Remaining Bar Index
-								HashMap<String, Object> laterBar = mapData.get(rbi);
-								float tradeClose = (float)laterBar.get("close");
-								float alphaClose = (float)laterBar.get("alphaclose");
-								float perchange = (tradeClose - tradeOpen) / tradeOpen;
-								if (perchange >= ps.getSellValue()) {
+						HashMap<String, Object> tradeData = new HashMap<String, Object>();
+						
+						float m1v = (float)bar.get("m1v"); // Metric 1 (X) Value
+						float m2v = (float)bar.get("m2v"); // Metric 2 (Y) Value
+						
+						// If this bar is in the cell being processed, open a trade
+						if (m1v >= cell.xMetricPosition && m1v <= (cell.xMetricPosition + xCellSize) && m2v >= cell.yMetricPosition && m2v <= (cell.yMetricPosition + yCellSize)) {
+							float tradeOpen = (float)bar.get("close");
+							float alphaOpen = (float)bar.get("alphaclose");
+							tradeData.put("open", tradeOpen);
+							tradeData.put("alphaopen", alphaOpen);
+							tradeData.put("barindex", bi);
+							
+							// Find the end of this trade
+							// Via the regular sell metric
+							if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_NUM_BARS_LATER)) {
+								if (symbolMapData.size() > (bi + (int)ps.getSellValue())) {
+									HashMap<String, Object> closeBar = symbolMapData.get(bi + (int)ps.getSellValue());
+									float tradeClose = (float)closeBar.get("close");
+									float alphaClose = (float)closeBar.get("alphaclose");
 									tradeData.put("close", tradeClose);
 									tradeData.put("alphaclose", alphaClose);
-									tradeData.put("duration", (rbi - bi));
+									tradeData.put("duration", ps.getSellValue());
 									tradeData.put("exitreason", "metric");
 								}
 							}
-						}
-						else if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_PERCENT_DOWN)) {
-							for (int rbi = bi + 1; rbi < mapData.size(); rbi++) { // Remaining Bar Index
-								HashMap<String, Object> laterBar = mapData.get(rbi);
-								float tradeClose = (float)laterBar.get("close");
-								float alphaClose = (float)laterBar.get("alphaclose");
-								float perchange = (tradeClose - tradeOpen) / tradeOpen;
-								if (perchange <= ps.getSellValue()) {
-									tradeData.put("close", tradeClose);
-									tradeData.put("alphaclose", alphaClose);
-									tradeData.put("duration", (rbi - bi));
-									tradeData.put("exitreason", "metric");
-								}
-							}
-						}
-						else {
-							for (int rbi = bi + 1; rbi < mapData.size(); rbi++) { // Remaining Bar Index
-								HashMap<String, Object> laterBar = mapData.get(rbi);
-								float sellMetric = (float)laterBar.get("m4v");
-								if (ps.getSellOperator().equals(">=")) {
-									if (sellMetric >= ps.getSellValue()) {
-										float tradeClose = (float)laterBar.get("close");
-										float alphaClose = (float)laterBar.get("alphaclose");
-										tradeData.put("close", tradeClose);
-										tradeData.put("alphaclose", alphaClose);
-										tradeData.put("duration", (rbi - bi));
-										tradeData.put("exitreason", "metric");
-										break;
-									}
-								}
-								else if (ps.getSellOperator().equals(">")) {
-									if (sellMetric > ps.getSellValue()) {
-										float tradeClose = (float)laterBar.get("close");
-										float alphaClose = (float)laterBar.get("alphaclose");
-										tradeData.put("close", tradeClose);
-										tradeData.put("alphaclose", alphaClose);
-										tradeData.put("duration", (rbi - bi));
-										tradeData.put("exitreason", "metric");
-										break;
-									}
-								}
-								else if (ps.getSellOperator().equals("=") || ps.getSellOperator().equals("==")) {
-									if (sellMetric == ps.getSellValue()) {
-										float tradeClose = (float)laterBar.get("close");
-										float alphaClose = (float)laterBar.get("alphaclose");
-										tradeData.put("close", tradeClose);
-										tradeData.put("alphaclose", alphaClose);
-										tradeData.put("duration", (rbi - bi));
-										tradeData.put("exitreason", "metric");
-										break;
-									}
-								}
-								else if (ps.getSellOperator().equals("<=")) {
-									if (sellMetric <= ps.getSellValue()) {
-										float tradeClose = (float)laterBar.get("close");
-										float alphaClose = (float)laterBar.get("alphaclose");
-										tradeData.put("close", tradeClose);
-										tradeData.put("alphaclose", alphaClose);
-										tradeData.put("duration", (rbi - bi));
-										tradeData.put("exitreason", "metric");
-										break;
-									}
-								}
-								else if (ps.getSellOperator().equals("<")) {
-									if (sellMetric < ps.getSellValue()) {
-										float tradeClose = (float)laterBar.get("close");
-										float alphaClose = (float)laterBar.get("alphaclose");
-										tradeData.put("close", tradeClose);
-										tradeData.put("alphaclose", alphaClose);
-										tradeData.put("duration", (rbi - bi));
-										tradeData.put("exitreason", "metric");
-										break;
-									}
-								}
-							}
-						}
-						// Via the stop metric
-						if (ps.getStopMetric().equals(Constants.STOP_METRIC_NUM_BARS)) {
-							if (mapData.size() > (bi + ps.getStopValue().intValue())) {
-								HashMap<String, Object> closeBar = mapData.get(bi + ps.getStopValue().intValue());
-								float tradeClose = (float)closeBar.get("close");
-								float alphaClose = (float)closeBar.get("alphaclose");
-								Integer regularDuration = null;
-								if (tradeData.get("duration") != null) {
-									regularDuration = (Integer)tradeData.get("duration");
-								}
-								int stopDuration = ps.getStopValue().intValue();
-								if (regularDuration == null || stopDuration < regularDuration) {
-									tradeData.put("close", tradeClose);
-									tradeData.put("alphaclose", alphaClose);
-									tradeData.put("duration", stopDuration);
-									tradeData.put("exitreason", "stop");
-								}
-							}
-						}
-						else if (ps.getStopMetric().equals(Constants.STOP_METRIC_PERCENT_DOWN)) {
-							for (int rbi = bi + 1; rbi < mapData.size(); rbi++) { // Remaining Bar Index
-								HashMap<String, Object> laterBar = mapData.get(rbi);
-								float tradeClose = (float)laterBar.get("close");
-								float alphaClose = (float)laterBar.get("alphaclose");
-								float perchange = (tradeClose - tradeOpen) / tradeOpen;
-								Integer regularDuration = null;
-								if (tradeData.get("duration") != null) {
-									regularDuration = (Integer)tradeData.get("duration");
-								}
-								int stopDuration = rbi - bi;
-								if (regularDuration == null || stopDuration < regularDuration) {
-									if (perchange <= ps.getSellValue()) {
-										tradeData.put("close", tradeClose);
-										tradeData.put("alphaclose", alphaClose);
-										tradeData.put("duration", stopDuration);
-										tradeData.put("exitreason", "stop");
-									}
-								}
-							}
-						}
-						else if (ps.getStopMetric().equals(Constants.STOP_METRIC_PERCENT_UP)) {
-							for (int rbi = bi + 1; rbi < mapData.size(); rbi++) { // Remaining Bar Index
-								HashMap<String, Object> laterBar = mapData.get(rbi);
-								float tradeClose = (float)laterBar.get("close");
-								float alphaClose = (float)laterBar.get("alphaclose");
-								float perchange = (tradeClose - tradeOpen) / tradeOpen;
-								Integer regularDuration = null;
-								if (tradeData.get("duration") != null) {
-									regularDuration = (Integer)tradeData.get("duration");
-								}
-								int stopDuration = rbi - bi;
-								if (regularDuration == null || stopDuration < regularDuration) {
+							else if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_PERCENT_UP)) {
+								for (int rbi = bi + 1; rbi < symbolMapData.size(); rbi++) { // Remaining Bar Index
+									HashMap<String, Object> laterBar = symbolMapData.get(rbi);
+									float tradeClose = (float)laterBar.get("close");
+									float alphaClose = (float)laterBar.get("alphaclose");
+									float perchange = (tradeClose - tradeOpen) / tradeOpen;
 									if (perchange >= ps.getSellValue()) {
 										tradeData.put("close", tradeClose);
 										tradeData.put("alphaclose", alphaClose);
+										tradeData.put("duration", (rbi - bi));
+										tradeData.put("exitreason", "metric");
+									}
+								}
+							}
+							else if (ps.getSellMetric().equals(Constants.OTHER_SELL_METRIC_PERCENT_DOWN)) {
+								for (int rbi = bi + 1; rbi < symbolMapData.size(); rbi++) { // Remaining Bar Index
+									HashMap<String, Object> laterBar = symbolMapData.get(rbi);
+									float tradeClose = (float)laterBar.get("close");
+									float alphaClose = (float)laterBar.get("alphaclose");
+									float perchange = (tradeClose - tradeOpen) / tradeOpen;
+									if (perchange <= ps.getSellValue()) {
+										tradeData.put("close", tradeClose);
+										tradeData.put("alphaclose", alphaClose);
+										tradeData.put("duration", (rbi - bi));
+										tradeData.put("exitreason", "metric");
+									}
+								}
+							}
+							else {
+								for (int rbi = bi + 1; rbi < symbolMapData.size(); rbi++) { // Remaining Bar Index
+									HashMap<String, Object> laterBar = symbolMapData.get(rbi);
+									float sellMetric = (float)laterBar.get("m4v");
+									if (ps.getSellOperator().equals(">=")) {
+										if (sellMetric >= ps.getSellValue()) {
+											float tradeClose = (float)laterBar.get("close");
+											float alphaClose = (float)laterBar.get("alphaclose");
+											tradeData.put("close", tradeClose);
+											tradeData.put("alphaclose", alphaClose);
+											tradeData.put("duration", (rbi - bi));
+											tradeData.put("exitreason", "metric");
+											break;
+										}
+									}
+									else if (ps.getSellOperator().equals(">")) {
+										if (sellMetric > ps.getSellValue()) {
+											float tradeClose = (float)laterBar.get("close");
+											float alphaClose = (float)laterBar.get("alphaclose");
+											tradeData.put("close", tradeClose);
+											tradeData.put("alphaclose", alphaClose);
+											tradeData.put("duration", (rbi - bi));
+											tradeData.put("exitreason", "metric");
+											break;
+										}
+									}
+									else if (ps.getSellOperator().equals("=") || ps.getSellOperator().equals("==")) {
+										if (sellMetric == ps.getSellValue()) {
+											float tradeClose = (float)laterBar.get("close");
+											float alphaClose = (float)laterBar.get("alphaclose");
+											tradeData.put("close", tradeClose);
+											tradeData.put("alphaclose", alphaClose);
+											tradeData.put("duration", (rbi - bi));
+											tradeData.put("exitreason", "metric");
+											break;
+										}
+									}
+									else if (ps.getSellOperator().equals("<=")) {
+										if (sellMetric <= ps.getSellValue()) {
+											float tradeClose = (float)laterBar.get("close");
+											float alphaClose = (float)laterBar.get("alphaclose");
+											tradeData.put("close", tradeClose);
+											tradeData.put("alphaclose", alphaClose);
+											tradeData.put("duration", (rbi - bi));
+											tradeData.put("exitreason", "metric");
+											break;
+										}
+									}
+									else if (ps.getSellOperator().equals("<")) {
+										if (sellMetric < ps.getSellValue()) {
+											float tradeClose = (float)laterBar.get("close");
+											float alphaClose = (float)laterBar.get("alphaclose");
+											tradeData.put("close", tradeClose);
+											tradeData.put("alphaclose", alphaClose);
+											tradeData.put("duration", (rbi - bi));
+											tradeData.put("exitreason", "metric");
+											break;
+										}
+									}
+								}
+							}
+							// Via the stop metric
+							if (ps.getStopMetric().equals(Constants.STOP_METRIC_NUM_BARS)) {
+								if (symbolMapData.size() > (bi + ps.getStopValue().intValue())) {
+									HashMap<String, Object> closeBar = symbolMapData.get(bi + ps.getStopValue().intValue());
+									float tradeClose = (float)closeBar.get("close");
+									float alphaClose = (float)closeBar.get("alphaclose");
+									Integer regularDuration = null;
+									if (tradeData.get("duration") != null) {
+										regularDuration = (Integer)tradeData.get("duration");
+									}
+									int stopDuration = ps.getStopValue().intValue();
+									if (regularDuration == null || stopDuration < regularDuration) {
+										tradeData.put("close", tradeClose);
+										tradeData.put("alphaclose", alphaClose);
 										tradeData.put("duration", stopDuration);
 										tradeData.put("exitreason", "stop");
 									}
 								}
 							}
-						}
-						// Via the end of data
-						// tradeData should have "open", "close", and "duration".  If there's no close or duration, it went to the end
-						if (tradeData.get("close") == null) {
-							HashMap<String, Object> lastBar = mapData.get(mapData.size() - 1);
-							float lastBarClose = (float)lastBar.get("close");
-							float alphaClose = (float)lastBar.get("alphaclose");
-							int startBarIndex = (int)tradeData.get("barindex");
-							int lastBarIndex = mapData.size() - 1;
-							tradeData.put("duration", lastBarIndex - startBarIndex);
-							tradeData.put("close", lastBarClose);
-							tradeData.put("alphaclose", alphaClose);
-							tradeData.put("exitreason", "end");
-						}
-						
-						trades.add(tradeData);
-						
-					} // End if
-				} // End for
+							else if (ps.getStopMetric().equals(Constants.STOP_METRIC_PERCENT_DOWN)) {
+								for (int rbi = bi + 1; rbi < symbolMapData.size(); rbi++) { // Remaining Bar Index
+									HashMap<String, Object> laterBar = symbolMapData.get(rbi);
+									float tradeClose = (float)laterBar.get("close");
+									float alphaClose = (float)laterBar.get("alphaclose");
+									float perchange = (tradeClose - tradeOpen) / tradeOpen;
+									Integer regularDuration = null;
+									if (tradeData.get("duration") != null) {
+										regularDuration = (Integer)tradeData.get("duration");
+									}
+									int stopDuration = rbi - bi;
+									if (regularDuration == null || stopDuration < regularDuration) {
+										if (perchange <= ps.getSellValue()) {
+											tradeData.put("close", tradeClose);
+											tradeData.put("alphaclose", alphaClose);
+											tradeData.put("duration", stopDuration);
+											tradeData.put("exitreason", "stop");
+										}
+									}
+								}
+							}
+							else if (ps.getStopMetric().equals(Constants.STOP_METRIC_PERCENT_UP)) {
+								for (int rbi = bi + 1; rbi < symbolMapData.size(); rbi++) { // Remaining Bar Index
+									HashMap<String, Object> laterBar = symbolMapData.get(rbi);
+									float tradeClose = (float)laterBar.get("close");
+									float alphaClose = (float)laterBar.get("alphaclose");
+									float perchange = (tradeClose - tradeOpen) / tradeOpen;
+									Integer regularDuration = null;
+									if (tradeData.get("duration") != null) {
+										regularDuration = (Integer)tradeData.get("duration");
+									}
+									int stopDuration = rbi - bi;
+									if (regularDuration == null || stopDuration < regularDuration) {
+										if (perchange >= ps.getSellValue()) {
+											tradeData.put("close", tradeClose);
+											tradeData.put("alphaclose", alphaClose);
+											tradeData.put("duration", stopDuration);
+											tradeData.put("exitreason", "stop");
+										}
+									}
+								}
+							}
+							// Via the end of data
+							// tradeData should have "open", "close", and "duration".  If there's no close or duration, it went to the end
+							if (tradeData.get("close") == null) {
+								HashMap<String, Object> lastBar = symbolMapData.get(symbolMapData.size() - 1);
+								float lastBarClose = (float)lastBar.get("close");
+								float alphaClose = (float)lastBar.get("alphaclose");
+								int startBarIndex = (int)tradeData.get("barindex");
+								int lastBarIndex = symbolMapData.size() - 1;
+								tradeData.put("duration", lastBarIndex - startBarIndex);
+								tradeData.put("close", lastBarClose);
+								tradeData.put("alphaclose", alphaClose);
+								tradeData.put("exitreason", "end");
+							}
+							
+							trades.add(tradeData);
+							
+						} // End if
+					} // End for bar index loop
+				} // End for key loop
 
 				// End processing on the list of trade data
 				int numResults = trades.size();
@@ -283,7 +287,7 @@ public class MapUpdateThread extends Thread {
 						stopTradeDurations.add(duration);
 						numStopExits++;
 					}
-				}
+				} // End while
 				
 				Float allGeomeanPerDay = 0f;
 				if (CalcUtils.getMean(allTradeDurations) > 0)

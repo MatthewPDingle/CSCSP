@@ -1144,7 +1144,7 @@ public class MetricsCalculator {
 		int c = 0;
 		for (Metric metric:metricSequence) {
 			closes[c] = metric.getAdjClose();
-			sp500closes[c] = metric.getSpyAdjClose();
+			sp500closes[c] = metric.getAlphaAdjClose();
 			c++;
 		}
 		
@@ -1170,9 +1170,9 @@ public class MetricsCalculator {
 	  	
 	  	for (Metric metric:metricSequence) {
 	  		float change = metric.getChange();
-	  		float spyChange = metric.getSpyChange();
+	  		float spyChange = metric.getAlphaChange();
 	  		float adjclose = metric.getAdjClose();
-	  		float spyAdjClose = metric.getSpyAdjClose();
+	  		float spyAdjClose = metric.getAlphaAdjClose();
 	  		
 	  		// Normalize changes to perchanges
 	  		float perchange = change / (adjclose - change) * 100;

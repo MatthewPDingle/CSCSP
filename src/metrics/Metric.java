@@ -22,11 +22,11 @@ public class Metric {
 	private float adjLow = 0f;
 	private float gap = 0f;
 	private float change = 0f;
-	private float spyAdjClose = 0f;
-	private float spyChange = 0f;
+	private float alphaClose = 0f;
+	private float alphaChange = 0f;
 
 	public Metric(String symbol, Calendar start, Calendar end, String duration, double volume, float adjOpen, float adjClose,
-			float adjHigh, float adjLow, float gap, float change, float spyAdjClose, float spyChange) {
+			float adjHigh, float adjLow, float gap, float change, float alphaClose, float alphaChange) {
 		super();
 		this.symbol = symbol;
 		this.start = start;
@@ -39,8 +39,8 @@ public class Metric {
 		this.adjLow = adjLow;
 		this.gap = gap;
 		this.change = change;
-		this.spyAdjClose = spyAdjClose;
-		this.spyChange = spyChange;
+		this.alphaClose = alphaClose;
+		this.alphaChange = alphaChange;
 	}
 
 	public String getName() {
@@ -131,12 +131,12 @@ public class Metric {
 		this.adjLow = adjLow;
 	}
 
-	public float getSpyAdjClose() {
-		return spyAdjClose;
+	public float getAlphaAdjClose() {
+		return alphaClose;
 	}
 
-	public void setSpyAdjClose(float spyAdjClose) {
-		this.spyAdjClose = spyAdjClose;
+	public void setAlphaAdjClose(float spyAdjClose) {
+		this.alphaClose = spyAdjClose;
 	}
 
 	public float getGap() {
@@ -155,11 +155,11 @@ public class Metric {
 		this.change = change;
 	}
 
-	public float getSpyChange() {
-		return spyChange;
+	public float getAlphaChange() {
+		return alphaChange;
 	}
 
-	public void setSpyChange(float spyChange) {
-		this.spyChange = spyChange;
+	public void setAlphaChange(float spyChange) {
+		this.alphaChange = spyChange;
 	}
 }

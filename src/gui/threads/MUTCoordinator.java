@@ -10,7 +10,7 @@ public class MUTCoordinator {
 
 	private static MUTCoordinator mut = null;
 	private ArrayList<Cell> cells = null;
-	private ArrayList<HashMap<String, Object>> mapData = null;
+	private HashMap<String, ArrayList<HashMap<String, Object>>> mapData = null; // Symbol, List of bars containing data
 	
 	protected MUTCoordinator() {
 		cells = new ArrayList<Cell>();
@@ -29,10 +29,10 @@ public class MUTCoordinator {
 	
 	public void loadRawDataIntoMemory() {
 		Calendar latestDateInBar = QueryManager.getMaxDateFromBar();
-		mapData = QueryManager.getDataForCells(latestDateInBar);
+		mapData = QueryManager.getMapDataForCells(latestDateInBar);
 	}
 
-	public ArrayList<HashMap<String, Object>> getCopyOfMapData() {
+	public HashMap<String, ArrayList<HashMap<String, Object>>> getCopyOfMapData() {
 //		ArrayList<HashMap<String, Object>> copy = new ArrayList<HashMap<String, Object>>();
 //		copy.addAll(mapData);
 		return mapData;
