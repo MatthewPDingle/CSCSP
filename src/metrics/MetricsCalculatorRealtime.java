@@ -9,9 +9,9 @@ import dbio.QueryManager;
 
 public class MetricsCalculatorRealtime {
 	
-	public static void calculateMetricsRealtime(ArrayList<String> metrics, ArrayList<String> symbols) {
+	public static void calculateMetricsRealtime(ArrayList<String> metrics, ArrayList<String[]> durationSymbols) {
 		try {
-			ArrayList<LinkedList<Metric>> metricSequences = QueryManager.loadMetricSequencesForRealtimeUpdates(symbols);
+			ArrayList<LinkedList<Metric>> metricSequences = QueryManager.loadMetricSequencesForRealtimeUpdates(durationSymbols);
 			Calendar latestTradingDay = QueryManager.getLastestTradingDay();
 			
 			// Unfortunately we have to go through all the metrics to see which ones need to be run

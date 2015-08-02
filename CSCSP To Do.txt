@@ -35,7 +35,7 @@ New Stuff
 - Neural network on a bunch of metrics
 - Might be able to speed up map generation a little more by not including unused columns in the query and trying to make the math code tighter
 - Use of numtrades and vwap fields in bar data
-- Play with other bitcoin exchange data
-- Play with other bitcoin bar sizes
 
+TODO
 - Memory leak when running GeneticSearcher
+- Cross validation and test sets

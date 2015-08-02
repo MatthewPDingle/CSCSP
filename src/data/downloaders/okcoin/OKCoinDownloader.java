@@ -24,11 +24,11 @@ public class OKCoinDownloader {
 
 	public static void main(String[] args) {
 
-//		ArrayList<Bar> bars = getMostRecentBarsFromBarHistory(OKCoinConstants.SYMBOL_BTCCNY, BAR_SIZE.BAR_15M, 2000, null);
-//		for (Bar bar : bars) {
-////			System.out.println(bar);
-//			QueryManager.insertOrUpdateIntoBar(bar);
-//		}
+		ArrayList<Bar> bars = getMostRecentBarsFromBarHistory(OKCoinConstants.SYMBOL_BTCCNY, BAR_SIZE.BAR_15M, 2000, null);
+		for (Bar bar : bars) {
+//			System.out.println(bar);
+			QueryManager.insertOrUpdateIntoBar(bar);
+		}
 		
 		
 		ArrayList<Bar> bars2 = getMostRecentBarsFromTickHistory(OKCoinConstants.SYMBOL_BTCCNY, Constants.BAR_SIZE.BAR_15M, "5000");

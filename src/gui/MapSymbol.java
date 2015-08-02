@@ -7,6 +7,7 @@ import java.util.Calendar;
 public class MapSymbol implements Comparable {
 
 	private String symbol = "";
+	private String duration = "";
 	private float price;
 	private float xMetricValue;
 	private float yMetricValue;
@@ -18,9 +19,10 @@ public class MapSymbol implements Comparable {
 	private boolean partOfBestBearGroup = false;
 	private Calendar lastUpdated = Calendar.getInstance();
 	
-	public MapSymbol(String symbol, float price, float xMetricValue, float yMetricValue) {
+	public MapSymbol(String symbol, String duration, float price, float xMetricValue, float yMetricValue) {
 		super();
 		this.symbol = symbol;
+		this.duration = duration;
 		this.price = price;
 		this.xMetricValue = xMetricValue;
 		this.yMetricValue = yMetricValue;
@@ -113,5 +115,13 @@ public class MapSymbol implements Comparable {
 
 	public void setLastUpdated(Calendar lastUpdated) {
 		this.lastUpdated = lastUpdated;
+	}
+
+	public String getDuration() {
+		return duration;
+	}
+
+	public void setDuration(String duration) {
+		this.duration = duration;
 	}
 }

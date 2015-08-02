@@ -36,7 +36,7 @@ public class ParameterSingleton {
 	private boolean sp500 = true;
 	private boolean etf = false;
 	private boolean bitcoin = false;
-	private ArrayList<String> symbols = new ArrayList<String>();
+	private ArrayList<String> symbols = new ArrayList<String>(); // Contains both duration and symbol in "Duration - Symbol" format
 	
 	private boolean runFinished = false;
 	

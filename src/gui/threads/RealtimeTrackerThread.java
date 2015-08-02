@@ -44,9 +44,17 @@ public class RealtimeTrackerThread extends Thread {
 	@Override
 	public void run() {
 		try {
-			// Delete any junk that might be in basicr or metric tables
-			QueryManager.deleteTodayFromBasic();
-			QueryManager.deleteTodayFromMetricTables();
+			// Delete the most recent bars and metrics for the symbols & bars we're going to be tracking.  
+			ArrayList<String> durationSymbols = ps.getSymbols();
+			if (durationSymbols != null) {
+				for (String ds : durationSymbols) {
+					String[] parts = ds.split(" - ");
+					String duration = parts[0];
+					String symbol = parts[1];
+					QueryManager.deleteMostRecentBar(symbol, duration);
+					QueryManager.deleteMostRecentMetrics(symbol, duration);
+				}
+			}
 			
 			while (this.running) {
 				runOnMaps();
@@ -65,32 +73,45 @@ public class RealtimeTrackerThread extends Thread {
 			System.out.println("HPMapSymbols.size() = " + mss.getHighPriorityMapSymbols().size());
 			
 			// Get list of symbols that need updates (Last Trading Day)
-			ArrayList<String> symbolList = new ArrayList<String>();
+			ArrayList<String[]> symbolList = new ArrayList<String[]>(); // Duration, Symbol
 			
 			// First round do everything
 			if (updateCounter == 0) {
 				for (MapSymbol ms:mss.getMapSymbols()) {
-					symbolList.add(ms.getSymbol());
+					String[] ds = new String[2];
+					ds[0] = ms.getDuration();
+					ds[1] = ms.getSymbol();
+					symbolList.add(ds);
 				}
 			}
 			// Every X times, track (1 / updateAllFrequency) of everything.  Each time this hits it shifts to the next set.
 			else if (updateCounter % updateAllFrequency == 0) {
 				int chunk = (updateCounter / updateAllFrequency) % 10; // 0-3
 				for (MapSymbol ms:mss.getMapSymbols()) {
-					if (mss.getMapSymbols().indexOf(ms) % 10 == chunk)
-						symbolList.add(ms.getSymbol());
+					if (mss.getMapSymbols().indexOf(ms) % 10 == chunk) {
+						String[] ds = new String[2];
+						ds[0] = ms.getDuration();
+						ds[1] = ms.getSymbol();
+						symbolList.add(ds);
+					}
 				}
 			}
 			// Otherwise track high priorities if they exist
 			else {	
 				if (mss.getHighPriorityMapSymbols().size() == 0) {
 					for (MapSymbol ms:mss.getMapSymbols()) {
-						symbolList.add(ms.getSymbol());
+						String[] ds = new String[2];
+						ds[0] = ms.getDuration();
+						ds[1] = ms.getSymbol();
+						symbolList.add(ds);
 					}
 				}
 				else {
 					for (MapSymbol ms:mss.getHighPriorityMapSymbols()) {
-						symbolList.add(ms.getSymbol());
+						String[] ds = new String[2];
+						ds[0] = ms.getDuration();
+						ds[1] = ms.getSymbol();
+						symbolList.add(ds);
 					}
 				}
 			}
@@ -98,24 +119,35 @@ public class RealtimeTrackerThread extends Thread {
 			ArrayList<HashMap<String, Object>> openPositions = QueryManager.getOpenPositions();
 			for (HashMap<String, Object> openPosition:openPositions) {
 				String symbol = openPosition.get("symbol").toString();
-				if (!symbolList.contains(symbol))
-					symbolList.add(symbol);
+				String duration = openPosition.get("duration").toString();
+				String[] ds = new String[2];
+				ds[0] = duration;
+				ds[1] = symbol;
+				if (!symbolList.contains(ds)) // TODO: Debug this and the next SPY section below to see what it does
+					symbolList.add(ds);
 			}
 			
 			// Add SPY to the symbolList if needed
-			if (!symbolList.contains("SPY"))
-				symbolList.add("SPY");
+			String[] alphaDS = new String[2];
+			alphaDS[0] = Constants.BAR_SIZE.BAR_1D.toString();
+			alphaDS[1] = "SPY";
+			if (!symbolList.contains(alphaDS))
+				symbolList.add(alphaDS);
 			System.out.println("symbolList.size() = " + symbolList.size());
 			
 			// Delete most recent trading day for the symbols we're tracking during this loop
-			QueryManager.deleteMostRecentTradingDayFromBasic(symbolList);
-			QueryManager.deleteMostRecentTradingDayFromMetricTables(symbolList, usedMetrics);
+			for (String[] ds : symbolList) {
+				QueryManager.deleteMostRecentBar(ds[1], ds[0]);
+				QueryManager.deleteMostRecentMetrics(ds[1], ds[0], usedMetrics);
+			}
+//			QueryManager.deleteMostRecentTradingDayFromBasic(symbolList);
+//			QueryManager.deleteMostRecentTradingDayFromMetricTables(symbolList, usedMetrics);
 			
 			// Create URL strings
-			ArrayList<String> symbolStrings = getSymbolStrings(symbolList);
-			
-			// Connect to Yahoo Finance & Update basicr with today's current info
-			getUpdatedYahooQuotesAndSaveToDB(symbolStrings);
+//			ArrayList<String> symbolStrings = getSymbolStrings(symbolList);
+//			
+//			// Connect to Yahoo Finance & Update basicr with today's current info
+//			getUpdatedYahooQuotesAndSaveToDB(symbolStrings);
 //			stockMovementTester(symbolList);
 			
 			// Update the MapSymbol's last updated time
@@ -161,15 +193,15 @@ public class RealtimeTrackerThread extends Thread {
 		return metrics;
 	}
 
-	public static ArrayList<String> getSymbolStrings(ArrayList<String> symbolList) {
+	public static ArrayList<String> getSymbolStrings(ArrayList<String[]> durationSymbols) {
 		ArrayList<String> symbolStrings = new ArrayList<String>();
 		try {
 			int c = 0;
 			String oneString = "";
-			for (String symbol:symbolList) {
+			for (String[] ds : durationSymbols) {
 				c++;
 				if (c <= 100) {
-					oneString += symbol + "+";
+					oneString += ds[1] + "+";
 				}
 				else {
 					if (oneString.endsWith("+")) {

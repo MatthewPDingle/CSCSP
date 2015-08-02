@@ -421,14 +421,17 @@ public class QueryManager {
 			}
 			q += i + ") ";
 			
-			ArrayList<String> symbols = ps.getSymbols();
+			ArrayList<String> durationSymbols = ps.getSymbols();
 			String symbolsClause = "";
-			if (symbols != null) {
-				symbolsClause = "AND b.symbol IN (";
-				for (String symbol : symbols) {
-					symbolsClause += "'" + symbol + "',";
+			if (durationSymbols != null) {
+				symbolsClause = "AND (";
+				for (String ds : durationSymbols) {
+					String[] parts = ds.split(" - ");
+					String duration = parts[0];
+					String symbol = parts[1];
+					symbolsClause += "(b.symbol = '" + symbol + "' AND b.duration = '" + duration + "') OR ";
 				}
-				symbolsClause = symbolsClause.substring(0, symbolsClause.length() - 1) + ") ";
+				symbolsClause = symbolsClause.substring(0, symbolsClause.length() - 4) + ") ";
 			}
 			
 						q += symbolsClause +
@@ -438,12 +441,13 @@ public class QueryManager {
 						"AND m4.name = '" + ps.getSellMetric() + "' " +
 						"AND ABS(m3.value) <= " + ps.getMaxVolatility() + " " +
 						"AND b.close >= " + ps.getMinPrice() + " " +
+						"AND b.volume * b.close >= " + ps.getMinLiquidity() + " " +
 						"AND b.start >= '" + CalendarUtils.getSqlDateString(ps.getFromCal()) + "' " +
 						"AND b.start < '" + CalendarUtils.getSqlDateString(ps.getToCal()) + "' " +
 						"AND b.start < '" + CalendarUtils.getSqlDateString(latestDateInBar) + "' " +
 						"ORDER BY b.symbol, b.start";
 			
-//			System.out.println(q);
+			System.out.println(q);
 			
 			// Run Query
 			Connection c = ConnectionSingleton.getInstance().getConnection();
@@ -631,6 +635,32 @@ public class QueryManager {
 		}
 		return symbols;
 	}
+	
+	public static ArrayList<String[]> getUniqueListOfDurationSymbols() {
+		ArrayList<String[]> durationSymbols = new ArrayList<String[]>();
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "SELECT symbol, duration FROM bar GROUP BY symbol, duration";
+			Statement s = c.createStatement();
+			ResultSet rs = s.executeQuery(q);
+			while (rs.next()) {
+				String symbol = rs.getString("symbol");
+				String duration = rs.getString("duration");
+				String[] ds = new String[2];
+				ds[0] = duration;
+				ds[1] = symbol;
+				durationSymbols.add(ds);
+			}
+			
+			rs.close();
+			s.close();
+			c.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return durationSymbols;
+	}
 
 	/**
 	 * Gets data from 2 trading days ago.  
@@ -732,7 +762,7 @@ public class QueryManager {
 			ParameterSingleton ps = ParameterSingleton.getInstance();
 			
 			// Index List
-			String whereIndexClause = "WHERE (r.symbol IN (SELECT DISTINCT symbol FROM indexlist WHERE ";
+			String whereIndexClause = "WHERE b.symbol IN (SELECT DISTINCT symbol FROM indexlist WHERE ";
 			String i = "";
 			boolean one = false;
 			if (ps.isNyse()) {
@@ -773,45 +803,54 @@ public class QueryManager {
 			}
 			if (ps.isBitcoin()) {
 				if (one) {
-					i += "OR index = 'Index' ";
+					i += "OR index = 'Bitcoin' ";
 				} else {
-					i = "index = 'Index' ";
+					i = "index = 'Bitcoin' ";
 				}
 			}
 			whereIndexClause += i + ") ";
 			
-			// The bottom date WHERE clause is the correct one, but it was replaced by the functionally equivalent 4th join.
-			String q = 	"SELECT r.symbol, r.adjclose AS price, m1.value AS m1, m2.value AS m2 " +
-						"FROM basicr r " +
-						"INNER JOIN metric_" + ps.getxAxisMetric() + " m1 " +
-						"ON m1.symbol = r.symbol AND m1.date = r.date " +
-						"INNER JOIN metric_" + ps.getyAxisMetric() + " m2 " +
-						"ON m2.symbol = r.symbol AND m2.date = r.date " +
-						"INNER JOIN metric_priceboll20 sd " +
-						"ON r.symbol = sd.symbol AND r.date = sd.date " +
-						"INNER JOIN (SELECT symbol, MAX(date) date FROM basicr GROUP BY symbol) t " +
-						"ON t.symbol = r.symbol AND t.date = r.date " +
+			ArrayList<String> durationSymbols = ps.getSymbols();
+			String symbolsClause = "";
+			if (durationSymbols != null) {
+				symbolsClause = "AND (";
+				for (String ds : durationSymbols) {
+					String[] parts = ds.split(" - ");
+					String duration = parts[0];
+					String symbol = parts[1];
+					symbolsClause += "(b.symbol = '" + symbol + "' AND b.duration = '" + duration + "') OR ";
+				}
+				symbolsClause = symbolsClause.substring(0, symbolsClause.length() - 4) + ") ";
+			}
+
+			// This clause used to be in here, and I'll need to add it back in.
+			String openTradeClause = "OR b.symbol IN (SELECT symbol FROM trades WHERE status = 'open')";
+			
+			String q = 	"SELECT b.symbol, b.duration, b.close AS price, m1.value AS m1, m2.value AS m2 " +
+						"FROM bar b " +
+						"LEFT OUTER JOIN metrics m1 ON b.symbol = m1.symbol and b.start = m1.start AND b.duration = m1.duration " +
+						"LEFT OUTER JOIN metrics m2 ON b.symbol = m2.symbol and b.start = m2.start AND b.duration = m2.duration " +
+						"LEFT OUTER JOIN metrics m3 ON b.symbol = m3.symbol and b.start = m3.start AND b.duration = m3.duration " +
+						"INNER JOIN (SELECT symbol, duration, MAX(start) AS start FROM bar GROUP BY symbol, duration) t ON t.symbol = b.symbol AND t.start = b.start  AND t.duration = b.duration " +
 						whereIndexClause + 
-//						"AND r.date = (SELECT MAX(date) FROM basicr) " +
-//						"AND r.date = (SELECT MAX(date) FROM tradingdays WHERE date < date(now())) " + 
-//						"AND r.date = (SELECT MAX(date) FROM basicr WHERE symbol = r.symbol) " +
-						"AND r.volume >= ? / r.adjclose " +
-						"AND ABS(sd.value) <= ? " +
-						"AND r.adjclose >= ?) " +
-						"OR r.symbol IN (SELECT symbol FROM trades WHERE status = 'open')";
+						symbolsClause +
+						"AND m1.name = '" + ps.getxAxisMetric() + "' " +
+						"AND m2.name = '" + ps.getyAxisMetric() + "' " +
+						"AND m3.name = 'priceboll20' " +
+						"AND ABS(m3.value) <= " + ps.getMaxVolatility() + " " +
+						"AND b.volume * b.close >= " + ps.getMinLiquidity() + " " +
+						"AND b.close >= " + ps.getMinPrice();
 			
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			PreparedStatement pst = c.prepareStatement(q);
-			pst.setInt(1, ps.getMinLiquidity());
-			pst.setFloat(2, ps.getMaxVolatility());
-			pst.setFloat(3, ps.getMinPrice());
 			ResultSet rs = pst.executeQuery();
 			while (rs.next()) {
 				String symbol = rs.getString("symbol");
+				String duration = rs.getString("duration");
 				float price = rs.getFloat("price");
 				float m1 = rs.getFloat("m1");
 				float m2 = rs.getFloat("m2");
-				MapSymbol ms = new MapSymbol(symbol, price, m1, m2);
+				MapSymbol ms = new MapSymbol(symbol, duration, price, m1, m2);
 				mapSymbols.add(ms);
 			}
 			rs.close();
@@ -948,20 +987,20 @@ public class QueryManager {
 		}
 	}
 
-	public static ArrayList<LinkedList<Metric>> loadMetricSequencesForRealtimeUpdates(ArrayList<String> symbols) {
+	public static ArrayList<LinkedList<Metric>> loadMetricSequencesForRealtimeUpdates(ArrayList<String[]> durationSymbols) {
 		ArrayList<LinkedList<Metric>> metricSequences = new ArrayList<LinkedList<Metric>>();
 		try {
 			// Put the list of symbols together into a string for the query
 			StringBuilder sb = new StringBuilder();
 			sb.append("(");
-			for (String symbol:symbols) {
+			for (String[] ds : durationSymbols) {
 				sb.append("'");
-				sb.append(symbol);
+				sb.append(ds[1]);
 				sb.append("'");
 				sb.append(",");
 			}
 			String symbolsString = sb.toString();
-			if (symbols.size() > 0)
+			if (durationSymbols.size() > 0)
 				symbolsString = symbolsString.substring(0, symbolsString.length() - 1) + ")";
 			else
 				symbolsString = "()";
@@ -1468,11 +1507,16 @@ public class QueryManager {
 		}
 	}
 	
-	public static void deleteTodayFromBasic() {
+	public static void deleteMostRecentBar(String symbol, String duration) {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "DELETE FROM basicr WHERE date = date(now())";
+			String q = 	"DELETE FROM bar WHERE (symbol, duration, start) IN ( " +
+						"SELECT symbol, duration, MAX(start) FROM bar " +
+						"WHERE symbol = ? AND duration = ? " +
+						"GROUP BY symbol, duration)";
 			PreparedStatement ps = c.prepareStatement(q);
+			ps.setString(1, symbol);
+			ps.setString(2, duration);
 			ps.executeUpdate();
 			ps.close();
 			c.close();
@@ -1482,15 +1526,51 @@ public class QueryManager {
 		}
 	}
 	
-	public static void deleteTodayFromMetricTables() {
+	public static void deleteMostRecentMetrics(String symbol, String duration) {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			for (String metric:Constants.METRICS){
-				String q = "DELETE FROM metric_" + metric + " WHERE date = date(now())";
-				PreparedStatement ps = c.prepareStatement(q);
-				ps.executeUpdate();
-				ps.close();
+			String q = 	"DELETE FROM metrics WHERE (symbol, duration, start) IN ( " +
+						"SELECT symbol, duration, MAX(start) FROM metrics " +
+						"WHERE symbol = ? AND duration = ? " +
+						"GROUP BY symbol, duration)";
+			PreparedStatement ps = c.prepareStatement(q);
+			ps.setString(1, symbol);
+			ps.setString(2, duration);
+			ps.executeUpdate();
+			ps.close();
+			
+			c.close();
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void deleteMostRecentMetrics(String symbol, String duration, ArrayList<String> metrics) {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = 	"DELETE FROM metrics WHERE (symbol, duration, start) IN ( " +
+						"SELECT symbol, duration, MAX(start) FROM metrics " +
+						"WHERE symbol = ? AND duration = ? " +
+						"GROUP BY symbol, duration) ";
+			String metricsTerm = "";
+			if (metrics != null && metrics.size() > 0) {
+				metricsTerm = "WHERE name IN (";
+				
+				for (String metric : metrics) {
+					metricsTerm += "'" + metric + "',";
+				}
+				
+				metricsTerm = metricsTerm.substring(0, metricsTerm.length() - 1) + ")";
 			}
+			q += metricsTerm;
+			
+			PreparedStatement ps = c.prepareStatement(q);
+			ps.setString(1, symbol);
+			ps.setString(2, duration);
+			ps.executeUpdate();
+			ps.close();
+			
 			c.close();
 		} 
 		catch (Exception e) {
@@ -1547,13 +1627,13 @@ public class QueryManager {
 		}
 	}
 
-	public static void deleteMostRecentTradingDayFromMetricTables(ArrayList<String> symbolList, ArrayList<String> usedMetrics) {
+	public static void deleteMostRecentTradingDayFromMetricTables(ArrayList<String[]> durationSymbols, ArrayList<String> usedMetrics) {
 		try {
 			StringBuilder sb = new StringBuilder();
 			sb.append("(");
 			int counter = 0;
-			for (String symbol:symbolList) {
-				sb.append("'").append(symbol).append("', ");
+			for (String[] ds : durationSymbols) {
+				sb.append("'").append(ds[1]).append("', ");
 				counter++;
 			}
 			String symbolPart = sb.toString();
@@ -1765,11 +1845,11 @@ public class QueryManager {
 		}
 	}
 	
-	public static void insertIntoBitcoinTick(ArrayList<String> records) {
+	public static void insertIntoTick(ArrayList<String> records) {
 		try {
 			if (records != null && records.size() > 0) {
 				Connection c = ConnectionSingleton.getInstance().getConnection();
-				String q = "INSERT INTO bitcointick(symbol, price, volume, \"timestamp\") VALUES ";
+				String q = "INSERT INTO tick(symbol, price, volume, \"timestamp\") VALUES ";
 				StringBuilder sb = new StringBuilder();
 				for (String record : records) {
 					sb.append("(" + record + "), ");
@@ -1789,11 +1869,11 @@ public class QueryManager {
 		}
 	}
 	
-	public static Calendar getBitcoinTickEarliestTick(String symbol) {
+	public static Calendar getTickEarliestTick(String symbol) {
 		Calendar earliestTick = Calendar.getInstance();
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "SELECT timestamp FROM bitcointick WHERE symbol = ? ORDER BY \"timestamp\" LIMIT 1";
+			String q = "SELECT timestamp FROM tick WHERE symbol = ? ORDER BY \"timestamp\" LIMIT 1";
 			PreparedStatement s = c.prepareStatement(q);
 			s.setString(1, symbol);
 			
@@ -1811,12 +1891,12 @@ public class QueryManager {
 		return earliestTick;
 	}
 	
-	public static Calendar getBitcoinTickLatestTick(String symbol) {
+	public static Calendar getTickLatestTick(String symbol) {
 		Calendar latestTick = Calendar.getInstance();
 		latestTick.set(2000, 0, 1); // Just make it old in case there isn't any tick data
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "SELECT timestamp FROM bitcointick WHERE symbol = ? ORDER BY \"timestamp\" DESC LIMIT 1";
+			String q = "SELECT timestamp FROM tick WHERE symbol = ? ORDER BY \"timestamp\" DESC LIMIT 1";
 			PreparedStatement s = c.prepareStatement(q);
 			s.setString(1, symbol);
 			
@@ -1986,7 +2066,7 @@ public class QueryManager {
 		}
 	}
 	
-	public static ArrayList<HashMap<String, Object>> getBitcoinTickData(String symbol, Calendar periodStart, BAR_SIZE barSize) {
+	public static ArrayList<HashMap<String, Object>> getTickData(String symbol, Calendar periodStart, BAR_SIZE barSize) {
 		ArrayList<HashMap<String, Object>> listOfRecords = new ArrayList<HashMap<String, Object>>();
 		try {
 			Calendar periodEnd = Calendar.getInstance();
@@ -2034,7 +2114,7 @@ public class QueryManager {
 			}
 			
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "SELECT * FROM bitcointick " + 
+			String q = "SELECT * FROM tick " + 
 						"WHERE symbol = ? AND \"timestamp\" >= '" + CalendarUtils.getSqlDateTimeString(periodStart) + "' AND \"timestamp\" < '" + CalendarUtils.getSqlDateTimeString(periodEnd) + "' ORDER BY \"timestamp\" ";
 			PreparedStatement s = c.prepareStatement(q);
 			s.setString(1, symbol);
@@ -2243,13 +2323,14 @@ public class QueryManager {
 		ArrayList<HashMap<String, Object>> openPositions = new ArrayList<HashMap<String, Object>>(); 
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "SELECT type, symbol, shares, entryprice, commission, sell, sellop, sellvalue, stop, stopvalue FROM trades WHERE status = 'open'";
+			String q = "SELECT type, symbol, duration, shares, entryprice, commission, sell, sellop, sellvalue, stop, stopvalue FROM trades WHERE status = 'open'";
 			Statement s = c.createStatement();
 			ResultSet rs = s.executeQuery(q);
 			while (rs.next()) {
 				HashMap<String, Object> openPosition = new HashMap<String, Object>();
 				openPosition.put("type", rs.getString("type"));
 				openPosition.put("symbol", rs.getString("symbol"));
+				openPosition.put("duration", rs.getString("duration"));
 				openPosition.put("shares", rs.getInt("shares"));
 				openPosition.put("sell", rs.getString("sell"));
 				openPosition.put("sellop", rs.getString("sellop"));

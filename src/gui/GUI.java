@@ -1614,7 +1614,7 @@ public class GUI {
 			    		String duration = pieces1[0];
 			    		String[] pieces2 = pieces1[1].split(" \\(");
 			    		String symbol = pieces2[0];
-			    		selectedSymbols.add(symbol);
+			    		selectedSymbols.add(duration + " - " + symbol);
 			    	}
 			    }
 			    ps.setSymbols(selectedSymbols);

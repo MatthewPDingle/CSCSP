@@ -91,7 +91,7 @@ public class Converter {
 	}
 	
 	/**
-	 * Queries data from bitcointick, packages the tick data into bars, and inserts it into bar
+	 * Queries data from tick, packages the tick data into bars, and inserts it into bar
 	 * 
 	 * @param bitcoinSymbol
 	 * @param barSize
@@ -100,8 +100,8 @@ public class Converter {
 		int numBarsProcessed = 0;
 		try {
 			// First figure out where to start by finding the earlist tick and then rounding back to the beginning of what that bar period would be
-			Calendar earlistTick = QueryManager.getBitcoinTickEarliestTick(bitcoinSymbol);
-			Calendar latestTick = QueryManager.getBitcoinTickLatestTick(bitcoinSymbol);
+			Calendar earlistTick = QueryManager.getTickEarliestTick(bitcoinSymbol);
+			Calendar latestTick = QueryManager.getTickLatestTick(bitcoinSymbol);
 			
 			Calendar periodStart = earlistTick;
 			periodStart.set(Calendar.SECOND, 0);
@@ -208,7 +208,7 @@ public class Converter {
 //				System.out.println("Processing bar between " + periodStart.getTime().toString() + " and " + periodEnd.getTime().toString());
 				
 				// Get the tick data from the database
-				ArrayList<HashMap<String, Object>> recordsInBar = QueryManager.getBitcoinTickData(bitcoinSymbol, periodStart, barSize);
+				ArrayList<HashMap<String, Object>> recordsInBar = QueryManager.getTickData(bitcoinSymbol, periodStart, barSize);
 				
 				int numTrades = recordsInBar.size();
 				
@@ -325,9 +325,9 @@ public class Converter {
 	}
 	
 	/**
-	 * Reads the file archive and inserts the data into the bitcointick table.
-	 * It first checks the bitcointick table for previous data and gets the time of the latest tick data for the symbol.
-	 * Only data in the file after that time gets imported into bitcointick.  T
+	 * Reads the file archive and inserts the data into the tick table.
+	 * It first checks the tick table for previous data and gets the time of the latest tick data for the symbol.
+	 * Only data in the file after that time gets imported into tick.  T
 	 * 
 	 * @param filename
 	 */
@@ -358,7 +358,7 @@ public class Converter {
 				tickSymbol = "okcoinBTCCNY";
 			}
 			
-			Calendar latestTick = QueryManager.getBitcoinTickLatestTick(tickSymbol);
+			Calendar latestTick = QueryManager.getTickLatestTick(tickSymbol);
 			
 			InputStream fileStream = new FileInputStream("data/" + filename);
 			InputStream gzipStream = new GZIPInputStream(fileStream);
@@ -382,7 +382,7 @@ public class Converter {
 					String record = "'" + tickSymbol + "', " + price + ", " + volume + ", '" + CalendarUtils.getSqlDateTimeString(c) + "'";
 					recordBuffer.add(record);
 					if (recordBuffer.size() >= 100) {
-						QueryManager.insertIntoBitcoinTick(recordBuffer);
+						QueryManager.insertIntoTick(recordBuffer);
 						recordBuffer.clear();
 					}
 				}
@@ -393,7 +393,7 @@ public class Converter {
 			
 			// Insert remaining buffered ticks
 			if (recordBuffer.size() > 0) {
-				QueryManager.insertIntoBitcoinTick(recordBuffer);
+				QueryManager.insertIntoTick(recordBuffer);
 				recordBuffer.clear();
 			}
 			
