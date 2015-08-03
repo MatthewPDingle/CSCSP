@@ -1020,14 +1020,15 @@ public class QueryManager {
 
 				// Fill a "metricSequence" with the price data for the last X
 				// days + however many days I need stats for
-				String q2 = "SELECT r.*, r2.adjclose AS spyadjclose, r2.change AS spychange "
-						+ "FROM bar r "
-						+ "INNER JOIN bar r2 "
-						+ "ON r.start = r2.start AND r2.symbol = 'SPY' "
-						+ "WHERE r.symbol = '" + symbol + "' "
-						+ "AND r.start >= '" + baseDate + "' "
-						+ "ORDER BY start ASC";
-
+				String alphaComparison = "SPY"; // TODO: probably change this
+				String q2 = "SELECT r.*, " +
+						"(SELECT close FROM bar WHERE symbol = '" + alphaComparison + "' AND start <= r.start ORDER BY start DESC LIMIT 1) AS alphaclose, " +
+						"(SELECT change FROM bar WHERE symbol = '" + alphaComparison + "' AND start <= r.start ORDER BY start DESC LIMIT 1) AS alphachange " +
+						"FROM bar r " +
+						"WHERE r.symbol = '" + symbol + "' " +
+						"AND r.start >= '" + baseDate + "' " +
+						"ORDER BY start ASC";
+				
 				LinkedList<Metric> metricSequence = new LinkedList<Metric>();
 				
 				Statement s2 = c.createStatement();
@@ -1047,12 +1048,12 @@ public class QueryManager {
 					float adjClose = rs2.getFloat("close");
 					float adjHigh = rs2.getFloat("high");
 					float adjLow = rs2.getFloat("low");
-					float spyAdjClose = rs2.getFloat("spyadjclose");
-					float spyChange = rs2.getFloat("spychange");
+					float alphaClose = rs2.getFloat("alphaclose");
+					float alphaChange = rs2.getFloat("alphachange");
 					float gap = rs2.getFloat("gap");
 					float change = rs2.getFloat("change");
 
-					Metric day = new Metric(symbol, start, end, duration, volume, adjOpen, adjClose, adjHigh, adjLow, gap, change, spyAdjClose, spyChange);
+					Metric day = new Metric(symbol, start, end, duration, volume, adjOpen, adjClose, adjHigh, adjLow, gap, change, alphaClose, alphaChange);
 					metricSequence.add(day);
 				}
 				metricSequences.add(metricSequence);
@@ -1530,7 +1531,7 @@ public class QueryManager {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			String q = 	"DELETE FROM metrics WHERE (symbol, duration, start) IN ( " +
-						"SELECT symbol, duration, MAX(start) FROM metrics " +
+						"SELECT symbol, duration, MAX(start) AS start FROM metrics " +
 						"WHERE symbol = ? AND duration = ? " +
 						"GROUP BY symbol, duration)";
 			PreparedStatement ps = c.prepareStatement(q);
@@ -1550,12 +1551,12 @@ public class QueryManager {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			String q = 	"DELETE FROM metrics WHERE (symbol, duration, start) IN ( " +
-						"SELECT symbol, duration, MAX(start) FROM metrics " +
+						"SELECT symbol, duration, MAX(start) AS start FROM metrics " +
 						"WHERE symbol = ? AND duration = ? " +
 						"GROUP BY symbol, duration) ";
 			String metricsTerm = "";
 			if (metrics != null && metrics.size() > 0) {
-				metricsTerm = "WHERE name IN (";
+				metricsTerm = "AND name IN (";
 				
 				for (String metric : metrics) {
 					metricsTerm += "'" + metric + "',";

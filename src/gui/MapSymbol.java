@@ -41,6 +41,12 @@ public class MapSymbol implements Comparable {
 			return 1;
 	}
 	
+	@Override
+	public String toString() {
+		String out = duration + " - " + symbol;
+		return out;
+	}
+
 	public MapCell getParentMapCell() {
 		return MapCellSingleton.getInstance().getSmoothedMapCellAt(xMetricValue, yMetricValue);
 	}
