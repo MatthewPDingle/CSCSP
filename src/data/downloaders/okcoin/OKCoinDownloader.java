@@ -31,13 +31,27 @@ public class OKCoinDownloader {
 		}
 		
 		
-		ArrayList<Bar> bars2 = getMostRecentBarsFromTickHistory(OKCoinConstants.SYMBOL_BTCCNY, Constants.BAR_SIZE.BAR_15M, "5000");
-		for (Bar bar : bars2) {
-//			System.out.println(bar);
+//		ArrayList<Bar> bars2 = getMostRecentBarsFromTickHistory(OKCoinConstants.SYMBOL_BTCCNY, Constants.BAR_SIZE.BAR_15M, "5000");
+//		for (Bar bar : bars2) {
+////			System.out.println(bar);
+//			QueryManager.insertOrUpdateIntoBar(bar);
+//		}
+	}
+
+	public static void downloadBarsAndUpdate(String okcoinSymbol, BAR_SIZE barSize) {
+		ArrayList<Bar> bars = getMostRecentBarsFromBarHistory(okcoinSymbol, barSize, 2000, null);
+		for (Bar bar : bars) {
 			QueryManager.insertOrUpdateIntoBar(bar);
 		}
 	}
-
+	
+	public static void downloadTicksAndUpdate(String okcoinSymbol, BAR_SIZE barSize) {
+		ArrayList<Bar> bars2 = getMostRecentBarsFromTickHistory(okcoinSymbol, barSize, "5000");
+		for (Bar bar : bars2) {
+			QueryManager.insertOrUpdateIntoBar(bar);
+		}
+	}
+	
 	/**
 	 * Returns the most recent bars in order of oldest to newest
 	 * The newest bar may be "partial" if the full bar duration has not passed yet.
@@ -47,7 +61,6 @@ public class OKCoinDownloader {
 	 * @param sinceID
 	 * @return
 	 */
-	
 	public static ArrayList<Bar> getMostRecentBarsFromTickHistory(String okCoinSymbol, Constants.BAR_SIZE barSize, String sinceID) {
 		ArrayList<Bar> bars = new ArrayList<Bar>();
 		try {

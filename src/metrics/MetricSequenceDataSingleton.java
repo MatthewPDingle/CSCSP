@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 import constants.Constants;
+import data.Metric;
 
 public class MetricSequenceDataSingleton {
 

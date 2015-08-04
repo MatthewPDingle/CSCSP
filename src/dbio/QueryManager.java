@@ -1,14 +1,11 @@
 package dbio;
 
-import gui.MapCell;
-import gui.MapSymbol;
-import gui.singletons.ParameterSingleton;
-
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -17,14 +14,17 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
 
-import metrics.Metric;
+import constants.Constants;
+import constants.Constants.BAR_SIZE;
+import data.Bar;
+import data.Metric;
+import gui.MapCell;
+import gui.MapSymbol;
+import gui.singletons.ParameterSingleton;
 import metrics.MetricSequenceDataSingleton;
 import utils.CalcUtils;
 import utils.CalendarUtils;
 import utils.ConnectionSingleton;
-import constants.Constants;
-import constants.Constants.BAR_SIZE;
-import data.Bar;
 
 public class QueryManager {
 
@@ -1007,16 +1007,15 @@ public class QueryManager {
 			
 			// Query
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q1 = "SELECT symbol, to_char(MAX(start::date) + INTEGER '-300', 'YYYY-MM-DD') AS baseDate, " +
-					"to_char(MAX(start), 'YYYY-MM-DD') AS maxDate FROM " + Constants.BAR_TABLE + " " +
-					"WHERE symbol IN " + symbolsString + " " +
-					"GROUP BY symbol";
+			String q1 = "SELECT DISTINCT symbol, " +
+						"(SELECT MIN(start) FROM (SELECT symbol, start FROM bar WHERE symbol IN " + symbolsString + " ORDER BY start DESC LIMIT 300) t) AS baseDate " +
+						"FROM bar WHERE symbol IN " + symbolsString;
 			Statement s1 = c.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			ResultSet rs1 = s1.executeQuery(q1);
 
 			while (rs1.next()) {
 				String symbol = rs1.getString("symbol");
-				String baseDate = rs1.getString("baseDate"); // 300 days before latest date
+				String baseDate = rs1.getString("baseDate"); // 300 bars ago
 
 				// Fill a "metricSequence" with the price data for the last X
 				// days + however many days I need stats for
@@ -1034,13 +1033,12 @@ public class QueryManager {
 				Statement s2 = c.createStatement();
 				ResultSet rs2 = s2.executeQuery(q2);
 				while (rs2.next()) {
-					Date dStart = rs2.getDate("start");
+					Timestamp tsStart = rs2.getTimestamp("start");
 					Calendar start = Calendar.getInstance();
-					start.setTime(dStart);
-					start.set(Calendar.SECOND, 0);
-					Date dEnd = rs2.getDate("end");
+					start.setTimeInMillis(tsStart.getTime());
+					Timestamp tsEnd = rs2.getTimestamp("end");
 					Calendar end = Calendar.getInstance();
-					end.setTime(dEnd);
+					end.setTimeInMillis(tsEnd.getTime());
 					end.set(Calendar.SECOND, 0);
 					String duration = rs2.getString("duration");
 					long volume = rs2.getLong("volume");
@@ -1053,7 +1051,7 @@ public class QueryManager {
 					float gap = rs2.getFloat("gap");
 					float change = rs2.getFloat("change");
 
-					Metric day = new Metric(symbol, start, end, duration, volume, adjOpen, adjClose, adjHigh, adjLow, gap, change, alphaClose, alphaChange);
+					Metric day = new Metric(symbol, start, end, BAR_SIZE.valueOf(duration), volume, adjOpen, adjClose, adjHigh, adjLow, gap, change, alphaClose, alphaChange);
 					metricSequence.add(day);
 				}
 				metricSequences.add(metricSequence);
@@ -1233,6 +1231,101 @@ public class QueryManager {
 			s.close();
 			c.close();
 		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void insertIntoMetrics(Metric metric) {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			
+			// First see if this bar exists in the DB
+			String q = "SELECT * FROM metrics WHERE name = ? AND symbol = ? AND start = ? AND duration = ?";
+			PreparedStatement s = c.prepareStatement(q);
+			s.setString(1, metric.name);
+			s.setString(2, metric.symbol);
+			s.setTimestamp(3, new java.sql.Timestamp(metric.start.getTime().getTime()));
+			s.setString(4, metric.duration.toString());
+			
+			ResultSet rs = s.executeQuery();
+			boolean exists = false;
+			while (rs.next()) {
+				exists = true;
+				break;
+			}
+			s.close();
+			
+			// If it doesn't exist, insert it
+			if (!exists) {
+				String q2 = "INSERT INTO metrics(name, symbol, start, \"end\", duration, value) " + 
+							"VALUES (?, ?, ?, ?, ?, ?)";
+				PreparedStatement s2 = c.prepareStatement(q2);
+				s2.setString(1, metric.name);
+				s2.setString(2, metric.symbol);
+				s2.setTimestamp(3, new java.sql.Timestamp(metric.start.getTime().getTime()));
+				s2.setTimestamp(4, new java.sql.Timestamp(metric.end.getTime().getTime()));
+				s2.setString(5, metric.duration.toString());
+				if (metric.value == null) {
+					s2.setNull(6, java.sql.Types.FLOAT);
+				}
+				else {
+					s2.setFloat(6, metric.value);
+				}
+				
+				s2.executeUpdate();
+				s2.close();
+			}
+			
+			c.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void insertIntoMetrics(LinkedList<Metric> metrics) {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			
+			String q2 = "INSERT INTO metrics(name, symbol, start, \"end\", duration, value) VALUES (?, ?, ?, ?, ?, ?)";
+			PreparedStatement s2 = c.prepareStatement(q2);
+			
+			for (Metric metric : metrics) {
+				// First see if this bar exists in the DB
+				String q = "SELECT COUNT(*) AS numtrades FROM metrics WHERE name = ? AND symbol = ? AND start = ? AND duration = ?";
+				PreparedStatement s = c.prepareStatement(q);
+				s.setString(1, metric.name);
+				s.setString(2, metric.symbol);
+				s.setTimestamp(3, new java.sql.Timestamp(metric.start.getTime().getTime()));
+				s.setString(4, metric.duration.toString());
+				
+				ResultSet rs = s.executeQuery();
+				boolean exists = false;
+				while (rs.next()) {
+					exists = true;
+					break;
+				}
+				rs.close();
+				s.close();
+				
+				// If it doesn't exist, insert it
+				if (!exists) {
+					s2.setString(1, metric.name);
+					s2.setString(2, metric.symbol);
+					s2.setTimestamp(3, new java.sql.Timestamp(metric.start.getTime().getTime()));
+					s2.setTimestamp(4, new java.sql.Timestamp(metric.end.getTime().getTime()));
+					s2.setString(5, metric.duration.toString());
+					s2.setFloat(6, metric.value);
+					s2.addBatch();
+				}
+			}
+			
+			s2.executeUpdate();
+			s2.close();
+			
+			c.close();
+		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1714,59 +1807,48 @@ public class QueryManager {
 			return null;
 		}
 	}
-
-	public static void insertRealtimeMetrics(Calendar latestTradingDay, LinkedList<Metric> metricSequence) {
+	
+	public static Calendar getMaxStartFromBar() {
 		try {
-			ArrayList<String> records = new ArrayList<String>();
-			String metricName = "";
-			
-			Metric lastMetric = metricSequence.getLast();
-			
-			Calendar start = lastMetric.getStart();
-			if (start.get(Calendar.YEAR) == latestTradingDay.get(Calendar.YEAR) &&  
-					start.get(Calendar.MONTH) == latestTradingDay.get(Calendar.MONTH) &&  
-					start.get(Calendar.DATE) == latestTradingDay.get(Calendar.DATE)) {
-				// The last date in the metricsequence is the right date: the latest trading date
-			}
-			else {
-				return; // Else GTFO
-			}
-			
-			Calendar end = lastMetric.getEnd();
-			
-			metricName = lastMetric.getName();
-			String symbol = lastMetric.getSymbol();
-			String duration = lastMetric.getDuration();
-			Float value = lastMetric.getValue();
-			String sValue = "NULL";
-			if (value == null || value.isNaN() || value.isInfinite()) {
-				sValue = "NULL";
-			} 
-			else {
-				sValue = value.toString();
-			}
-			
-			StringBuilder sb = new StringBuilder();
-			sb.append("('");
-			sb.append(metricName);
-			sb.append("', '");
-			sb.append(symbol);
-			sb.append("', '");
-			sb.append(CalendarUtils.getSqlDateString(start));
-			sb.append("', '");
-			sb.append(CalendarUtils.getSqlDateString(end));
-			sb.append("', '");
-			sb.append(duration);
-			sb.append("', ");
-			sb.append(sValue);
-			sb.append(")");
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "SELECT MAX(start) AS d FROM bar";
+			PreparedStatement ps = c.prepareStatement(q);
 
-			records.add(sb.toString());
-				
-			if (records.size() > 0) {
-				QueryManager.insertMetrics(records);
-				records.clear();
+			ResultSet rs = ps.executeQuery();
+			java.sql.Timestamp ts = null;
+			Calendar cal = Calendar.getInstance();
+			while (rs.next()) {
+				cal.setTimeInMillis(rs.getTimestamp(1).getTime());
+				break;
 			}
+
+			rs.close();
+			ps.close();
+			c.close();
+			
+			return cal;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static void insertRealtimeMetrics(Calendar maxStartFromBar, LinkedList<Metric> metricSequence) {
+		try {
+			insertIntoMetrics(metricSequence);
+//			Metric lastMetric = metricSequence.getLast();
+//			
+//			if (	lastMetric.start.get(Calendar.YEAR) == maxStartFromBar.get(Calendar.YEAR) &&  
+//					lastMetric.start.get(Calendar.MONTH) == maxStartFromBar.get(Calendar.MONTH) &&  
+//					lastMetric.start.get(Calendar.DATE) == maxStartFromBar.get(Calendar.DATE) &&
+//					lastMetric.start.get(Calendar.HOUR) == maxStartFromBar.get(Calendar.HOUR) &&
+//					lastMetric.start.get(Calendar.MINUTE) == maxStartFromBar.get(Calendar.MINUTE)) {
+//				// The last start in the metricsequence is the right start: the latest bar start
+//				if (lastMetric != null) {
+//					insertIntoMetrics(lastMetric);
+//				}
+//			}
 		} 
 		catch (Exception e) {
 			e.printStackTrace();

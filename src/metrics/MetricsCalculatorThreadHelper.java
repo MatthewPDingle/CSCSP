@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
 
+import constants.Constants.BAR_SIZE;
+import data.Metric;
 import utils.CalendarUtils;
 import dbio.QueryManager;
 
@@ -17,7 +19,7 @@ public class MetricsCalculatorThreadHelper extends Thread {
 				Metric first = metricSequence.getFirst();
 				String symbol = "";
 				if (first != null) {
-					symbol = first.getSymbol();
+					symbol = first.symbol;
 				}
 				System.out.println("Processing " + symbol);
 
@@ -115,9 +117,9 @@ public class MetricsCalculatorThreadHelper extends Thread {
 			ArrayList<String> records = new ArrayList<String>();
 			String metricName = "";
 			for (Metric metric:metricSequence) {
-				metricName = metric.getName();
-				String symbol = metric.getSymbol();
-				Float value = metric.getValue();
+				metricName = metric.name;
+				String symbol = metric.symbol;
+				Float value = metric.value;
 				String sValue = "NULL";
 				if (value == null || value.isNaN() || value.isInfinite()) {
 					sValue = "NULL";
@@ -127,9 +129,9 @@ public class MetricsCalculatorThreadHelper extends Thread {
 				}
 				
 				// See if this metric/symbol/start/duration combo needs stats
-				Calendar start = metric.getStart();
-				Calendar end = metric.getEnd();
-				String duration = metric.getDuration();
+				Calendar start = metric.start;
+				Calendar end = metric.end;
+				BAR_SIZE duration = metric.duration;
 	
 			  	StringBuilder sb = new StringBuilder();
 			  	sb.append("('");
@@ -141,7 +143,7 @@ public class MetricsCalculatorThreadHelper extends Thread {
 			  	sb.append("', '");
 			  	sb.append(CalendarUtils.getSqlDateTimeString(end));
 			  	sb.append("', '");
-			  	sb.append(duration);
+			  	sb.append(duration.toString());
 			  	sb.append("', ");
 			  	sb.append(sValue);
 			  	sb.append(")");

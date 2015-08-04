@@ -1298,7 +1298,7 @@ public class GUI {
 							}
 				        	
 				        	// Start the realtime tracking thread
-				        	MapSymbolSingleton.getInstance().setMapSymbols(QueryManager.getMapSymbols());
+//				        	MapSymbolSingleton.getInstance().setMapSymbols(QueryManager.getMapSymbols());
 
 				        	rttWorker = new RealtimeTrackerWorker();
 							rttWorker.execute();

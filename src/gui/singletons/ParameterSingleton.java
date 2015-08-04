@@ -293,6 +293,16 @@ public class ParameterSingleton {
 	public ArrayList<String> getSymbols() {
 		return symbols;
 	}
+	
+	public ArrayList<String[]> getDurationSymbols() {
+		ArrayList<String[]> durationSymbols = new ArrayList<String[]>();
+		if (symbols != null) {
+			for (String s : symbols) {
+				durationSymbols.add(s.split(" - "));
+			}
+		}
+		return durationSymbols;
+	}
 
 	public void setSymbols(ArrayList<String> symbols) {
 		this.symbols = symbols;

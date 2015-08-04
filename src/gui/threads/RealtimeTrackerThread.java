@@ -16,6 +16,8 @@ import java.util.HashMap;
 import metrics.MetricsCalculatorRealtime;
 import trading.TradeMonitor;
 import constants.Constants;
+import data.downloaders.okcoin.OKCoinConstants;
+import data.downloaders.okcoin.OKCoinDownloader;
 import dbio.QueryManager;
 
 public class RealtimeTrackerThread extends Thread {
@@ -44,16 +46,35 @@ public class RealtimeTrackerThread extends Thread {
 	@Override
 	public void run() {
 		try {
-			// Delete the most recent bars and metrics for the symbols & bars we're going to be tracking.  
-			ArrayList<String> durationSymbols = ps.getSymbols();
+			ArrayList<String[]> durationSymbols = ps.getDurationSymbols();
+	
 			if (durationSymbols != null) {
-				for (String ds : durationSymbols) {
-					String[] parts = ds.split(" - ");
-					String duration = parts[0];
-					String symbol = parts[1];
-					QueryManager.deleteMostRecentBar(symbol, duration);
-					QueryManager.deleteMostRecentMetrics(symbol, duration);
+				// Download latest data and put in DB
+				for (String[] ds : durationSymbols) {
+					String duration = ds[0];
+					String symbol = ds[1];
+					
+					if (symbol.startsWith("okcoin")) {
+						String okCoinSymbol = OKCoinConstants.symbolToOKCoinSymbolHash.get(symbol);
+						if (okCoinSymbol != null) {
+							OKCoinDownloader.downloadBarsAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration));
+							OKCoinDownloader.downloadTicksAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration));
+						}
+					}
 				}
+				
+				// Delete most recent bar from both bar and metric tables.  TODO: why?
+//				for (String[] ds : durationSymbols) {
+//					String duration = ds[0];
+//					String symbol = ds[1];
+//					QueryManager.deleteMostRecentBar(symbol, duration);
+//					QueryManager.deleteMostRecentMetrics(symbol, duration);
+//				}
+				
+				// Calculate metrics for the latest data
+				MetricsCalculatorRealtime.calculateMetricsRealtime(this.usedMetrics, durationSymbols);
+				
+				mss.setMapSymbols(QueryManager.getMapSymbols());
 			}
 			
 			while (this.running) {
@@ -73,7 +94,7 @@ public class RealtimeTrackerThread extends Thread {
 			System.out.println("HPMapSymbols.size() = " + mss.getHighPriorityMapSymbols().size());
 			
 			// Get list of symbols that need updates (Last Trading Day)
-			ArrayList<String[]> symbolList = new ArrayList<String[]>(); // Duration, Symbol
+			ArrayList<String[]> durationSymbols = new ArrayList<String[]>(); // Duration, Symbol
 			
 			// First round do everything
 			if (updateCounter == 0) {
@@ -81,7 +102,7 @@ public class RealtimeTrackerThread extends Thread {
 					String[] ds = new String[2];
 					ds[0] = ms.getDuration();
 					ds[1] = ms.getSymbol();
-					symbolList.add(ds);
+					durationSymbols.add(ds);
 				}
 			}
 			// Every X times, track (1 / updateAllFrequency) of everything.  Each time this hits it shifts to the next set.
@@ -92,7 +113,7 @@ public class RealtimeTrackerThread extends Thread {
 						String[] ds = new String[2];
 						ds[0] = ms.getDuration();
 						ds[1] = ms.getSymbol();
-						symbolList.add(ds);
+						durationSymbols.add(ds);
 					}
 				}
 			}
@@ -103,7 +124,7 @@ public class RealtimeTrackerThread extends Thread {
 						String[] ds = new String[2];
 						ds[0] = ms.getDuration();
 						ds[1] = ms.getSymbol();
-						symbolList.add(ds);
+						durationSymbols.add(ds);
 					}
 				}
 				else {
@@ -111,7 +132,7 @@ public class RealtimeTrackerThread extends Thread {
 						String[] ds = new String[2];
 						ds[0] = ms.getDuration();
 						ds[1] = ms.getSymbol();
-						symbolList.add(ds);
+						durationSymbols.add(ds);
 					}
 				}
 			}
@@ -123,20 +144,20 @@ public class RealtimeTrackerThread extends Thread {
 				String[] ds = new String[2];
 				ds[0] = duration;
 				ds[1] = symbol;
-				if (!symbolList.contains(ds)) // TODO: Debug this and the next SPY section below to see what it does
-					symbolList.add(ds);
+				if (!durationSymbols.contains(ds)) // TODO: Debug this and the next SPY section below to see what it does
+					durationSymbols.add(ds);
 			}
 			
 			// Add SPY to the symbolList if needed
 			String[] alphaDS = new String[2];
 			alphaDS[0] = Constants.BAR_SIZE.BAR_1D.toString();
 			alphaDS[1] = "SPY";
-			if (!symbolList.contains(alphaDS))
-				symbolList.add(alphaDS);
-			System.out.println("symbolList.size() = " + symbolList.size());
+			if (!durationSymbols.contains(alphaDS))
+				durationSymbols.add(alphaDS);
+			System.out.println("symbolList.size() = " + durationSymbols.size());
 			
 			// Delete most recent trading day for the symbols we're tracking during this loop
-			for (String[] ds : symbolList) {
+			for (String[] ds : durationSymbols) {
 				QueryManager.deleteMostRecentBar(ds[1], ds[0]);
 				QueryManager.deleteMostRecentMetrics(ds[1], ds[0], usedMetrics);
 			}
@@ -144,21 +165,34 @@ public class RealtimeTrackerThread extends Thread {
 //			QueryManager.deleteMostRecentTradingDayFromMetricTables(symbolList, usedMetrics);
 			
 			// Create URL strings
-//			ArrayList<String> symbolStrings = getSymbolStrings(symbolList);
-//			
-//			// Connect to Yahoo Finance & Update basicr with today's current info
+			ArrayList<String> symbolStrings = getSymbolStrings(durationSymbols);
+			
+			// Download latest data and put in DB
+			for (String[] ds : durationSymbols) {
+				String duration = ds[0];
+				String symbol = ds[1];
+				
+				if (symbol.startsWith("okcoin")) {
+					String okCoinSymbol = OKCoinConstants.symbolToOKCoinSymbolHash.get(symbol);
+					if (okCoinSymbol != null) {
+						OKCoinDownloader.downloadBarsAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration));
+						OKCoinDownloader.downloadTicksAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration));
+					}
+				}
+			}
+			
 //			getUpdatedYahooQuotesAndSaveToDB(symbolStrings);
-//			stockMovementTester(symbolList);
+//			stockMovementTester(durationSymbols);
 			
 			// Update the MapSymbol's last updated time
 			for (MapSymbol ms:mss.getMapSymbols()) {
-				if (symbolList.contains(ms.getSymbol())) {
+				if (durationSymbols.contains(ms.getSymbol())) {
 					ms.setLastUpdated(Calendar.getInstance());
 				}
 			}
 			
 			// Calculate the metrics
-			MetricsCalculatorRealtime.calculateMetricsRealtime(this.usedMetrics, symbolList);
+			MetricsCalculatorRealtime.calculateMetricsRealtime(this.usedMetrics, durationSymbols);
 			mss.setMapSymbols(QueryManager.getMapSymbols());
 			
 			// Notify the GUI

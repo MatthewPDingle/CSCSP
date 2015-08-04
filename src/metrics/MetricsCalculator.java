@@ -16,6 +16,8 @@ import com.tictactec.ta.lib.MInteger;
 import com.tictactec.ta.lib.RetCode;
 
 import constants.Constants;
+import constants.Constants.BAR_SIZE;
+import data.Metric;
 import dbio.QueryManager;
 
 public class MetricsCalculator {
@@ -104,7 +106,7 @@ public class MetricsCalculator {
 					float alphaChange = rs2.getFloat("alphachange");
 					float gap = rs2.getFloat("gap");
 					float change = rs2.getFloat("change");
-					metricSequence.add(new Metric(symbol, start, end, duration, volume, adjOpen, adjClose, adjHigh, adjLow, gap, change, alphaClose, alphaChange));
+					metricSequence.add(new Metric(symbol, start, end, BAR_SIZE.valueOf(duration), volume, adjOpen, adjClose, adjHigh, adjLow, gap, change, alphaClose, alphaChange));
 				}
 				rs2.close();
 				msds.addMetricSequence(metricSequence);
@@ -132,7 +134,7 @@ public class MetricsCalculator {
 		float maxValue = -1000000000f;
 		ArrayList<Float> values = new ArrayList<Float>(); 
 		for (Metric metric:metricSequence) {
-			Float value = metric.getValue();
+			Float value = metric.value;
 			if (value != null) {
 				if (value < minValue) {
 					minValue = value;
@@ -160,11 +162,11 @@ public class MetricsCalculator {
 		
 		for (Metric metric:metricSequence) {
 			// Shift unscaled values so the min becomes zero, then apply scale
-			Float value = metric.getValue();
+			Float value = metric.value;
 			if (value != null) {
 				float zeroBasedValue = value - minValue;
 				float normalizedValue = zeroBasedValue * scaleFactor;
-				metric.setValue(normalizedValue);
+				metric.value = normalizedValue;
 			}
 		}
 	}
@@ -203,15 +205,15 @@ public class MetricsCalculator {
 
 			  	// Set this day's AVEMA value and add it to the new sequence
 			  	if (c >= 10) {
-			  		metric.setValue(todaysAV);
+			  		metric.value = todaysAV;
 			  	}
 			  	else {
-			  		metric.setValue(null);
+			  		metric.value = null;
 			  	}
 			  	
 			  	yesterdaysAV = todaysAV;
 			}
-			metric.setName("av" + weight + "ema");
+			metric.name = "av" + weight + "ema";
 			
 		  	yesterdaysAdjClose = adjClose;
 		  	c++;
@@ -254,15 +256,15 @@ public class MetricsCalculator {
 
 			  	// Set this day's BVEMA value and add it to the new sequence
 			  	if (c >= 10) {
-			  		metric.setValue(todaysBV);
+			  		metric.value = todaysBV;
 			  	}
 			  	else {
-			  		metric.setValue(null);
+			  		metric.value = null;
 			  	}
 			  	
 			  	yesterdaysBV = todaysBV;
 			}
-			metric.setName("bv" + weight + "ema");
+			metric.name = "bv" + weight + "ema";
 			
 		  	yesterdaysAdjClose = adjClose;
 		  	c++;
@@ -305,15 +307,15 @@ public class MetricsCalculator {
 
 			  	// Set this day's CVEMA value and add it to the new sequence
 			  	if (c >= 10) {
-			  		metric.setValue(todaysCV);
+			  		metric.value = todaysCV;
 			  	}
 			  	else {
-			  		metric.setValue(null);
+			  		metric.value = null;
 			  	}
 			  	
 			  	yesterdaysCV = todaysCV;
 			}
-			metric.setName("cv" + weight + "ema");
+			metric.name = "cv" + weight + "ema";
 			
 		  	yesterdaysAdjClose = adjClose;
 		  	c++;
@@ -346,12 +348,12 @@ public class MetricsCalculator {
 		  	}
 
 		  	// Set this day's DV2EMA value and add it to the new sequence
-		  	metric.setName("dv" + weight + "ema");
+		  	metric.name = "dv" + weight + "ema";
 		  	if (c >= 10) {
-		  		metric.setValue(todaysDV);
+		  		metric.value = todaysDV;
 		  	}
 		  	else {
-		  		metric.setValue(null);
+		  		metric.value = null;
 		  	}
 		  	
 		  	yesterdaysDV = todaysDV;
@@ -386,12 +388,12 @@ public class MetricsCalculator {
 		  	}
 
 		  	// Set this day's EVEMA value and add it to the new sequence
-		  	metric.setName("ev" + weight + "ema");
+		  	metric.name = "ev" + weight + "ema";
 		  	if (c >= 10) {
-		  		metric.setValue(todaysEV);
+		  		metric.value = todaysEV;
 		  	}
 		  	else {
-		  		metric.setValue(null);
+		  		metric.value = null;
 		  	}
 		  	
 		  	yesterdaysEV = todaysEV;
@@ -426,12 +428,12 @@ public class MetricsCalculator {
 		  	}
 
 		  	// Set this day's FVEMA value and add it to the new sequence
-		  	metric.setName("fv" + weight + "ema");
+		  	metric.name = "fv" + weight + "ema";
 		  	if (c >= 10) {
-		  		metric.setValue(todaysFV);
+		  		metric.value = todaysFV;
 		  	}
 		  	else {
-		  		metric.setValue(null);
+		  		metric.value = null;
 		  	}
 		  	
 		  	yesterdaysFV = todaysFV;
@@ -483,12 +485,12 @@ public class MetricsCalculator {
 			
 			// Set the MACD values and add the day to the new day sequence
 			if (c >= longPeriod) {
-				metric.setValue(divergence);
+				metric.value = divergence;
 			}
 			else {
-				metric.setValue(null);
+				metric.value = null;
 			}
-			metric.setName("macddivergence" + shortPeriod + "_" + longPeriod + "_" + macdPeriod);
+			metric.name = "macddivergence" + shortPeriod + "_" + longPeriod + "_" + macdPeriod;
 			
 			previousShortPeriodEMA = shortPeriodEMA;
 			previousLongPeriodEMA = longPeriodEMA;
@@ -532,12 +534,12 @@ public class MetricsCalculator {
 
 			// Set the MACD values and add the day to the new day sequence
 			if (c >= longPeriod) {
-				metric.setValue(macdAsPercentOfPrice);
+				metric.value = macdAsPercentOfPrice;
 			}
 			else {
-				metric.setValue(null);
+				metric.value = null;
 			}
-			metric.setName("macd" + shortPeriod + "_" + longPeriod + "_" + macdPeriod);
+			metric.name = "macd" + shortPeriod + "_" + longPeriod + "_" + macdPeriod;
 			
 			previousShortPeriodEMA = shortPeriodEMA;
 			previousLongPeriodEMA = longPeriodEMA;
@@ -576,12 +578,12 @@ public class MetricsCalculator {
 				float dvFading4 = (((todaysValue * .4f) + (yesterdaysValue * .3f) + (yesterday2sValue * .2f) + (yesterday3sValue * .1f)) - 1f) * 100f;
 				
 				// Set the DVFading4 value and add the day to the new day sequence
-				metric.setValue(dvFading4);
-				metric.setName("dvfading4");
+				metric.value = dvFading4;
+				metric.name = "dvfading4";
 			}
 			else {
-				metric.setValue(null);
-				metric.setName("dvfading4");
+				metric.value = null;
+				metric.name = "dvfading4";
 			}
 			
 			yesterday3 = yesterday2;
@@ -613,13 +615,13 @@ public class MetricsCalculator {
 
 		  	// Set this day's RSI value and add it to the new sequence
 		  	if (c >= 10) {
-			  	metric.setValue(todaysDVol);
+			  	metric.value = todaysDVol;
 			  	
 		  	}
 		  	else {
-		  		metric.setValue(null);
+		  		metric.value = null;
 		  	}
-		  	metric.setName("dvol" + weight + "ema");
+		  	metric.name = "dvol" + weight + "ema";
 		  	
 		  	yesterdaysDVol = todaysDVol;
 		  	c++;
@@ -636,7 +638,7 @@ public class MetricsCalculator {
 	  		float adjClose = metric.getAdjClose();
 	  		if (closes.size() < period) {
 	  			closes.add(adjClose);
-	  			metric.setValue(0f);
+	  			metric.value = 0f;
 	  		}
 
 	  		else if (closes.size() == period) {
@@ -673,14 +675,14 @@ public class MetricsCalculator {
 	  			float adjustedBreakout = log * sign;
 	  			
 	  			
-	  			metric.setValue(adjustedBreakout);
+	  			metric.value = adjustedBreakout;
 	  			
 	  			// Toss the oldest, add the latest
 	  			closes.remove();
 	  			closes.add(adjClose);
 	  		}
 
-	  		metric.setName("breakout" + period);
+	  		metric.name = "breakout" + period;
 	  	}
 	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
@@ -705,12 +707,12 @@ public class MetricsCalculator {
 				float dv2 = (((todaysValue + yesterdaysValue) / 2f) - 1f) * 100f;
 				
 				// Set the DV2 value and add the day to the new day sequence
-				metric.setValue(dv2);
-				metric.setName("dv2");
+				metric.value = dv2;
+				metric.name = "dv2";
 			}
 			else {
-				metric.setValue(null);
-				metric.setName("dv2");
+				metric.value = null;
+				metric.name = "dv2";
 			}
 			
 			yesterday = metric;
@@ -736,8 +738,8 @@ public class MetricsCalculator {
 
 			if (periodsAdjCloses.size() < (period - 1)) {
 		  		periodsAdjCloses.add(adjClose);
-		  		metric.setValue(null);
-		  		metric.setName("williamsr" + period);
+		  		metric.value = null;
+		  		metric.name = "williamsr" + period;
 		  	}
 			else {
 				periodsAdjCloses.add(adjClose);
@@ -764,8 +766,8 @@ public class MetricsCalculator {
 				lastWilliam = william;
 				
 				// Set the WilliamsR value and add the day to the new day sequence
-				metric.setValue(william);
-				metric.setName("williamsr" + period);
+				metric.value = william;
+				metric.name = "williamsr" + period;
 				
 				periodsAdjCloses.remove();
 			}
@@ -795,8 +797,8 @@ public class MetricsCalculator {
 			if (periodsAdjCloses.size() < (period - 1)) {
 		  		periodsAdjCloses.add(adjClose);
 		  		periodsSPYAdjCloses.add(spyAdjClose);
-		  		metric.setValue(null);
-		  		metric.setName("williamsralpha" + period);
+		  		metric.value = null;
+		  		metric.name = "williamsralpha" + period;
 		  	}
 			else {
 				periodsAdjCloses.add(adjClose);
@@ -855,8 +857,8 @@ public class MetricsCalculator {
 				float william3 = william1 + b3;
 				
 				// Set the WilliamsR value and add the day to the new day sequence
-				metric.setValue(william3);
-				metric.setName("williamsralpha" + period);
+				metric.value = william3;
+				metric.name = "williamsralpha" + period;
 				
 				periodsAdjCloses.remove();
 			}
@@ -891,12 +893,12 @@ public class MetricsCalculator {
 
 		  	// Set this day's RSI value and add it to the new sequence
 		  	if (c >= 10) {
-			  	metric.setValue(rsi);
+			  	metric.value = rsi;
 		  	}
 		  	else {
-		  		metric.setValue(null);
+		  		metric.value = null;
 		  	}
-		  	metric.setName("rsi" + weight + "ema");
+		  	metric.name = "rsi" + weight + "ema";
 		  	
 		  	lastAvgUp = avgUp;
 		  	lastAvgDown = avgDown;
@@ -930,14 +932,14 @@ public class MetricsCalculator {
 				  	rsi = 100f - (100f / rs);
 			  	}
 			  	
-			  	metric.setValue(rsi);
+			  	metric.value = rsi;
 	  			
 	  			changes.remove();
 	  		}
 	  		else {
-	  			metric.setValue(null);
+	  			metric.value = null;
 	  		}
-	  		metric.setName("rsi" + period);
+	  		metric.name = "rsi" + period;
 	  	}
 	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
@@ -976,14 +978,14 @@ public class MetricsCalculator {
 				  	mfi = 100f - (float)(100d / rs);
 			  	}
 			  	
-			  	metric.setValue(mfi);
+			  	metric.value = mfi;
 	  			
 	  			moneyFlows.remove();
 	  		}
 	  		else {
-	  			metric.setValue(null);
+	  			metric.value = null;
 	  		}
-	  		metric.setName("mfi" + period);
+	  		metric.name = "mfi" + period;
 	  	}
 	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
@@ -1010,14 +1012,14 @@ public class MetricsCalculator {
 		if (retCode == RetCode.Success) { 
 			int c2 = begin.value; 
 			for (Metric metric:metricSequence) {
-				metric.setName("psar");
-				metric.setValue(null);
+				metric.name = "psar";
+				metric.value = null;
 				if (metricSequence.indexOf(metric) >= begin.value) {
 					float adjClose = metric.getAdjClose();
 					float psar = (float)output[c2 - begin.value];
 					float delta = psar - adjClose;
 					float percentAboveOrBelowClose = delta / adjClose * 100f;
-					metric.setValue(percentAboveOrBelowClose);
+					metric.value = percentAboveOrBelowClose;
 					c2++;
 				}
 			}
@@ -1049,10 +1051,10 @@ public class MetricsCalculator {
 		if (retCode == RetCode.Success) { 
 			int c2 = begin.value; 
 			for (Metric metric:metricSequence) {
-				metric.setName("ultimateoscillator");
-				metric.setValue(null);
+				metric.name = "ultimateoscillator";
+				metric.value = null;
 				if (metricSequence.indexOf(metric) >= begin.value) {
-					metric.setValue((float)output[c2 - begin.value]);
+					metric.value = (float)output[c2 - begin.value];
 					c2++;
 				}
 			}
@@ -1082,10 +1084,10 @@ public class MetricsCalculator {
 		if (retCode == RetCode.Success) { 
 			int c2 = begin.value; 
 			for (Metric metric:metricSequence) {
-				metric.setName("aroonoscillator");
-				metric.setValue(null);
+				metric.name = "aroonoscillator";
+				metric.value = null;
 				if (metricSequence.indexOf(metric) >= begin.value) {
-					metric.setValue((float)output[c2 - begin.value]);
+					metric.value = (float)output[c2 - begin.value];
 					c2++;
 				}
 			}
@@ -1118,10 +1120,10 @@ public class MetricsCalculator {
 		if (retCode == RetCode.Success) { 
 			int c2 = begin.value; 
 			for (Metric metric:metricSequence) {
-				metric.setName("cci" + period);
-				metric.setValue(null);
+				metric.name = "cci" + period;
+				metric.value = null;
 				if (metricSequence.indexOf(metric) >= begin.value) {
-					metric.setValue((float)(output[c2 - begin.value]) / 4f);
+					metric.value = (float)(output[c2 - begin.value]) / 4f;
 					c2++;
 				}
 			}
@@ -1152,10 +1154,10 @@ public class MetricsCalculator {
 		if (retCode == RetCode.Success) { 
 			int c2 = begin.value; 
 			for (Metric metric:metricSequence) {
-				metric.setName("beta" + period);
-				metric.setValue(null);
+				metric.name = "beta" + period;
+				metric.value = null;
 				if (metricSequence.indexOf(metric) >= begin.value) {
-					metric.setValue((float)(output[c2 - begin.value]));
+					metric.value = (float)(output[c2 - begin.value]);
 					c2++;
 				}
 			}
@@ -1196,13 +1198,13 @@ public class MetricsCalculator {
 				  	rsi = 100f - (100f / rs);
 			  	}
 			  	
-			  	metric.setValue(rsi);
+			  	metric.value = rsi;
 	  			changes.remove();
 	  		}
 	  		else {
-	  			metric.setValue(null);
+	  			metric.value = null;
 	  		}
-	  		metric.setName("rsi" + period + "alpha");
+	  		metric.name = "rsi" + period + "alpha";
 	  	}
 	  	normalizeMetricValues(metricSequence);
 	  	return metricSequence;
@@ -1226,8 +1228,8 @@ public class MetricsCalculator {
 		  		consecutiveUpMetrics = 0;
 		  	}
 			
-			metric.setValue((float)consecutiveUpMetrics);
-			metric.setName("consecutiveupdays");
+			metric.value = (float)consecutiveUpMetrics;
+			metric.name = "consecutiveupdays";
 			
 		  	lastAdjClose = adjClose;
 		}
@@ -1253,8 +1255,8 @@ public class MetricsCalculator {
 		  		consecutiveDownMetrics = 0;
 		  	}
 
-			metric.setValue((float)consecutiveDownMetrics);
-			metric.setName("consecutivedowndays");
+			metric.value = (float)consecutiveDownMetrics;
+			metric.name = "consecutivedowndays";
 			
 		  	lastAdjClose = adjClose;
 		}
@@ -1271,8 +1273,8 @@ public class MetricsCalculator {
 
 			if (periodsAdjCloses.size() < (period - 1)) {
 		  		periodsAdjCloses.add(adjClose);
-		  		metric.setValue(null);
-		  		metric.setName("pricedma" + period);
+		  		metric.value = null;
+		  		metric.name = "pricedma" + period;
 		  	}
 		  	else {
 		  		periodsAdjCloses.add(adjClose);
@@ -1283,8 +1285,8 @@ public class MetricsCalculator {
 		  		float dma = priceSum / (float)period;
 		  		
 		  		// Set this day's DMA value and add it to the new sequence
-		  		metric.setValue(dma);
-		  		metric.setName("pricedma" + period);
+		  		metric.value = dma;
+		  		metric.name = "pricedma" + period;
 		  		
 		  		periodsAdjCloses.remove();
 		  	}
@@ -1302,8 +1304,8 @@ public class MetricsCalculator {
 
 			if (periodsAdjCloses.size() < (period - 1)) {
 		  		periodsAdjCloses.add(adjClose);
-		  		metric.setValue(null);
-		  		metric.setName("priceboll" + period);
+		  		metric.value = null;
+		  		metric.name = "priceboll" + period;
 		  	}
 		  	else {
 		  		// DMA
@@ -1332,8 +1334,8 @@ public class MetricsCalculator {
 		  		}
 		  		
 		  		// Set this day's DMA value and add it to the new sequence
-		  		metric.setValue(boll);
-		  		metric.setName("priceboll" + period);
+		  		metric.value = boll;
+		  		metric.name = "priceboll" + period;
 		  		
 		  		periodsAdjCloses.remove();
 		  	}
@@ -1353,8 +1355,8 @@ public class MetricsCalculator {
 
 			if (periodGPCs.size() < (period - 1)) {
 		  		periodGPCs.add(gpc);
-		  		metric.setValue(null);
-		  		metric.setName("gapboll" + period);
+		  		metric.value = null;
+		  		metric.name = "gapboll" + period;
 		  	}
 		  	else {
 		  		// DMA
@@ -1383,8 +1385,8 @@ public class MetricsCalculator {
 		  		}
 		  		
 		  		// Set this day's DMA value and add it to the new sequence
-		  		metric.setValue(boll);
-		  		metric.setName("gapboll" + period);
+		  		metric.value = boll;
+		  		metric.name = "gapboll" + period;
 		  		
 		  		periodGPCs.remove();
 		  	}
@@ -1405,8 +1407,8 @@ public class MetricsCalculator {
 
 			if (periodIDPCs.size() < (period - 1)) {
 		  		periodIDPCs.add(idpc);
-		  		metric.setValue(null);
-		  		metric.setName("intradayboll" + period);
+		  		metric.value = null;
+		  		metric.name = "intradayboll" + period;
 		  	}
 		  	else {
 		  		// DMA
@@ -1436,8 +1438,8 @@ public class MetricsCalculator {
 		  		}
 		  		
 		  		// Set this day's DMA value and add it to the new sequence
-		  		metric.setValue(boll);
-		  		metric.setName("intradayboll" + period);
+		  		metric.value = boll;
+		  		metric.name = "intradayboll" + period;
 		  		
 		  		periodIDPCs.remove();
 		  	}
@@ -1455,8 +1457,8 @@ public class MetricsCalculator {
 
 			if (periodsVolumes.size() < (period - 1)) {
 		  		periodsVolumes.add(volume);
-		  		metric.setValue(null);
-		  		metric.setName("volumeboll" + period);
+		  		metric.value = null;
+		  		metric.name = "volumeboll" + period;
 		  	}
 		  	else {
 		  		// DMA
@@ -1486,8 +1488,8 @@ public class MetricsCalculator {
 		  		}
 		  		
 		  		// Set this day's DMA value and add it to the new sequence
-		  		metric.setValue(boll);
-		  		metric.setName("volumeboll" + period);
+		  		metric.value = boll;
+		  		metric.name = "volumeboll" + period;
 		  		
 		  		periodsVolumes.remove();
 		  	}
@@ -1505,8 +1507,8 @@ public class MetricsCalculator {
 
 			if (periodsVolumes.size() < (period - 1)) {
 		  		periodsVolumes.add(volume);
-		  		metric.setValue(null);
-		  		metric.setName("volumedma" + period);
+		  		metric.value = null;
+		  		metric.name = "volumedma" + period;
 		  	}
 		  	else {
 		  		periodsVolumes.add(volume);
@@ -1517,8 +1519,8 @@ public class MetricsCalculator {
 		  		double dma = volumeSum / period;
 		  		
 		  		// Set this day's DMA value and add it to the new sequence
-		  		metric.setValue((float)dma);
-		  		metric.setName("volumedma" + period);
+		  		metric.value = (float)dma;
+		  		metric.name = "volumedma" + period;
 		  		
 		  		periodsVolumes.remove();
 		  	}
@@ -1536,8 +1538,8 @@ public class MetricsCalculator {
 			
 			if (periodsAdjCloses.size() < (period - 1)) {
 		  		periodsAdjCloses.add(adjClose);
-		  		metric.setValue(null);
-		  		metric.setName("pricesd" + period);
+		  		metric.value = null;
+		  		metric.name = "pricesd" + period;
 		  	}
 		  	else {
 		  		periodsAdjCloses.add(adjClose);
@@ -1553,8 +1555,8 @@ public class MetricsCalculator {
 		  		float sd = (float)Math.sqrt(sumOfDifferenceFromAverageSquares / (float)period);
 		  		
 		  		// Set this day's SD value and add it to the new sequence
-		  		metric.setValue(sd);
-		  		metric.setName("pricesd" + period);
+		  		metric.value = sd;
+		  		metric.name = "pricesd" + period;
 		
 		  		periodsAdjCloses.remove();
 		  	}
@@ -1578,8 +1580,8 @@ public class MetricsCalculator {
 			
 			if (periodsAdjCloses.size() < (period - 1)) {
 		  		periodsAdjCloses.add(adjClose);
-		  		metric.setValue(null);
-		  		metric.setName("mvol" + period);
+		  		metric.value = null;
+		  		metric.name = "mvol" + period;
 		  	}
 		  	else {
 		  		periodsAdjCloses.add(adjClose);
@@ -1596,8 +1598,8 @@ public class MetricsCalculator {
 		  		float sdapodma = sd / averagePrice * 100;
 		  		
 		  		// Set this day's SD value and add it to the new sequence
-		  		metric.setValue(sdapodma);
-		  		metric.setName("mvol" + period);
+		  		metric.value = sdapodma;
+		  		metric.name = "mvol" + period;
 		
 		  		periodsAdjCloses.remove();
 		  	}
@@ -1615,8 +1617,8 @@ public class MetricsCalculator {
 			
 			if (periodsVolumes.size() < (period - 1)) {
 		  		periodsVolumes.add(volume);
-		  		metric.setValue(null);
-		  		metric.setName("volumesd" + period);
+		  		metric.value = null;
+		  		metric.name = "volumesd" + period;
 		  	}
 		  	else {
 		  		periodsVolumes.add(volume);
@@ -1632,8 +1634,8 @@ public class MetricsCalculator {
 		  		float sd = (float)Math.sqrt(sumOfDifferenceFromAverageSquares / (float)period);
 		  		
 		  		// Set this day's SD value and add it to the new sequence
-		  		metric.setValue(sd);
-		  		metric.setName("volumesd" + period);
+		  		metric.value = sd;
+		  		metric.name = "volumesd" + period;
 		  		
 		  		periodsVolumes.remove();
 		  	}

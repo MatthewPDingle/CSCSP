@@ -1,4 +1,4 @@
-package metrics;
+package data;
 
 import java.util.Calendar;
 
@@ -7,12 +7,12 @@ import constants.Constants.BAR_SIZE;
 public class Metric {
 	
 	// Essentials
-	private String name;
-	private String symbol;
-	private Calendar start;
-	private Calendar end;
-	private String duration;
-	private Float value;
+	public String name;
+	public String symbol;
+	public Calendar start;
+	public Calendar end;
+	public BAR_SIZE duration;
+	public Float value;
 	
 	// Auxiliary
 	private double volume = 0;
@@ -25,7 +25,7 @@ public class Metric {
 	private float alphaClose = 0f;
 	private float alphaChange = 0f;
 
-	public Metric(String symbol, Calendar start, Calendar end, String duration, double volume, float adjOpen, float adjClose,
+	public Metric(String symbol, Calendar start, Calendar end, BAR_SIZE duration, double volume, float adjOpen, float adjClose,
 			float adjHigh, float adjLow, float gap, float change, float alphaClose, float alphaChange) {
 		super();
 		this.symbol = symbol;
@@ -42,53 +42,17 @@ public class Metric {
 		this.alphaClose = alphaClose;
 		this.alphaChange = alphaChange;
 	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getSymbol() {
-		return symbol;
-	}
-
-	public void setSymbol(String symbol) {
-		this.symbol = symbol;
-	}
-
-	public Calendar getStart() {
-		return start;
-	}
-
-	public void setStart(Calendar start) {
-		this.start = start;
-	}
 	
-	public Calendar getEnd() {
-		return end;
-	}
-
-	public void setEnd(Calendar end) {
-		this.end = end;
-	}
-
-	public String getDuration() {
-		return duration;
-	}
-
-	public void setDuration(String duration) {
-		this.duration = duration;
-	}
-
-	public Float getValue() {
-		return value;
-	}
-
-	public void setValue(Float value) {
-		this.value = value;
+	@Override
+	public String toString() {
+		String s = "*** METRIC *** \n";
+		s += "Name: " + name + "\n";
+		s += "Symbol: " + symbol + "\n";
+		s += "Start: " + start.getTime().toString() + "\n";
+		s += "End: " + end.getTime().toString() + "\n";
+		s += "Duration: " + duration.toString() + "\n";
+		s += "Value: " + value + "\n";
+		return s;
 	}
 
 	public double getVolume() {
