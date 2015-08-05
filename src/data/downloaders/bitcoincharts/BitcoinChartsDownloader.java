@@ -20,7 +20,7 @@ public class BitcoinChartsDownloader {
 	 */
 	public static void main(String[] args) {
 
-		for (int a = 0; a < args.length; a+=2) {
+		for (int a = 0; a < args.length; a += 2) {
 			String filename = args[a];
 			String barSize = args[a + 1];
 			String tickname = BitcoinChartsConstants.FILENAME_TICKNAME_HASH.get(filename);

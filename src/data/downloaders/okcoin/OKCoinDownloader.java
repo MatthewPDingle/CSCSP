@@ -23,23 +23,43 @@ import dbio.QueryManager;
 public class OKCoinDownloader {
 
 	public static void main(String[] args) {
-
-		ArrayList<Bar> bars = getMostRecentBarsFromBarHistory(OKCoinConstants.SYMBOL_BTCCNY, BAR_SIZE.BAR_15M, 2000, null);
-		for (Bar bar : bars) {
-//			System.out.println(bar);
-			QueryManager.insertOrUpdateIntoBar(bar);
+		try {
+			ArrayList<String[]> params = new ArrayList<String[]>();
+			if (args != null) {
+				for (int a = 0; a < args.length; a += 3) {
+					String symbol = args[a];
+					String duration = args[a + 1];
+					String numBars = args[a + 2];
+					String[] param = new String[3];
+					param[0] = symbol;
+					param[1] = duration;
+					param[2] = numBars;
+					params.add(param);
+				}
+			}
+			
+			if (params.size() > 0) {
+				while (true) {
+					System.out.println(".");
+					for (String[] param : params) {
+						downloadBarsAndUpdate(param[0], BAR_SIZE.valueOf(param[1]), Integer.parseInt(param[2]));
+						System.out.println(param[0] + " " + param[1] + " done.");
+					}
+					Thread.sleep(1000);
+				}
+			}
 		}
-		
-		
-//		ArrayList<Bar> bars2 = getMostRecentBarsFromTickHistory(OKCoinConstants.SYMBOL_BTCCNY, Constants.BAR_SIZE.BAR_15M, "5000");
-//		for (Bar bar : bars2) {
-////			System.out.println(bar);
-//			QueryManager.insertOrUpdateIntoBar(bar);
-//		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
-	public static void downloadBarsAndUpdate(String okcoinSymbol, BAR_SIZE barSize) {
-		ArrayList<Bar> bars = getMostRecentBarsFromBarHistory(okcoinSymbol, barSize, 2000, null);
+	public static void downloadBarsAndUpdate(String okcoinSymbol, BAR_SIZE barSize, Integer numBars) {
+		int n = 0;
+		if (numBars != null) {
+			n = numBars;
+		}
+		ArrayList<Bar> bars = getMostRecentBarsFromBarHistory(okcoinSymbol, barSize, n, null); // Use n = 2000 if you want a lot
 		for (Bar bar : bars) {
 			QueryManager.insertOrUpdateIntoBar(bar);
 		}

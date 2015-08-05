@@ -11,7 +11,7 @@ import javax.swing.JWindow;
 
 public class StockToolTip extends JWindow {
 
-	private final int WIDTH = 60;
+	private final int WIDTH = 120;
 	private final int HEIGHT = 18;
 	
 	private JPanel pnl = null;

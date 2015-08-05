@@ -54,13 +54,13 @@ public class RealtimeTrackerThread extends Thread {
 					String duration = ds[0];
 					String symbol = ds[1];
 					
-					if (symbol.startsWith("okcoin")) {
-						String okCoinSymbol = OKCoinConstants.symbolToOKCoinSymbolHash.get(symbol);
-						if (okCoinSymbol != null) {
-							OKCoinDownloader.downloadBarsAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration));
-							OKCoinDownloader.downloadTicksAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration));
-						}
-					}
+//					if (symbol.startsWith("okcoin")) {
+//						String okCoinSymbol = OKCoinConstants.SYMBOL_TO_OKCOIN_SYMBOL_HASH.get(symbol);
+//						if (okCoinSymbol != null) {
+//							OKCoinDownloader.downloadBarsAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration), 1000);
+//							OKCoinDownloader.downloadTicksAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration));
+//						}
+//					}
 				}
 				
 				// Delete most recent bar from both bar and metric tables.  TODO: why?
@@ -158,33 +158,33 @@ public class RealtimeTrackerThread extends Thread {
 			
 			// Delete most recent trading day for the symbols we're tracking during this loop
 			for (String[] ds : durationSymbols) {
-				QueryManager.deleteMostRecentBar(ds[1], ds[0]);
+//				QueryManager.deleteMostRecentBar(ds[1], ds[0]);
 				QueryManager.deleteMostRecentMetrics(ds[1], ds[0], usedMetrics);
 			}
 //			QueryManager.deleteMostRecentTradingDayFromBasic(symbolList);
 //			QueryManager.deleteMostRecentTradingDayFromMetricTables(symbolList, usedMetrics);
 			
 			// Create URL strings
-			ArrayList<String> symbolStrings = getSymbolStrings(durationSymbols);
-			
-			// Download latest data and put in DB
-			for (String[] ds : durationSymbols) {
-				String duration = ds[0];
-				String symbol = ds[1];
-				
-				if (symbol.startsWith("okcoin")) {
-					String okCoinSymbol = OKCoinConstants.symbolToOKCoinSymbolHash.get(symbol);
-					if (okCoinSymbol != null) {
-						OKCoinDownloader.downloadBarsAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration));
-						OKCoinDownloader.downloadTicksAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration));
-					}
-				}
-			}
+//			ArrayList<String> symbolStrings = getSymbolStrings(durationSymbols);
+//			
+//			// Download latest data and put in DB
+//			for (String[] ds : durationSymbols) {
+//				String duration = ds[0];
+//				String symbol = ds[1];
+//				
+//				if (symbol.startsWith("okcoin")) {
+//					String okCoinSymbol = OKCoinConstants.SYMBOL_TO_OKCOIN_SYMBOL_HASH.get(symbol);
+//					if (okCoinSymbol != null) {
+//						OKCoinDownloader.downloadBarsAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration), 1000);
+//						OKCoinDownloader.downloadTicksAndUpdate(okCoinSymbol, Constants.BAR_SIZE.valueOf(duration));
+//					}
+//				}
+//			}
 			
 //			getUpdatedYahooQuotesAndSaveToDB(symbolStrings);
 //			stockMovementTester(durationSymbols);
 			
-			// Update the MapSymbol's last updated time
+			// Update the MapSymbol's last updated time TODO: not going to be accurate because this is done externally through a service now
 			for (MapSymbol ms:mss.getMapSymbols()) {
 				if (durationSymbols.contains(ms.getSymbol())) {
 					ms.setLastUpdated(Calendar.getInstance());
