@@ -1290,10 +1290,11 @@ public class QueryManager {
 			
 			String q2 = "INSERT INTO metrics(name, symbol, start, \"end\", duration, value) VALUES (?, ?, ?, ?, ?, ?)";
 			PreparedStatement s2 = c.prepareStatement(q2);
+			boolean anyInserts = false;
 			
 			for (Metric metric : metrics) {
 				// First see if this bar exists in the DB
-				String q = "SELECT COUNT(*) AS numtrades FROM metrics WHERE name = ? AND symbol = ? AND start = ? AND duration = ?";
+				String q = "SELECT * FROM metrics WHERE name = ? AND symbol = ? AND start = ? AND duration = ?";
 				PreparedStatement s = c.prepareStatement(q);
 				s.setString(1, metric.name);
 				s.setString(2, metric.symbol);
@@ -1316,12 +1317,20 @@ public class QueryManager {
 					s2.setTimestamp(3, new java.sql.Timestamp(metric.start.getTime().getTime()));
 					s2.setTimestamp(4, new java.sql.Timestamp(metric.end.getTime().getTime()));
 					s2.setString(5, metric.duration.toString());
-					s2.setFloat(6, metric.value);
+					if (metric.value == null) {
+						s2.setNull(6, java.sql.Types.FLOAT);
+					}
+					else {
+						s2.setFloat(6, metric.value);
+					}
 					s2.addBatch();
+					anyInserts = true;
 				}
 			}
 			
-			s2.executeUpdate();
+			if (anyInserts) {
+				s2.executeBatch();
+			}
 			s2.close();
 			
 			c.close();

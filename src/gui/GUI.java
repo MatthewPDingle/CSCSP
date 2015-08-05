@@ -905,7 +905,7 @@ public class GUI {
 		if (frame == null) {
 			frame = new JFrame();
 			frame.setSize(new Dimension(922, 738));
-			frame.setTitle("Chip Swinger Championship Stock Picker .40");
+			frame.setTitle("Chip Swinger Championship Stock Picker .41");
 			frame.setContentPane(panel);
 			frame.setVisible(true);
 			frame.addWindowListener(new java.awt.event.WindowAdapter() {
