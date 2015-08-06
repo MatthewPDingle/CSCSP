@@ -7,50 +7,76 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 
-import utils.CalendarUtils;
-import utils.StringUtils;
-
 import com.google.gson.Gson;
 
 import constants.Constants;
 import constants.Constants.BAR_SIZE;
 import data.Bar;
+import data.BarKey;
 import data.Converter;
 import data.Tick;
 import dbio.QueryManager;
+import gui.singletons.MetricSingleton;
+import metrics.MetricsCalculatorRealtime;
+import utils.CalendarUtils;
+import utils.StringUtils;
 
 
 public class OKCoinDownloader {
 
+	/**
+	 * Parameters have to come in sets of 3.
+	 * First is okcoin symbol like btc_cny
+	 * Second is bar duration
+	 * Third is number of bars requested
+	 * @param args
+	 */
 	public static void main(String[] args) {
-		try {
-			ArrayList<String[]> params = new ArrayList<String[]>();
-			if (args != null) {
-				for (int a = 0; a < args.length; a += 3) {
-					String symbol = args[a];
-					String duration = args[a + 1];
-					String numBars = args[a + 2];
-					String[] param = new String[3];
-					param[0] = symbol;
-					param[1] = duration;
-					param[2] = numBars;
-					params.add(param);
-				}
-			}
-			
-			if (params.size() > 0) {
-				while (true) {
-					System.out.println(".");
-					for (String[] param : params) {
-						downloadBarsAndUpdate(param[0], BAR_SIZE.valueOf(param[1]), Integer.parseInt(param[2]));
-						System.out.println(param[0] + " " + param[1] + " done.");
-					}
-					Thread.sleep(1000);
-				}
+		// Get params
+		ArrayList<String[]> params = new ArrayList<String[]>();
+		ArrayList<BarKey> barKeys = new ArrayList<BarKey>();
+		if (args != null) {
+			for (int a = 0; a < args.length; a += 3) {
+				String symbol = args[a];
+				String duration = args[a + 1];
+				String numBars = args[a + 2];
+				String[] param = new String[3];
+				param[0] = symbol;
+				param[1] = duration;
+				param[2] = numBars;
+				params.add(param);
+				BarKey barKey = new BarKey(symbol, BAR_SIZE.valueOf(duration));
+				barKeys.add(barKey);
 			}
 		}
-		catch (Exception e) {
-			e.printStackTrace();
+		
+		// Loop.  First pass get 1000 bars.  All other passes, get the number specified by parameters.
+		if (params.size() > 0) {
+			MetricSingleton metricSingleton = MetricSingleton.getInstance();
+			metricSingleton.init(barKeys);
+			
+			boolean firstPass = true;
+			int numBars = 1000;
+			while (true) {	
+				try {
+					System.out.println(Calendar.getInstance().getTime().toString());
+					for (String[] param : params) {
+						if (!firstPass) {
+							numBars = Integer.parseInt(param[2]);
+						}
+						downloadBarsAndUpdate(param[0], BAR_SIZE.valueOf(param[1]), numBars);
+						System.out.println(param[0] + " " + param[1] + " done.");
+					}
+					firstPass = false;
+					System.out.println(Calendar.getInstance().getTime().toString() + " - Bar Downloads & Inserts Done");
+					MetricsCalculatorRealtime.calculateMetricsRealtime(Constants.METRICS, barKeys);
+					System.out.println(Calendar.getInstance().getTime().toString() + " - Metrics Done");
+//					Thread.sleep(1000);
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 

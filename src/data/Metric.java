@@ -43,6 +43,25 @@ public class Metric {
 		this.alphaChange = alphaChange;
 	}
 	
+	public Metric(String name, String symbol, Calendar start, Calendar end, BAR_SIZE duration, double volume, float adjOpen, float adjClose,
+			float adjHigh, float adjLow, float gap, float change, float alphaClose, float alphaChange) {
+		super();
+		this.name = name;
+		this.symbol = symbol;
+		this.start = start;
+		this.end = end;
+		this.duration = duration;
+		this.volume = volume;
+		this.adjOpen = adjOpen;
+		this.adjClose = adjClose;
+		this.adjHigh = adjHigh;
+		this.adjLow = adjLow;
+		this.gap = gap;
+		this.change = change;
+		this.alphaClose = alphaClose;
+		this.alphaChange = alphaChange;
+	}
+	
 	@Override
 	public String toString() {
 		String s = "*** METRIC *** \n";

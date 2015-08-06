@@ -2,17 +2,40 @@ package metrics;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 
 import constants.Constants;
+import data.BarKey;
 import data.Metric;
+import data.MetricKey;
 import dbio.QueryManager;
+import gui.singletons.MetricSingleton;
 
 public class MetricsCalculatorRealtime {
 	
-	public static void calculateMetricsRealtime(ArrayList<String> metrics, ArrayList<String[]> durationSymbols) {
+	public static void calculateMetricsRealtime() {
 		try {
-			ArrayList<LinkedList<Metric>> metricSequences = QueryManager.loadMetricSequencesForRealtimeUpdates(durationSymbols);
+			MetricSingleton metricSingleton = MetricSingleton.getInstance();
+			HashMap<MetricKey, LinkedList<Metric>>metricSequenceHash = metricSingleton.getMetricSequenceHash();
+			Iterator i = metricSequenceHash.entrySet().iterator();
+			while (i.hasNext()) {
+				Map.Entry pair = (Map.Entry)i.next();
+				MetricKey mk = (MetricKey)pair.getKey();
+				LinkedList<Metric> ms = (LinkedList<Metric>)pair.getValue();
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void calculateMetricsRealtime(ArrayList<String> metrics, ArrayList<BarKey> barKeys) {
+		try {
+			ArrayList<LinkedList<Metric>> metricSequences = QueryManager.loadMetricSequencesForRealtimeUpdates(barKeys);
+
 			Calendar maxStartFromBar = QueryManager.getMaxStartFromBar();
 			
 			// Unfortunately we have to go through all the metrics to see which ones need to be run

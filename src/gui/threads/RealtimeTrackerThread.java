@@ -1,10 +1,5 @@
 package gui.threads;
 
-import gui.MapCellPanel;
-import gui.MapSymbol;
-import gui.singletons.MapSymbolSingleton;
-import gui.singletons.ParameterSingleton;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -13,12 +8,15 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
+import constants.Constants;
+import data.BarKey;
+import dbio.QueryManager;
+import gui.MapCellPanel;
+import gui.MapSymbol;
+import gui.singletons.MapSymbolSingleton;
+import gui.singletons.ParameterSingleton;
 import metrics.MetricsCalculatorRealtime;
 import trading.TradeMonitor;
-import constants.Constants;
-import data.downloaders.okcoin.OKCoinConstants;
-import data.downloaders.okcoin.OKCoinDownloader;
-import dbio.QueryManager;
 
 public class RealtimeTrackerThread extends Thread {
 
@@ -46,13 +44,11 @@ public class RealtimeTrackerThread extends Thread {
 	@Override
 	public void run() {
 		try {
-			ArrayList<String[]> durationSymbols = ps.getDurationSymbols();
+			ArrayList<BarKey> barKeys = ps.getBarKeys();
 	
-			if (durationSymbols != null) {
+			if (barKeys != null) {
 				// Download latest data and put in DB
-				for (String[] ds : durationSymbols) {
-					String duration = ds[0];
-					String symbol = ds[1];
+				for (BarKey bk : barKeys) {
 					
 //					if (symbol.startsWith("okcoin")) {
 //						String okCoinSymbol = OKCoinConstants.SYMBOL_TO_OKCOIN_SYMBOL_HASH.get(symbol);
@@ -72,7 +68,7 @@ public class RealtimeTrackerThread extends Thread {
 //				}
 				
 				// Calculate metrics for the latest data
-				MetricsCalculatorRealtime.calculateMetricsRealtime(this.usedMetrics, durationSymbols);
+				MetricsCalculatorRealtime.calculateMetricsRealtime(this.usedMetrics, barKeys);
 				
 				mss.setMapSymbols(QueryManager.getMapSymbols());
 			}
@@ -94,15 +90,12 @@ public class RealtimeTrackerThread extends Thread {
 			System.out.println("HPMapSymbols.size() = " + mss.getHighPriorityMapSymbols().size());
 			
 			// Get list of symbols that need updates (Last Trading Day)
-			ArrayList<String[]> durationSymbols = new ArrayList<String[]>(); // Duration, Symbol
+			ArrayList<BarKey> barKeys = new ArrayList<BarKey>();
 			
 			// First round do everything
 			if (updateCounter == 0) {
 				for (MapSymbol ms:mss.getMapSymbols()) {
-					String[] ds = new String[2];
-					ds[0] = ms.getDuration();
-					ds[1] = ms.getSymbol();
-					durationSymbols.add(ds);
+					barKeys.add(new BarKey(ms.getSymbol(), ms.getDuration()));
 				}
 			}
 			// Every X times, track (1 / updateAllFrequency) of everything.  Each time this hits it shifts to the next set.
@@ -110,10 +103,7 @@ public class RealtimeTrackerThread extends Thread {
 				int chunk = (updateCounter / updateAllFrequency) % 10; // 0-3
 				for (MapSymbol ms:mss.getMapSymbols()) {
 					if (mss.getMapSymbols().indexOf(ms) % 10 == chunk) {
-						String[] ds = new String[2];
-						ds[0] = ms.getDuration();
-						ds[1] = ms.getSymbol();
-						durationSymbols.add(ds);
+						barKeys.add(new BarKey(ms.getSymbol(), ms.getDuration()));
 					}
 				}
 			}
@@ -121,18 +111,12 @@ public class RealtimeTrackerThread extends Thread {
 			else {	
 				if (mss.getHighPriorityMapSymbols().size() == 0) {
 					for (MapSymbol ms:mss.getMapSymbols()) {
-						String[] ds = new String[2];
-						ds[0] = ms.getDuration();
-						ds[1] = ms.getSymbol();
-						durationSymbols.add(ds);
+						barKeys.add(new BarKey(ms.getSymbol(), ms.getDuration()));
 					}
 				}
 				else {
 					for (MapSymbol ms:mss.getHighPriorityMapSymbols()) {
-						String[] ds = new String[2];
-						ds[0] = ms.getDuration();
-						ds[1] = ms.getSymbol();
-						durationSymbols.add(ds);
+						barKeys.add(new BarKey(ms.getSymbol(), ms.getDuration()));
 					}
 				}
 			}
@@ -141,25 +125,21 @@ public class RealtimeTrackerThread extends Thread {
 			for (HashMap<String, Object> openPosition:openPositions) {
 				String symbol = openPosition.get("symbol").toString();
 				String duration = openPosition.get("duration").toString();
-				String[] ds = new String[2];
-				ds[0] = duration;
-				ds[1] = symbol;
-				if (!durationSymbols.contains(ds)) // TODO: Debug this and the next SPY section below to see what it does
-					durationSymbols.add(ds);
+				BarKey bk = new BarKey(symbol, duration);
+				if (!barKeys.contains(bk))
+					barKeys.add(bk);
 			}
 			
 			// Add SPY to the symbolList if needed
-			String[] alphaDS = new String[2];
-			alphaDS[0] = Constants.BAR_SIZE.BAR_1D.toString();
-			alphaDS[1] = "SPY";
-			if (!durationSymbols.contains(alphaDS))
-				durationSymbols.add(alphaDS);
-			System.out.println("symbolList.size() = " + durationSymbols.size());
+			BarKey alphaBK = new BarKey("SPY", Constants.BAR_SIZE.BAR_1D);
+			if (!barKeys.contains(alphaBK))
+				barKeys.add(alphaBK);
+			System.out.println("symbolList.size() = " + barKeys.size());
 			
 			// Delete most recent trading day for the symbols we're tracking during this loop
-			for (String[] ds : durationSymbols) {
+			for (BarKey bk : barKeys) {
 //				QueryManager.deleteMostRecentBar(ds[1], ds[0]);
-				QueryManager.deleteMostRecentMetrics(ds[1], ds[0], usedMetrics);
+				QueryManager.deleteMostRecentMetrics(bk.symbol, bk.duration.toString(), usedMetrics);
 			}
 //			QueryManager.deleteMostRecentTradingDayFromBasic(symbolList);
 //			QueryManager.deleteMostRecentTradingDayFromMetricTables(symbolList, usedMetrics);
@@ -186,13 +166,13 @@ public class RealtimeTrackerThread extends Thread {
 			
 			// Update the MapSymbol's last updated time TODO: not going to be accurate because this is done externally through a service now
 			for (MapSymbol ms:mss.getMapSymbols()) {
-				if (durationSymbols.contains(ms.getSymbol())) {
+				if (barKeys.contains(ms.getSymbol())) {
 					ms.setLastUpdated(Calendar.getInstance());
 				}
 			}
 			
 			// Calculate the metrics
-			MetricsCalculatorRealtime.calculateMetricsRealtime(this.usedMetrics, durationSymbols);
+			MetricsCalculatorRealtime.calculateMetricsRealtime(this.usedMetrics, barKeys);
 			mss.setMapSymbols(QueryManager.getMapSymbols());
 			
 			// Notify the GUI
@@ -227,15 +207,15 @@ public class RealtimeTrackerThread extends Thread {
 		return metrics;
 	}
 
-	public static ArrayList<String> getSymbolStrings(ArrayList<String[]> durationSymbols) {
+	public static ArrayList<String> getSymbolStrings(ArrayList<BarKey> barKeys) {
 		ArrayList<String> symbolStrings = new ArrayList<String>();
 		try {
 			int c = 0;
 			String oneString = "";
-			for (String[] ds : durationSymbols) {
+			for (BarKey bk : barKeys) {
 				c++;
 				if (c <= 100) {
-					oneString += ds[1] + "+";
+					oneString += bk.symbol + "+";
 				}
 				else {
 					if (oneString.endsWith("+")) {

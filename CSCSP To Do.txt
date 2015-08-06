@@ -34,8 +34,9 @@ New Stuff
 - Would be nice to be able to view charts and metrics by clicking on a cell
 - Neural network on a bunch of metrics
 - Might be able to speed up map generation a little more by not including unused columns in the query and trying to make the math code tighter
-- Use of numtrades and vwap fields in bar data
+- Use of numtrades and vwap fields in bar data (maybe probably not)
 
 TODO
 - Memory leak when running GeneticSearcher
 - Cross validation and test sets
+- Metric values aren't going to be consistent on realtime tracking compared to historical values because they're going to be 0-100 normalized using different min/max

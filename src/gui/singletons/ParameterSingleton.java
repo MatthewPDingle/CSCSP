@@ -3,6 +3,9 @@ package gui.singletons;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import constants.Constants.BAR_SIZE;
+import data.BarKey;
+
 public class ParameterSingleton {
 
 	private static ParameterSingleton instance = null;
@@ -294,15 +297,18 @@ public class ParameterSingleton {
 		return symbols;
 	}
 	
-	public ArrayList<String[]> getDurationSymbols() {
-		ArrayList<String[]> durationSymbols = new ArrayList<String[]>();
+	public ArrayList<BarKey> getBarKeys() {
+		ArrayList<BarKey> barKeys = new ArrayList<BarKey>();
 		if (symbols != null) {
 			for (String s : symbols) {
-				durationSymbols.add(s.split(" - "));
+				String[] parts = s.split(" - "); // duration - symbol
+				BarKey bk = new BarKey(parts[1], BAR_SIZE.valueOf(parts[0]));
+				barKeys.add(bk);
 			}
 		}
-		return durationSymbols;
+		return barKeys;
 	}
+	
 
 	public void setSymbols(ArrayList<String> symbols) {
 		this.symbols = symbols;

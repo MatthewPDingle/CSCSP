@@ -1,17 +1,15 @@
 package trading;
 
-import gui.MapSymbol;
-import gui.singletons.MapSymbolSingleton;
-import gui.threads.RealtimeTrackerThread;
-
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 
 import constants.Constants;
-
-import metrics.MetricsCalculatorRealtime;
+import data.BarKey;
 import dbio.QueryManager;
+import gui.MapSymbol;
+import gui.singletons.MapSymbolSingleton;
+import gui.threads.RealtimeTrackerThread;
+import metrics.MetricsCalculatorRealtime;
 
 public class TradeMonitor {
 
@@ -101,13 +99,10 @@ public class TradeMonitor {
 				// Calculate the metrics needed to check this position's sell exit.
 				ArrayList<String> sellMetrics = new ArrayList<String>();
 				sellMetrics.add(sell);
-				ArrayList<String[]> durationSymbols = new ArrayList<String[]>();
-				String[] ds = new String[2];
-				ds[0] = duration;
-				ds[1] = symbol;
-				durationSymbols.add(ds);
-				QueryManager.deleteMostRecentTradingDayFromMetricTables(durationSymbols, sellMetrics);
-				MetricsCalculatorRealtime.calculateMetricsRealtime(sellMetrics, durationSymbols);
+				ArrayList<BarKey> barKeys = new ArrayList<BarKey>();
+				barKeys.add(new BarKey(symbol, duration));
+				QueryManager.deleteMostRecentTradingDayFromMetricTables(barKeys, sellMetrics);
+				MetricsCalculatorRealtime.calculateMetricsRealtime(sellMetrics, barKeys);
 				
 				// See if this position's exit (sell or stop) criteria has been met
 				HashMap<String, Object> answers = QueryManager.doICloseThisPosition(symbol, sell, sellop, stop, stopvalue);
@@ -270,22 +265,22 @@ public class TradeMonitor {
 	
 	public static void getRealtimeQuotesForEverything() {
 		try {
-			ArrayList<String[]> durationSymbols = QueryManager.getUniqueListOfDurationSymbols();
+			ArrayList<BarKey> barKeys = QueryManager.getUniqueBarKeys();
 			
 			// Delete most recent trading day for the symbols we're tracking during this loop
-			for (String[] ds : durationSymbols) {
-				QueryManager.deleteMostRecentBar(ds[1], ds[0]);
-				QueryManager.deleteMostRecentMetrics(ds[1], ds[0], Constants.METRICS);
+			for (BarKey bk : barKeys) {
+				QueryManager.deleteMostRecentBar(bk.symbol, bk.duration.toString());
+				QueryManager.deleteMostRecentMetrics(bk.symbol, bk.duration.toString(), Constants.METRICS);
 			}
 
 			// Create URL strings
-			ArrayList<String> symbolStrings = RealtimeTrackerThread.getSymbolStrings(durationSymbols);
+			ArrayList<String> symbolStrings = RealtimeTrackerThread.getSymbolStrings(barKeys);
 			
 			// Connect to Yahoo Finance & Update basicr with today's current info
 			RealtimeTrackerThread.getUpdatedYahooQuotesAndSaveToDB(symbolStrings);
 			
 			// Recalculate the metrics for today
-			MetricsCalculatorRealtime.calculateMetricsRealtime(Constants.METRICS, durationSymbols);
+			MetricsCalculatorRealtime.calculateMetricsRealtime(Constants.METRICS, barKeys);
 		}
 		catch (Exception e) {
 			e.printStackTrace();

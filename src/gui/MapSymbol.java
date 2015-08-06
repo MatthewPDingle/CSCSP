@@ -9,8 +9,8 @@ public class MapSymbol implements Comparable {
 	private String symbol = "";
 	private String duration = "";
 	private float price;
-	private float xMetricValue;
-	private float yMetricValue;
+	private Float xMetricValue;
+	private Float yMetricValue;
 	private float cellBullScore;
 	private float cellBearScore;
 	private float groupBullishScore;
@@ -19,7 +19,7 @@ public class MapSymbol implements Comparable {
 	private boolean partOfBestBearGroup = false;
 	private Calendar lastUpdated = Calendar.getInstance();
 	
-	public MapSymbol(String symbol, String duration, float price, float xMetricValue, float yMetricValue) {
+	public MapSymbol(String symbol, String duration, float price, Float xMetricValue, Float yMetricValue) {
 		super();
 		this.symbol = symbol;
 		this.duration = duration;
@@ -55,11 +55,11 @@ public class MapSymbol implements Comparable {
 		return symbol;
 	}
 
-	public float getXMetricValue() {
+	public Float getXMetricValue() {
 		return xMetricValue;
 	}
 
-	public float getYMetricValue() {
+	public Float getYMetricValue() {
 		return yMetricValue;
 	}
 

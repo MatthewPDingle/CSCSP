@@ -170,6 +170,7 @@ public class MetricsCalculator {
 			}
 		}
 	}
+
 	
 	/**
 	 * Related to DV, AV is exponentially weighted with a weight of parameter "weight"

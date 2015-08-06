@@ -17,7 +17,9 @@ import java.util.Random;
 import constants.Constants;
 import constants.Constants.BAR_SIZE;
 import data.Bar;
+import data.BarKey;
 import data.Metric;
+import data.MetricKey;
 import gui.MapCell;
 import gui.MapSymbol;
 import gui.singletons.ParameterSingleton;
@@ -636,8 +638,8 @@ public class QueryManager {
 		return symbols;
 	}
 	
-	public static ArrayList<String[]> getUniqueListOfDurationSymbols() {
-		ArrayList<String[]> durationSymbols = new ArrayList<String[]>();
+	public static ArrayList<BarKey> getUniqueBarKeys() {
+		ArrayList<BarKey> barKeys = new ArrayList<BarKey>();
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			String q = "SELECT symbol, duration FROM bar GROUP BY symbol, duration";
@@ -646,10 +648,7 @@ public class QueryManager {
 			while (rs.next()) {
 				String symbol = rs.getString("symbol");
 				String duration = rs.getString("duration");
-				String[] ds = new String[2];
-				ds[0] = duration;
-				ds[1] = symbol;
-				durationSymbols.add(ds);
+				barKeys.add(new BarKey(symbol, duration));
 			}
 			
 			rs.close();
@@ -659,7 +658,7 @@ public class QueryManager {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-		return durationSymbols;
+		return barKeys;
 	}
 
 	/**
@@ -826,20 +825,20 @@ public class QueryManager {
 			// This clause used to be in here, and I'll need to add it back in.
 			String openTradeClause = "OR b.symbol IN (SELECT symbol FROM trades WHERE status = 'open')";
 			
-			String q = 	"SELECT b.symbol, b.duration, b.close AS price, m1.value AS m1, m2.value AS m2 " +
+			String q = 	"SELECT b.symbol, b.duration, b.close AS price " + //, m1.value AS m1, m2.value AS m2 " +
 						"FROM bar b " +
-						"LEFT OUTER JOIN metrics m1 ON b.symbol = m1.symbol and b.start = m1.start AND b.duration = m1.duration " +
-						"LEFT OUTER JOIN metrics m2 ON b.symbol = m2.symbol and b.start = m2.start AND b.duration = m2.duration " +
-						"LEFT OUTER JOIN metrics m3 ON b.symbol = m3.symbol and b.start = m3.start AND b.duration = m3.duration " +
+						//"LEFT OUTER JOIN metrics m1 ON b.symbol = m1.symbol and b.start = m1.start AND b.duration = m1.duration " +
+						//"LEFT OUTER JOIN metrics m2 ON b.symbol = m2.symbol and b.start = m2.start AND b.duration = m2.duration " +
+						//"LEFT OUTER JOIN metrics m3 ON b.symbol = m3.symbol and b.start = m3.start AND b.duration = m3.duration " +
 						"INNER JOIN (SELECT symbol, duration, MAX(start) AS start FROM bar GROUP BY symbol, duration) t ON t.symbol = b.symbol AND t.start = b.start  AND t.duration = b.duration " +
 						whereIndexClause + 
-						symbolsClause +
-						"AND m1.name = '" + ps.getxAxisMetric() + "' " +
-						"AND m2.name = '" + ps.getyAxisMetric() + "' " +
-						"AND m3.name = 'priceboll20' " +
-						"AND ABS(m3.value) <= " + ps.getMaxVolatility() + " " +
-						"AND b.volume * b.close >= " + ps.getMinLiquidity() + " " +
-						"AND b.close >= " + ps.getMinPrice();
+						symbolsClause;
+						//"AND m1.name = '" + ps.getxAxisMetric() + "' " +
+						//"AND m2.name = '" + ps.getyAxisMetric() + "' " +
+						//"AND m3.name = 'priceboll20' " +
+						//"AND ABS(m3.value) <= " + ps.getMaxVolatility() + " " +
+						//"AND b.volume * b.close >= " + ps.getMinLiquidity() + " " +
+						//"AND b.close >= " + ps.getMinPrice();
 			
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			PreparedStatement pst = c.prepareStatement(q);
@@ -848,9 +847,9 @@ public class QueryManager {
 				String symbol = rs.getString("symbol");
 				String duration = rs.getString("duration");
 				float price = rs.getFloat("price");
-				float m1 = rs.getFloat("m1");
-				float m2 = rs.getFloat("m2");
-				MapSymbol ms = new MapSymbol(symbol, duration, price, m1, m2);
+//				Float m1 = rs.getFloat("m1");
+//				Float m2 = rs.getFloat("m2");
+				MapSymbol ms = new MapSymbol(symbol, duration, price, null, null);
 				mapSymbols.add(ms);
 			}
 			rs.close();
@@ -986,24 +985,115 @@ public class QueryManager {
 			return null;
 		}
 	}
+	
+	public static HashMap<MetricKey, LinkedList<Metric>> loadMetricSequenceHash(ArrayList<BarKey> barKeys) {
+		HashMap<MetricKey, LinkedList<Metric>> metricSequenceHash = new HashMap<MetricKey, LinkedList<Metric>>();
+		try {
+			// WHERE clause
+			String whereClause = "";
+			if (barKeys != null && barKeys.size() > 0) {
+				whereClause = "WHERE ";
+			}
+			for (BarKey bk : barKeys) {
+				whereClause += "(symbol = '" + bk.symbol + "' AND duration = '" + bk.duration.toString() + "') OR ";
+			}
+			if (whereClause.length() > 0) {
+				whereClause = whereClause.substring(0, whereClause.length() - 3); // Chop off the trailing " OR"
+			}
+			
+			// Query to get list of symbols/durations and their base dates
+			String numBarsBack = "300"; 
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "SELECT DISTINCT symbol, duration, " +
+						"(SELECT MIN(start) FROM (SELECT symbol, start FROM bar " + whereClause + " ORDER BY start DESC LIMIT " + numBarsBack + ") t) AS baseDate " +
+						"FROM bar " + whereClause;
+			Statement s = c.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			ResultSet rs = s.executeQuery(q);
+			
+			while (rs.next()) {
+				String symbol = rs.getString("symbol");
+				String duration = rs.getString("duration");
+				String baseDate = rs.getString("baseDate");
+				LinkedList<Metric> metricSequence = new LinkedList<Metric>();
+				for (String metric : Constants.METRICS) {
+					MetricKey mk = new MetricKey(metric, symbol, BAR_SIZE.valueOf(duration));
+					metricSequenceHash.put(mk, metricSequence);
+				}
+				
+				
+				// Fill a "metricSequence" with the price data for the last X days + however many days I need stats for
+				String alphaComparison = "SPY"; // TODO: probably change this
+				String q2 = "SELECT r.*, " +
+						"(SELECT close FROM bar WHERE symbol = '" + alphaComparison + "' AND start <= r.start ORDER BY start DESC LIMIT 1) AS alphaclose, " +
+						"(SELECT change FROM bar WHERE symbol = '" + alphaComparison + "' AND start <= r.start ORDER BY start DESC LIMIT 1) AS alphachange " +
+						"FROM bar r " +
+						"WHERE r.symbol = '" + symbol + "' " +
+						"AND r.duration = '" + duration + "' " +
+						"AND r.start >= '" + baseDate + "' " +
+						"ORDER BY start ASC";
+				
+				Statement s2 = c.createStatement();
+				ResultSet rs2 = s2.executeQuery(q2);
+				
+				while (rs2.next()) {
+					Timestamp tsStart = rs2.getTimestamp("start");
+					Calendar start = Calendar.getInstance();
+					start.setTimeInMillis(tsStart.getTime());
+					Timestamp tsEnd = rs2.getTimestamp("end");
+					Calendar end = Calendar.getInstance();
+					end.setTimeInMillis(tsEnd.getTime());
+					end.set(Calendar.SECOND, 0);
+					long volume = rs2.getLong("volume");
+					float adjOpen = rs2.getFloat("open");
+					float adjClose = rs2.getFloat("close");
+					float adjHigh = rs2.getFloat("high");
+					float adjLow = rs2.getFloat("low");
+					float alphaClose = rs2.getFloat("alphaclose");
+					float alphaChange = rs2.getFloat("alphachange");
+					float gap = rs2.getFloat("gap");
+					float change = rs2.getFloat("change");
 
-	public static ArrayList<LinkedList<Metric>> loadMetricSequencesForRealtimeUpdates(ArrayList<String[]> durationSymbols) {
+					for (String metricName : Constants.METRICS) {
+						// Create a Metric
+						Metric m = new Metric(metricName, symbol, start, end, BAR_SIZE.valueOf(duration), volume, adjOpen, adjClose, adjHigh, adjLow, gap, change, alphaClose, alphaChange);
+						
+						// Figure out which MetricKey it should go in, and add it to that MetricKey's MetricSequence
+						MetricKey mk = new MetricKey(metricName, symbol, BAR_SIZE.valueOf(duration));
+						LinkedList<Metric> ms = metricSequenceHash.get(mk);
+						ms.add(m);
+						metricSequenceHash.put(mk, ms);
+					}
+				}
+				
+				rs2.close();
+				s2.close();
+			}
+			
+			rs.close();
+			s.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return metricSequenceHash;
+	}
+
+	public static ArrayList<LinkedList<Metric>> loadMetricSequencesForRealtimeUpdates(ArrayList<BarKey> barKeys) {
 		ArrayList<LinkedList<Metric>> metricSequences = new ArrayList<LinkedList<Metric>>();
 		try {
 			// Put the list of symbols together into a string for the query
 			StringBuilder sb = new StringBuilder();
 			sb.append("(");
-			for (String[] ds : durationSymbols) {
-				sb.append("'");
-				sb.append(ds[1]);
-				sb.append("'");
-				sb.append(",");
+			for (BarKey bk : barKeys) {
+				sb.append("'").append(bk.symbol).append("'").append(",");
 			}
 			String symbolsString = sb.toString();
-			if (durationSymbols.size() > 0)
+			if (barKeys.size() > 0) {
 				symbolsString = symbolsString.substring(0, symbolsString.length() - 1) + ")";
-			else
+			}
+			else {
 				symbolsString = "()";
+			}
 			
 			// Query
 			Connection c = ConnectionSingleton.getInstance().getConnection();
@@ -1730,13 +1820,13 @@ public class QueryManager {
 		}
 	}
 
-	public static void deleteMostRecentTradingDayFromMetricTables(ArrayList<String[]> durationSymbols, ArrayList<String> usedMetrics) {
+	public static void deleteMostRecentTradingDayFromMetricTables(ArrayList<BarKey> barKeys, ArrayList<String> usedMetrics) {
 		try {
 			StringBuilder sb = new StringBuilder();
 			sb.append("(");
 			int counter = 0;
-			for (String[] ds : durationSymbols) {
-				sb.append("'").append(ds[1]).append("', ");
+			for (BarKey bk : barKeys) {
+				sb.append("'").append(bk.symbol).append("', ");
 				counter++;
 			}
 			String symbolPart = sb.toString();
