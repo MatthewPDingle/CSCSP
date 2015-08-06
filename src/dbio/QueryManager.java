@@ -423,15 +423,12 @@ public class QueryManager {
 			}
 			q += i + ") ";
 			
-			ArrayList<String> durationSymbols = ps.getSymbols();
+			ArrayList<BarKey> barKeys = ps.getBarKeys();
 			String symbolsClause = "";
-			if (durationSymbols != null) {
+			if (barKeys != null) {
 				symbolsClause = "AND (";
-				for (String ds : durationSymbols) {
-					String[] parts = ds.split(" - ");
-					String duration = parts[0];
-					String symbol = parts[1];
-					symbolsClause += "(b.symbol = '" + symbol + "' AND b.duration = '" + duration + "') OR ";
+				for (BarKey bk : barKeys) {
+					symbolsClause += "(b.symbol = '" + bk.symbol + "' AND b.duration = '" + bk.duration.toString() + "') OR ";
 				}
 				symbolsClause = symbolsClause.substring(0, symbolsClause.length() - 4) + ") ";
 			}
@@ -809,15 +806,12 @@ public class QueryManager {
 			}
 			whereIndexClause += i + ") ";
 			
-			ArrayList<String> durationSymbols = ps.getSymbols();
+			ArrayList<BarKey> barKeys = ps.getBarKeys();
 			String symbolsClause = "";
-			if (durationSymbols != null) {
+			if (barKeys != null) {
 				symbolsClause = "AND (";
-				for (String ds : durationSymbols) {
-					String[] parts = ds.split(" - ");
-					String duration = parts[0];
-					String symbol = parts[1];
-					symbolsClause += "(b.symbol = '" + symbol + "' AND b.duration = '" + duration + "') OR ";
+				for (BarKey bk : barKeys) {
+					symbolsClause += "(b.symbol = '" + bk.symbol + "' AND b.duration = '" + bk.duration.toString() + "') OR ";
 				}
 				symbolsClause = symbolsClause.substring(0, symbolsClause.length() - 4) + ") ";
 			}
