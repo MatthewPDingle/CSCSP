@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Random;
 
 import constants.Constants;
@@ -2231,6 +2233,120 @@ public class QueryManager {
 			System.err.println("Fear not - it's probably just duplicate times causing a PK violation because of FUCKING daylight savings");
 			e.printStackTrace();
 		}
+	}
+	
+	public static void insertOrUpdateIntoMetricCalcEssentials(MetricKey mk, HashMap<String, Object> mce) {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			
+			// First check to see if this MCE exists in the metriccalcessentials table
+			String q = "SELECT * FROM metriccalcessentials WHERE name = ? AND symbol = ? AND duration = ?";
+			PreparedStatement s = c.prepareStatement(q);
+			s.setString(1, mk.name);
+			s.setString(2, mk.symbol);
+			s.setString(3, mk.duration.toString());
+			
+			ResultSet rs = s.executeQuery();
+			boolean exists = false;
+			while (rs.next()) {
+				exists = true;
+				break;
+			}
+			s.close();
+			
+			// If it doesn't exist, insert it
+			if (!exists) {
+				Iterator i = mce.entrySet().iterator();
+				while (i.hasNext()) {
+					// Get the VarName and VarValue out of the MCE hash
+					Map.Entry pair = (Map.Entry)i.next();
+					String varName = pair.getKey().toString();
+					Float varValue = null;
+					Object o = pair.getValue();
+					if (!(o instanceof Calendar)) {
+						varValue = Float.parseFloat(o.toString());
+						
+						String q1 = "INSERT INTO metriccalcessentials(name, symbol, duration, start, varname, varvalue) VALUES (?, ?, ?, ?, ?, ?)";
+						PreparedStatement s1 = c.prepareStatement(q1);
+						s1.setString(1, mk.name);
+						s1.setString(2, mk.symbol);
+						s1.setString(3, mk.duration.toString());
+						Calendar start = (Calendar)mce.get("start");
+						s1.setTimestamp(4, new java.sql.Timestamp(start.getTime().getTime()));
+						s1.setString(5, varName);
+						s1.setFloat(6, varValue);
+						
+						s1.executeUpdate();
+						s1.close();
+					}
+				}
+			}
+			else { // It does exist, update it
+				Iterator i = mce.entrySet().iterator();
+				while (i.hasNext()) {
+					// Get the VarName and VarValue out of the MCE hash
+					Map.Entry pair = (Map.Entry)i.next();
+					String varName = pair.getKey().toString();
+					Float varValue = null;
+					Object o = pair.getValue();
+					if (!(o instanceof Calendar)) {
+						varValue = Float.parseFloat(o.toString());
+						
+						String q1 = "UPDATE metriccalcessentials SET name = ?, symbol = ?, duration = ?, start = ?, varname = ?, varvalue = ? WHERE name = ? AND symbol = ? AND duration = ? AND varname = ?";
+						PreparedStatement s1 = c.prepareStatement(q1);
+						s1.setString(1, mk.name);
+						s1.setString(2, mk.symbol);
+						s1.setString(3, mk.duration.toString());
+						Calendar start = (Calendar)mce.get("start");
+						s1.setTimestamp(4, new java.sql.Timestamp(start.getTime().getTime()));
+						s1.setString(5, varName);
+						s1.setFloat(6, varValue);
+						s1.setString(7, mk.name);
+						s1.setString(8, mk.symbol);
+						s1.setString(9, mk.duration.toString());
+						s1.setString(10, varName);
+						
+						s1.executeUpdate();
+						s1.close();
+					}
+				}
+			}
+			c.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static HashMap<String, Object> getMetricCalcEssentials(MetricKey mk) {
+		HashMap<String, Object> mce = null;
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+
+			String q = "SELECT * FROM metriccalcessentials WHERE name = ? AND symbol = ? AND duration = ?";
+			PreparedStatement s = c.prepareStatement(q);
+			s.setString(1, mk.name);
+			s.setString(2, mk.symbol);
+			s.setString(3, mk.duration.toString());
+			
+			ResultSet rs = s.executeQuery();
+			while (rs.next()) {
+				String varName = rs.getString("varname");
+				float varValue = rs.getFloat("varvalue");
+				Timestamp startTS = rs.getTimestamp("start");
+				Calendar start = Calendar.getInstance();
+				start.setTimeInMillis(startTS.getTime());
+				
+				mce.put(varName, varValue);
+				mce.put("start", start);
+			}
+			s.close();
+			c.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return mce;
 	}
 	
 	public static ArrayList<HashMap<String, Object>> getTickData(String symbol, Calendar periodStart, BAR_SIZE barSize) {

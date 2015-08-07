@@ -372,6 +372,7 @@ public class MetricsCalculator {
 	  	// Update the MetricCalcEssentials
 	  	mce.put("yesterdaysDV", yesterdaysDV);
 	  	mce.put("c", c);
+	  	mce.put("start", metric.start);
 	}
 	
 	/**

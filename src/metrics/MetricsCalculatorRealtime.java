@@ -32,8 +32,11 @@ public class MetricsCalculatorRealtime {
 				LinkedList<Metric> ms = (LinkedList<Metric>)pair.getValue();
 				// Get this MetricCalcEssentials
 				HashMap<String, Object> mce = metricCalcEssentials.get(mk);
-				if (mce == null) {
-					mce = new HashMap<String, Object>();
+				if (mce == null) { // If it's null, see if it's in the DB
+					mce = QueryManager.getMetricCalcEssentials(mk);
+					if (mce == null) { // If it's not in the DB, make a new one
+						mce = new HashMap<String, Object>();
+					}
 				}
 				
 				// Go through the MetricSequence, only calculating values for the ones that don't already have them.
@@ -56,6 +59,11 @@ public class MetricsCalculatorRealtime {
 								
 						}
 					}
+				}
+				
+				// Save the MetricCalcEssentials to the DB
+				if (mce != null) {
+					QueryManager.insertOrUpdateIntoMetricCalcEssentials(mk, mce);
 				}
 				
 				// Insert the MetricSequence
