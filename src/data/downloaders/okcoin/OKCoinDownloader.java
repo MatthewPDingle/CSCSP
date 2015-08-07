@@ -45,7 +45,7 @@ public class OKCoinDownloader {
 				param[1] = duration;
 				param[2] = numBars;
 				params.add(param);
-				BarKey barKey = new BarKey(symbol, BAR_SIZE.valueOf(duration));
+				BarKey barKey = new BarKey(OKCoinConstants.OKCOIN_SYMBOL_TO_SYMBOL_HASH.get(symbol), BAR_SIZE.valueOf(duration));
 				barKeys.add(barKey);
 			}
 		}
@@ -69,7 +69,7 @@ public class OKCoinDownloader {
 					}
 					firstPass = false;
 					System.out.println(Calendar.getInstance().getTime().toString() + " - Bar Downloads & Inserts Done");
-					MetricsCalculatorRealtime.calculateMetricsRealtime(Constants.METRICS, barKeys);
+					MetricsCalculatorRealtime.calculateMetricsRealtime();
 					System.out.println(Calendar.getInstance().getTime().toString() + " - Metrics Done");
 //					Thread.sleep(1000);
 				}

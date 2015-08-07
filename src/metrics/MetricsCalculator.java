@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 import utils.ConnectionSingleton;
@@ -328,40 +329,49 @@ public class MetricsCalculator {
 	/**
 	 * A variation of DV that is exponentially weighted with a weight of parameter "weight"
 	 * 
-	 * @param metricSequence
+	 * @param mce
+	 * @param metric
 	 * @param weight
 	 * @return
 	 */
-	public static LinkedList<Metric> fillInWeightedDVEMA(LinkedList<Metric> metricSequence, int weight) {
+	public static void fillInWeightedDVEMA(HashMap<String, Object> mce, Metric metric, int weight) {
 		// Initialize Variables
 		float yesterdaysDV = 0;
 	  	int c = 1;
 	  	
-	  	for (Metric metric:metricSequence) {
-	  		float adjHigh = metric.getAdjHigh();
-			float adjLow = metric.getAdjLow();
-			float adjClose = metric.getAdjClose();
-	  		
-			float todaysValue = adjClose / ((adjHigh + adjLow) / 2f);
-			float todaysDV = (todaysValue - 1f) * 100f;
-		  	if (c > 1) {
-		  		todaysDV = ((todaysDV * weight / 100f) + (yesterdaysDV * (1 - (weight / 100f))));
-		  	}
-
-		  	// Set this day's DV2EMA value and add it to the new sequence
-		  	metric.name = "dv" + weight + "ema";
-		  	if (c >= 10) {
-		  		metric.value = todaysDV;
-		  	}
-		  	else {
-		  		metric.value = null;
-		  	}
-		  	
-		  	yesterdaysDV = todaysDV;
-		  	c++;
+	  	// Load pre-computed values that can help speed up
+	  	if (mce.size() > 0) {
+	  		yesterdaysDV = (float)mce.get("yesterdaysDV");
+	  		c = (int)mce.get("c");
 	  	}
-	  	normalizeMetricValues(metricSequence);
-	  	return metricSequence;
+	  	
+	  	// Calculate mmetric value
+  		float adjHigh = metric.getAdjHigh();
+		float adjLow = metric.getAdjLow();
+		float adjClose = metric.getAdjClose();
+  		
+		float todaysValue = adjClose / ((adjHigh + adjLow) / 2f);
+		float todaysDV = (todaysValue - 1f) * 100f;
+	  	if (c > 1) {
+	  		todaysDV = ((todaysDV * weight / 100f) + (yesterdaysDV * (1 - (weight / 100f))));
+	  	}
+
+	  	metric.name = "dv" + weight + "ema";
+	  	if (c >= 10) {
+	  		metric.value = todaysDV;
+	  	}
+	  	else {
+	  		metric.value = null;
+	  	}
+	  	
+	  	yesterdaysDV = todaysDV;
+	  	c++;
+	  	
+//	  	normalizeMetricValues(ms);
+	  	
+	  	// Update the MetricCalcEssentials
+	  	mce.put("yesterdaysDV", yesterdaysDV);
+	  	mce.put("c", c);
 	}
 	
 	/**

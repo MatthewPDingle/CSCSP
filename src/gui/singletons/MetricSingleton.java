@@ -13,12 +13,14 @@ public class MetricSingleton {
 
 	private static MetricSingleton instance = null;
 	
+	// For holding all the BarKeys
 	private ArrayList<BarKey> barKeys = null;
 
 	// For holding all the Metric Sequences
 	private HashMap<MetricKey, LinkedList<Metric>> metricSequenceHash = new HashMap<MetricKey, LinkedList<Metric>>();
+	
 	// For holding all the variables needed to quickly calculate metrics without recomputing a long chain
-	private HashMap<MetricKey, HashMap<String, Double>> metricCalcEssentialsHash = new HashMap<MetricKey, HashMap<String, Double>>();
+	private HashMap<MetricKey, HashMap<String, Object>> metricCalcEssentialsHash = new HashMap<MetricKey, HashMap<String, Object>>();
 
 	protected MetricSingleton() {
 	}
@@ -43,7 +45,7 @@ public class MetricSingleton {
 		return metricSequenceHash;
 	}
 
-	public HashMap<MetricKey, HashMap<String, Double>> getMetricCalcEssentialsHash() {
+	public HashMap<MetricKey, HashMap<String, Object>> getMetricCalcEssentialsHash() {
 		return metricCalcEssentialsHash;
 	}
 }

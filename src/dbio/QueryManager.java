@@ -1008,11 +1008,11 @@ public class QueryManager {
 				String symbol = rs.getString("symbol");
 				String duration = rs.getString("duration");
 				String baseDate = rs.getString("baseDate");
-				LinkedList<Metric> metricSequence = new LinkedList<Metric>();
-				for (String metric : Constants.METRICS) {
-					MetricKey mk = new MetricKey(metric, symbol, BAR_SIZE.valueOf(duration));
-					metricSequenceHash.put(mk, metricSequence);
-				}
+//				LinkedList<Metric> metricSequence = new LinkedList<Metric>();
+//				for (String metric : Constants.METRICS) {
+//					MetricKey mk = new MetricKey(metric, symbol, BAR_SIZE.valueOf(duration));
+//					metricSequenceHash.put(mk, metricSequence);
+//				}
 				
 				
 				// Fill a "metricSequence" with the price data for the last X days + however many days I need stats for
@@ -1054,6 +1054,9 @@ public class QueryManager {
 						// Figure out which MetricKey it should go in, and add it to that MetricKey's MetricSequence
 						MetricKey mk = new MetricKey(metricName, symbol, BAR_SIZE.valueOf(duration));
 						LinkedList<Metric> ms = metricSequenceHash.get(mk);
+						if (ms == null) {
+							ms = new LinkedList<Metric>();
+						}
 						ms.add(m);
 						metricSequenceHash.put(mk, ms);
 					}
@@ -1930,18 +1933,6 @@ public class QueryManager {
 	public static void insertRealtimeMetrics(Calendar maxStartFromBar, LinkedList<Metric> metricSequence) {
 		try {
 			insertIntoMetrics(metricSequence);
-//			Metric lastMetric = metricSequence.getLast();
-//			
-//			if (	lastMetric.start.get(Calendar.YEAR) == maxStartFromBar.get(Calendar.YEAR) &&  
-//					lastMetric.start.get(Calendar.MONTH) == maxStartFromBar.get(Calendar.MONTH) &&  
-//					lastMetric.start.get(Calendar.DATE) == maxStartFromBar.get(Calendar.DATE) &&
-//					lastMetric.start.get(Calendar.HOUR) == maxStartFromBar.get(Calendar.HOUR) &&
-//					lastMetric.start.get(Calendar.MINUTE) == maxStartFromBar.get(Calendar.MINUTE)) {
-//				// The last start in the metricsequence is the right start: the latest bar start
-//				if (lastMetric != null) {
-//					insertIntoMetrics(lastMetric);
-//				}
-//			}
 		} 
 		catch (Exception e) {
 			e.printStackTrace();
