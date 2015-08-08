@@ -985,91 +985,70 @@ public class QueryManager {
 	public static HashMap<MetricKey, LinkedList<Metric>> loadMetricSequenceHash(ArrayList<BarKey> barKeys) {
 		HashMap<MetricKey, LinkedList<Metric>> metricSequenceHash = new HashMap<MetricKey, LinkedList<Metric>>();
 		try {
-			// WHERE clause
-			String whereClause = "";
-			if (barKeys != null && barKeys.size() > 0) {
-				whereClause = "WHERE ";
-			}
-			for (BarKey bk : barKeys) {
-				whereClause += "(symbol = '" + bk.symbol + "' AND duration = '" + bk.duration.toString() + "') OR ";
-			}
-			if (whereClause.length() > 0) {
-				whereClause = whereClause.substring(0, whereClause.length() - 3); // Chop off the trailing " OR"
-			}
-			
-			// Query to get list of symbols/durations and their base dates
-			String numBarsBack = "300"; 
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "SELECT DISTINCT symbol, duration, " +
-						"(SELECT MIN(start) FROM (SELECT symbol, start FROM bar " + whereClause + " ORDER BY start DESC LIMIT " + numBarsBack + ") t) AS baseDate " +
-						"FROM bar " + whereClause;
-			Statement s = c.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-			ResultSet rs = s.executeQuery(q);
 			
-			while (rs.next()) {
-				String symbol = rs.getString("symbol");
-				String duration = rs.getString("duration");
-				String baseDate = rs.getString("baseDate");
-//				LinkedList<Metric> metricSequence = new LinkedList<Metric>();
-//				for (String metric : Constants.METRICS) {
-//					MetricKey mk = new MetricKey(metric, symbol, BAR_SIZE.valueOf(duration));
-//					metricSequenceHash.put(mk, metricSequence);
-//				}
-				
-				
-				// Fill a "metricSequence" with the price data for the last X days + however many days I need stats for
-				String alphaComparison = "SPY"; // TODO: probably change this
-				String q2 = "SELECT r.*, " +
-						"(SELECT close FROM bar WHERE symbol = '" + alphaComparison + "' AND start <= r.start ORDER BY start DESC LIMIT 1) AS alphaclose, " +
-						"(SELECT change FROM bar WHERE symbol = '" + alphaComparison + "' AND start <= r.start ORDER BY start DESC LIMIT 1) AS alphachange " +
-						"FROM bar r " +
-						"WHERE r.symbol = '" + symbol + "' " +
-						"AND r.duration = '" + duration + "' " +
-						"AND r.start >= '" + baseDate + "' " +
-						"ORDER BY start ASC";
-				
-				Statement s2 = c.createStatement();
-				ResultSet rs2 = s2.executeQuery(q2);
-				
-				while (rs2.next()) {
-					Timestamp tsStart = rs2.getTimestamp("start");
-					Calendar start = Calendar.getInstance();
-					start.setTimeInMillis(tsStart.getTime());
-					Timestamp tsEnd = rs2.getTimestamp("end");
-					Calendar end = Calendar.getInstance();
-					end.setTimeInMillis(tsEnd.getTime());
-					end.set(Calendar.SECOND, 0);
-					long volume = rs2.getLong("volume");
-					float adjOpen = rs2.getFloat("open");
-					float adjClose = rs2.getFloat("close");
-					float adjHigh = rs2.getFloat("high");
-					float adjLow = rs2.getFloat("low");
-					float alphaClose = rs2.getFloat("alphaclose");
-					float alphaChange = rs2.getFloat("alphachange");
-					float gap = rs2.getFloat("gap");
-					float change = rs2.getFloat("change");
-
-					for (String metricName : Constants.METRICS) {
-						// Create a Metric
-						Metric m = new Metric(metricName, symbol, start, end, BAR_SIZE.valueOf(duration), volume, adjOpen, adjClose, adjHigh, adjLow, gap, change, alphaClose, alphaChange);
-						
-						// Figure out which MetricKey it should go in, and add it to that MetricKey's MetricSequence
-						MetricKey mk = new MetricKey(metricName, symbol, BAR_SIZE.valueOf(duration));
-						LinkedList<Metric> ms = metricSequenceHash.get(mk);
-						if (ms == null) {
-							ms = new LinkedList<Metric>();
-						}
-						ms.add(m);
-						metricSequenceHash.put(mk, ms);
+			for (BarKey bk : barKeys) {
+				for (String metricName : Constants.METRICS) {
+					
+					MetricKey mk = new MetricKey(metricName, bk.symbol, bk.duration);
+					LinkedList<Metric> ms = metricSequenceHash.get(mk);
+					if (ms == null) {
+						ms = new LinkedList<Metric>();
 					}
+					
+					String alphaComparison = "SPY"; // TODO: probably change this.  Seems weird to compare bitcoin or forex to SPY.
+					String q = "SELECT b.*, " +
+							"(SELECT close FROM bar WHERE symbol = ? AND start <= b.start ORDER BY start DESC LIMIT 1) AS alphaclose, " +
+							"(SELECT change FROM bar WHERE symbol = ? AND start <= b.start ORDER BY start DESC LIMIT 1) AS alphachange " +
+							"FROM bar b " +
+							"WHERE (b.start >= (SELECT COALESCE((SELECT MAX(start) FROM metrics WHERE symbol = ? AND duration = ? AND name = ?), '2010-01-01 00:00:00')) OR b.partial = true) " +
+							"AND b.symbol = ? " +
+							"AND b.duration = ? " +
+							"ORDER BY b.start";
+					
+					PreparedStatement s = c.prepareStatement(q);
+					s.setString(1, alphaComparison);
+					s.setString(2, alphaComparison);
+					s.setString(3, bk.symbol);
+					s.setString(4, bk.duration.toString());
+					s.setString(5, metricName);
+					s.setString(6, bk.symbol);
+					s.setString(7, bk.duration.toString());
+					
+					ResultSet rs = s.executeQuery();
+					int counter = 0;
+					
+					while (rs.next()) {
+						Timestamp tsStart = rs.getTimestamp("start");
+						Calendar start = Calendar.getInstance();
+						start.setTimeInMillis(tsStart.getTime());
+						Timestamp tsEnd = rs.getTimestamp("end");
+						Calendar end = Calendar.getInstance();
+						end.setTimeInMillis(tsEnd.getTime());
+						end.set(Calendar.SECOND, 0);
+						long volume = rs.getLong("volume");
+						float adjOpen = rs.getFloat("open");
+						float adjClose = rs.getFloat("close");
+						float adjHigh = rs.getFloat("high");
+						float adjLow = rs.getFloat("low");
+						float alphaClose = rs.getFloat("alphaclose");
+						float alphaChange = rs.getFloat("alphachange");
+						float gap = rs.getFloat("gap");
+						float change = rs.getFloat("change");
+
+						// Create a Metric
+						Metric m = new Metric(metricName, bk.symbol, start, end, bk.duration, volume, adjOpen, adjClose, adjHigh, adjLow, gap, change, alphaClose, alphaChange);
+						ms.add(m);
+						counter++;
+					}
+					metricSequenceHash.put(mk, ms);
+					System.out.println("Adding " + counter + " metrics to MetricSequence for " + mk.toString());
+					
+					rs.close();
+					s.close();
 				}
-				
-				rs2.close();
-				s2.close();
 			}
-			
-			rs.close();
-			s.close();
+			c.close();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -1373,13 +1352,17 @@ public class QueryManager {
 		}
 	}
 	
-	public static void insertIntoMetrics(LinkedList<Metric> metrics) {
+	public static void insertOrUpdateIntoMetrics(LinkedList<Metric> metrics) {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			
 			String q2 = "INSERT INTO metrics(name, symbol, start, \"end\", duration, value) VALUES (?, ?, ?, ?, ?, ?)";
 			PreparedStatement s2 = c.prepareStatement(q2);
 			boolean anyInserts = false;
+			
+			String q3 = "UPDATE metrics SET value = ? WHERE name = ? AND symbol = ? AND start = ? AND duration = ?";
+			PreparedStatement s3 = c.prepareStatement(q3);
+			boolean anyUpdates = false;
 			
 			for (Metric metric : metrics) {
 				// First see if this bar exists in the DB
@@ -1415,12 +1398,30 @@ public class QueryManager {
 					s2.addBatch();
 					anyInserts = true;
 				}
+				else { // Otherwise it does exist, so update it
+					if (metric.value == null) {
+						s3.setNull(1, java.sql.Types.FLOAT);
+					}
+					else {
+						s3.setFloat(1, metric.value);
+					}
+					s3.setString(2, metric.name);
+					s3.setString(3, metric.symbol);
+					s3.setTimestamp(4, new java.sql.Timestamp(metric.start.getTime().getTime()));
+					s3.setString(5, metric.duration.toString());
+					s3.addBatch();
+					anyUpdates = true;
+				}
 			}
 			
 			if (anyInserts) {
 				s2.executeBatch();
 			}
+			if (anyUpdates) {
+				s3.executeBatch();
+			}
 			s2.close();
+			s3.close();
 			
 			c.close();
 		}
@@ -1934,7 +1935,7 @@ public class QueryManager {
 
 	public static void insertRealtimeMetrics(Calendar maxStartFromBar, LinkedList<Metric> metricSequence) {
 		try {
-			insertIntoMetrics(metricSequence);
+			insertOrUpdateIntoMetrics(metricSequence);
 		} 
 		catch (Exception e) {
 			e.printStackTrace();
@@ -2319,7 +2320,7 @@ public class QueryManager {
 	}
 	
 	public static HashMap<String, Object> getMetricCalcEssentials(MetricKey mk) {
-		HashMap<String, Object> mce = null;
+		HashMap<String, Object> mce = new HashMap<String, Object>();
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 
@@ -2346,7 +2347,12 @@ public class QueryManager {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-		return mce;
+		if (mce.size() == 0) {
+			return null;
+		}
+		else {
+			return mce;
+		}
 	}
 	
 	public static ArrayList<HashMap<String, Object>> getTickData(String symbol, Calendar periodStart, BAR_SIZE barSize) {

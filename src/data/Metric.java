@@ -14,6 +14,8 @@ public class Metric {
 	public BAR_SIZE duration;
 	public Float value;
 	
+	public boolean calculated = false;
+	
 	// Auxiliary
 	private double volume = 0;
 	private float adjOpen = 0f;

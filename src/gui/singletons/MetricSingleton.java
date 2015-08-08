@@ -38,6 +38,9 @@ public class MetricSingleton {
 
 	public void init(ArrayList<BarKey> barKeys) {
 		this.barKeys = barKeys;
+	}
+	
+	public void updateMetricSequenceHash() {
 		this.metricSequenceHash = QueryManager.loadMetricSequenceHash(barKeys);
 	}
 

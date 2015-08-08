@@ -330,11 +330,12 @@ public class MetricsCalculator {
 	 * A variation of DV that is exponentially weighted with a weight of parameter "weight"
 	 * 
 	 * @param mce
+	 * @param last - If this metric is the last in the metric sequence.
 	 * @param metric
 	 * @param weight
 	 * @return
 	 */
-	public static void fillInWeightedDVEMA(HashMap<String, Object> mce, Metric metric, int weight) {
+	public static void fillInWeightedDVEMA(HashMap<String, Object> mce, boolean last, Metric metric, int weight) {
 		// Initialize Variables
 		float yesterdaysDV = 0;
 	  	int c = 1;
@@ -342,10 +343,15 @@ public class MetricsCalculator {
 	  	// Load pre-computed values that can help speed up
 	  	if (mce.size() > 0) {
 	  		yesterdaysDV = (float)mce.get("yesterdaysDV");
-	  		c = (int)mce.get("c");
+	  		c = (int)(new Float(mce.get("c").toString()).floatValue()); // kill me
+	  	}
+	  	if (last) {
+	  		metric.calculated = false;
+	  		mce.put("yesterdaysDV", yesterdaysDV);
+		  	mce.put("c", c);
 	  	}
 	  	
-	  	// Calculate mmetric value
+	  	// Calculate metric value
   		float adjHigh = metric.getAdjHigh();
 		float adjLow = metric.getAdjLow();
 		float adjClose = metric.getAdjClose();
@@ -364,15 +370,19 @@ public class MetricsCalculator {
 	  		metric.value = null;
 	  	}
 	  	
+	  	
 	  	yesterdaysDV = todaysDV;
 	  	c++;
 	  	
 //	  	normalizeMetricValues(ms);
 	  	
-	  	// Update the MetricCalcEssentials
-	  	mce.put("yesterdaysDV", yesterdaysDV);
-	  	mce.put("c", c);
-	  	mce.put("start", metric.start);
+	  	// Update the MetricCalcEssentials if it's not the last one
+	  	if (!last) {
+	  		metric.calculated = true;
+		  	mce.put("yesterdaysDV", yesterdaysDV);
+		  	mce.put("c", c);
+		  	mce.put("start", metric.start);
+	  	}
 	}
 	
 	/**

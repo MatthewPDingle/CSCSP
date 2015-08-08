@@ -13,12 +13,14 @@ import data.Metric;
 import data.MetricKey;
 import dbio.QueryManager;
 import gui.singletons.MetricSingleton;
+import utils.CalendarUtils;
 
 public class MetricsCalculatorRealtime {
 	
 	public static void calculateMetricsRealtime() {
 		try {
 			MetricSingleton metricSingleton = MetricSingleton.getInstance();
+			metricSingleton.updateMetricSequenceHash();
 			HashMap<MetricKey, LinkedList<Metric>>metricSequenceHash = metricSingleton.getMetricSequenceHash();
 			HashMap<MetricKey, HashMap<String, Object>> metricCalcEssentials = metricSingleton.getMetricCalcEssentialsHash();
 			
@@ -28,6 +30,7 @@ public class MetricsCalculatorRealtime {
 				Map.Entry pair = (Map.Entry)i.next();
 				// Get this MetricKey
 				MetricKey mk = (MetricKey)pair.getKey();
+				System.out.println("Processing " + mk.toString());
 				// Get this MetricSequence
 				LinkedList<Metric> ms = (LinkedList<Metric>)pair.getValue();
 				// Get this MetricCalcEssentials
@@ -40,12 +43,30 @@ public class MetricsCalculatorRealtime {
 				}
 				
 				// Go through the MetricSequence, only calculating values for the ones that don't already have them.
+				int index = 0;
+				boolean last = false;
 				for (Metric metric : ms) {
-					if (metric.value == null) {
+					if (index == ms.size() - 1) {
+						last = true;
+					}
+					if (!metric.calculated) {
+						// Need to check to make sure that the Metric Calc Essential contains values for the bar right before this metric.
+						Calendar mceStart = (Calendar)mce.get("start");
+						if (mceStart != null) {
+							Calendar mceEnd = CalendarUtils.getBarEnd(mceStart, metric.duration);
+							System.out.println("Comparing " + mceEnd.getTime().toString() + "     to     " + metric.start.getTime().toString());
+							if (!CalendarUtils.areSame(mceEnd, metric.start)) {
+								// This is bad.  I'm somehow trying to calculate a metric for a bar that I don't have a last MCE for.
+								throw new Exception("Trying to calcualte a metric for a bar that doesn't have a previous MCE.");
+							}
+						}
+						
+						// It has successfully gotten past the previous MCE timing check.  We have nothing to worry about and can proceed calculating metrics.
 						switch (metric.name) {
 							// DV EMA
 							case "dv10ema":
-								MetricsCalculator.fillInWeightedDVEMA(mce, metric, 10);
+								System.out.println("Filling in dv10ema at                             " + metric.start.getTime().toString());
+								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 10);
 								break;
 							case "dv25ema":
 						
@@ -59,15 +80,16 @@ public class MetricsCalculatorRealtime {
 								
 						}
 					}
+					index++;
 				}
 				
 				// Save the MetricCalcEssentials to the DB
-				if (mce != null) {
+				if (mce != null && mce.size() > 0) {
 					QueryManager.insertOrUpdateIntoMetricCalcEssentials(mk, mce);
 				}
 				
 				// Insert the MetricSequence
-				QueryManager.insertIntoMetrics(ms);
+				QueryManager.insertOrUpdateIntoMetrics(ms);
 				
 				switch (mk.name) {
 					// DV EMA
@@ -299,19 +321,19 @@ public class MetricsCalculatorRealtime {
 						// AV EMA
 						if (metric.equals("av10ema")) {
 							MetricsCalculator.fillInWeightedAVEMA(ms, 10);
-							QueryManager.insertIntoMetrics(ms);
+							QueryManager.insertOrUpdateIntoMetrics(ms);
 						}
 						if (metric.equals("av25ema")) {
 							MetricsCalculator.fillInWeightedAVEMA(ms, 25);
-							QueryManager.insertIntoMetrics(ms);
+							QueryManager.insertOrUpdateIntoMetrics(ms);
 						}
 						if (metric.equals("av50ema")) {
 							MetricsCalculator.fillInWeightedAVEMA(ms, 50);
-							QueryManager.insertIntoMetrics(ms);
+							QueryManager.insertOrUpdateIntoMetrics(ms);
 						}
 						if (metric.equals("av75ema")) {
 							MetricsCalculator.fillInWeightedAVEMA(ms, 75);
-							QueryManager.insertIntoMetrics(ms);
+							QueryManager.insertOrUpdateIntoMetrics(ms);
 						}
 								
 //						// DV EMA
