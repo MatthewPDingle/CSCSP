@@ -33,13 +33,12 @@ public class MetricsCalculatorThreadHelper extends Thread {
 //				prepareMetricInsertStatement(ms);
 //				prepareMetricInsertStatement(ms);
 //				prepareMetricInsertStatement(ms);
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInDV2(ms));
-				prepareMetricInsertStatement(MetricsCalculator.fillInDVFading4(ms));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInRSI(ms, 2));
-				prepareMetricInsertStatement(MetricsCalculator.fillInRSI(ms, 5));
-				prepareMetricInsertStatement(MetricsCalculator.fillInRSI(ms, 14));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInDV2(ms));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInRSI(ms, 2));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInRSI(ms, 5));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInRSI(ms, 14));
 				
 				prepareMetricInsertStatement(MetricsCalculator.fillInRSIAlpha(ms, 2));
 				prepareMetricInsertStatement(MetricsCalculator.fillInRSIAlpha(ms, 5));

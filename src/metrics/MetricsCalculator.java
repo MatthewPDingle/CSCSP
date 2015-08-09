@@ -5,12 +5,12 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
-
-import utils.ConnectionSingleton;
+import java.util.List;
 
 import com.tictactec.ta.lib.Core;
 import com.tictactec.ta.lib.MInteger;
@@ -20,6 +20,7 @@ import constants.Constants;
 import constants.Constants.BAR_SIZE;
 import data.Metric;
 import dbio.QueryManager;
+import utils.ConnectionSingleton;
 
 public class MetricsCalculator {
 
@@ -662,51 +663,6 @@ public class MetricsCalculator {
 		return metricSequence;
 	}
 	
-	public static LinkedList<Metric> fillInDVFading4(LinkedList<Metric> metricSequence) {
-		// Initialize Variables
-		Metric yesterday = null;
-		Metric yesterday2 = null;
-		Metric yesterday3 = null;
-		
-		for (Metric metric:metricSequence) {
-			float adjHigh = metric.getAdjHigh();
-			float adjLow = metric.getAdjLow();
-			float adjClose = metric.getAdjClose();
-			
-			if (yesterday3 != null) {
-				float yesterdayAdjHigh = yesterday.getAdjHigh();
-				float yesterdayAdjLow = yesterday.getAdjLow();
-				float yesterdayAdjClose = yesterday.getAdjClose();
-				float yesterday2AdjHigh = yesterday2.getAdjHigh();
-				float yesterday2AdjLow = yesterday2.getAdjLow();
-				float yesterday2AdjClose = yesterday2.getAdjClose();
-				float yesterday3AdjHigh = yesterday3.getAdjHigh();
-				float yesterday3AdjLow = yesterday3.getAdjLow();
-				float yesterday3AdjClose = yesterday3.getAdjClose();
-				
-				float todaysValue = adjClose / ((adjHigh + adjLow) / 2f);
-				float yesterdaysValue = yesterdayAdjClose / ((yesterdayAdjHigh + yesterdayAdjLow) / 2f);
-				float yesterday2sValue = yesterday2AdjClose / ((yesterday2AdjHigh + yesterday2AdjLow) / 2f);
-				float yesterday3sValue = yesterday3AdjClose / ((yesterday3AdjHigh + yesterday3AdjLow) / 2f);
-				float dvFading4 = (((todaysValue * .4f) + (yesterdaysValue * .3f) + (yesterday2sValue * .2f) + (yesterday3sValue * .1f)) - 1f) * 100f;
-				
-				// Set the DVFading4 value and add the day to the new day sequence
-				metric.value = dvFading4;
-				metric.name = "dvfading4";
-			}
-			else {
-				metric.value = null;
-				metric.name = "dvfading4";
-			}
-			
-			yesterday3 = yesterday2;
-			yesterday2 = yesterday;
-			yesterday = metric;
-		}
-		normalizeMetricValues(metricSequence);
-		return metricSequence;
-	}
-	
 	public static LinkedList<Metric> fillInWeightedDVol(LinkedList<Metric> metricSequence, int weight) { 
 		// Initialize Variables
 		float yesterdaysDVol = 0f;
@@ -801,37 +757,62 @@ public class MetricsCalculator {
 	  	return metricSequence;
 	}
 	
-	public static LinkedList<Metric> fillInDV2(LinkedList<Metric> metricSequence) {
+	/**
+	 * Original DV2 metric
+	 * 
+	 * @param mce
+	 * @param last
+	 * @param metric
+	 */
+	public static void fillInDV2(HashMap<String, Object> mce, boolean last, Metric metric) {
 		// Initialize Variables
-		Metric yesterday = null;
+		float yesterdayAdjHigh = 0f;
+		float yesterdayAdjLow = 0f;
+		float yesterdayAdjClose = 0f;
 		
-		for (Metric metric:metricSequence) {
-			float adjHigh = metric.getAdjHigh();
-			float adjLow = metric.getAdjLow();
-			float adjClose = metric.getAdjClose();
+		// Load pre-computed values that can help speed up
+	  	if (mce.size() > 0) {
+	  		yesterdayAdjHigh = (float)mce.get("yesterdayAdjHigh");
+	  		yesterdayAdjLow = (float)mce.get("yesterdayAdjLow");
+	  		yesterdayAdjClose = (float)mce.get("yesterdayAdjClose");
+	  	}
+	  	if (last) {
+	  		metric.calculated = false;
+	  		mce.put("yesterdayAdjHigh", yesterdayAdjHigh);
+	  		mce.put("yesterdayAdjLow", yesterdayAdjLow);
+	  		mce.put("yesterdayAdjClose", yesterdayAdjClose);
+	  	}
+	
+		float adjHigh = metric.getAdjHigh();
+		float adjLow = metric.getAdjLow();
+		float adjClose = metric.getAdjClose();
+		
+		if (yesterdayAdjClose != 0f) {
+			float todaysValue = adjClose / ((adjHigh + adjLow) / 2f);
+			float yesterdaysValue = yesterdayAdjClose / ((yesterdayAdjHigh + yesterdayAdjLow) / 2f);
+			float dv2 = (((todaysValue + yesterdaysValue) / 2f) - 1f) * 100f;
 			
-			if (yesterday != null) {
-				float yesterdayAdjHigh = yesterday.getAdjHigh();
-				float yesterdayAdjLow = yesterday.getAdjLow();
-				float yesterdayAdjClose = yesterday.getAdjClose();
-				
-				float todaysValue = adjClose / ((adjHigh + adjLow) / 2f);
-				float yesterdaysValue = yesterdayAdjClose / ((yesterdayAdjHigh + yesterdayAdjLow) / 2f);
-				float dv2 = (((todaysValue + yesterdaysValue) / 2f) - 1f) * 100f;
-				
-				// Set the DV2 value and add the day to the new day sequence
-				metric.value = dv2;
-				metric.name = "dv2";
-			}
-			else {
-				metric.value = null;
-				metric.name = "dv2";
-			}
-			
-			yesterday = metric;
+			// Set the DV2 value and add the day to the new day sequence
+			metric.value = dv2;
+			metric.name = "dv2";
 		}
-		normalizeMetricValues(metricSequence);
-		return metricSequence;
+		else {
+			metric.value = null;
+			metric.name = "dv2";
+		}
+		
+		yesterdayAdjHigh = metric.getAdjHigh();
+		yesterdayAdjLow = metric.getAdjLow();
+		yesterdayAdjClose = metric.getAdjClose();
+	
+		// Update the MetricCalcEssentials if it's not the last one
+	  	if (!last) {
+	  		metric.calculated = true;
+		  	mce.put("yesterdayAdjHigh", yesterdayAdjHigh);
+		  	mce.put("yesterdayAdjLow", yesterdayAdjLow);
+	  		mce.put("yesterdayAdjClose", yesterdayAdjClose);
+		  	mce.put("start", metric.start);
+	  	}
 	}
 	
 	/**
@@ -1021,41 +1002,129 @@ public class MetricsCalculator {
 	  	return metricSequence;
 	}
 	
-	public static LinkedList<Metric> fillInRSI(LinkedList<Metric> metricSequence, int period) {
+	/**
+	 * Traditional RSI
+	 * 
+	 * @param mce
+	 * @param last - If this metric is the last in the metric sequence.
+	 * @param metric
+	 * @param period
+	 * @return
+	 */
+	public static void fillInRSI2(HashMap<String, Object> mce, boolean last, Metric metric, int period) {
 		// Initialize Variables
 	  	LinkedList<Float> changes = new LinkedList<Float>();
 	  	
-	  	for (Metric metric:metricSequence) {
-	  		float change = metric.getChange();
-	  		changes.add(change);
-	  		
-	  		if (changes.size() == period) {
-	  			float upSum = 0f;
-	  			float downSum = 0f;
-	  			for (Float ch:changes) {
-	  				if (ch > 0) upSum += ch;
-	  				else downSum += -ch;
+	  	// Load pre-computed values that can help speed up
+	  	if (mce.size() > 0) {
+	  		Object rawChanges = mce.get("changes");
+	  		if (rawChanges instanceof Float) {
+	  			changes.add((float)rawChanges);
+	  		}
+	  		else if (rawChanges instanceof Float[]) {
+	  			for (Float f : (Float[])rawChanges) {
+	  				changes.add(f);
 	  			}
-	  			float avgUp = upSum / (float)period;
-	  			float avgDown = downSum / (float)period;
-	  			
-	  			float rsi = 100f;
-			  	if (avgDown != 0) {
-			  		float rs = (avgUp / avgDown) + 1f;
-				  	rsi = 100f - (100f / rs);
-			  	}
-			  	
-			  	metric.value = rsi;
-	  			
-	  			changes.remove();
 	  		}
-	  		else {
-	  			metric.value = null;
-	  		}
-	  		metric.name = "rsi" + period;
 	  	}
-	  	normalizeMetricValues(metricSequence);
-	  	return metricSequence;
+	  	if (last) {
+	  		metric.calculated = false;
+	  		LinkedList<Float> newChanges = new LinkedList<Float>();
+	  		newChanges.addAll(changes);
+	  		mce.put("changes", newChanges);
+	  	}
+	  	
+  		float change = metric.getChange();
+  		changes.add(change);
+  		
+  		if (changes.size() == period) {
+  			float upSum = 0f;
+  			float downSum = 0f;
+  			for (Float ch:changes) {
+  				if (ch > 0) upSum += ch;
+  				else downSum += -ch;
+  			}
+  			float avgUp = upSum / (float)period;
+  			float avgDown = downSum / (float)period;
+  			
+  			float rsi = 100f;
+		  	if (avgDown != 0) {
+		  		float rs = (avgUp / avgDown) + 1f;
+			  	rsi = 100f - (100f / rs);
+		  	}
+		  	
+		  	metric.value = rsi;
+  			
+  			changes.remove();
+  		}
+  		else {
+  			metric.value = null;
+  		}
+  		metric.name = "rsi" + period;
+	  	
+  		// Update the MetricCalcEssentials if it's not the last one
+	  	if (!last) {
+	  		metric.calculated = true;
+	  		LinkedList<Float> newChanges = new LinkedList<Float>();
+	  		newChanges.addAll(changes);
+		  	mce.put("changes", newChanges);
+		  	mce.put("start", metric.start);
+	  	}
+	}
+	
+	public static void fillInRSI(HashMap<String, Object> mce, boolean last, Metric metric, int period) {
+		// Initialize Variables
+		Core core = new Core();
+		LinkedList<Float> closes = new LinkedList<Float>();
+		
+		// Load pre-computed values that can help speed up
+		if (mce.size() > 0) {
+			Object rawCloses = mce.get("closes");
+	  		if (rawCloses instanceof Float) {
+	  			closes.add((float)rawCloses);
+	  		}
+	  		else if (rawCloses instanceof Float[]) {
+	  			for (Float f : (Float[])rawCloses) {
+	  				closes.add(f);
+	  			}
+	  		}
+		}
+		if (last) {
+	  		metric.calculated = false;
+	  		mce.put("closes", closes);
+	  	}
+		
+		closes.add(metric.getAdjClose());
+		
+		MInteger outBeginIndex = new MInteger();
+		MInteger outNBElement = new MInteger();
+		
+		double[] outReal = new double[closes.size()];	
+		double[] dCloses = new double[closes.size()];
+		for (int i = 0; i < closes.size(); i++) {
+			dCloses[i] = closes.get(i);
+		}
+		RetCode retCode = core.rsi(0, closes.size() - 1, dCloses, period, outBeginIndex, outNBElement, outReal);
+		
+//		RetCode retCode = core.ultOsc(0, metricSequence.size() - 1, highs, lows, closes, 4, 10, 25, begin, length, output);
+		if (retCode == RetCode.Success) { 
+			int c2 = outBeginIndex.value; 
+//			for (Metric metric:metricSequence) {
+				metric.name = "rsi" + period;
+				metric.value = null;
+//				if (metricSequence.indexOf(metric) >= outBeginIndex.value) {
+					metric.value = (float)outReal[c2 - outBeginIndex.value];
+					c2++;
+//				}
+//			}
+		}
+		
+		// Update the MetricCalcEssentials if it's not the last one
+	  	if (!last) {
+	  		metric.calculated = true;
+		  	mce.put("closes", closes);
+		  	mce.put("start", metric.start);
+	  	}
 	}
 	
 	public static LinkedList<Metric> fillInMFI(LinkedList<Metric> metricSequence, int period) {

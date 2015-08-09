@@ -30,7 +30,7 @@ public class MetricsCalculatorRealtime {
 				Map.Entry pair = (Map.Entry)i.next();
 				// Get this MetricKey
 				MetricKey mk = (MetricKey)pair.getKey();
-				System.out.println("Processing " + mk.toString());
+//				System.out.println("Processing " + mk.toString());
 				// Get this MetricSequence
 				LinkedList<Metric> ms = (LinkedList<Metric>)pair.getValue();
 				// Get this MetricCalcEssentials
@@ -63,21 +63,36 @@ public class MetricsCalculatorRealtime {
 						
 						// It has successfully gotten past the previous MCE timing check.  We have nothing to worry about and can proceed calculating metrics.
 						switch (metric.name) {
-							// DV EMA
-							case "dv10ema":
-//								System.out.println("Filling in dv10ema at                             " + metric.start.getTime().toString());
-								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 10);
+//							// DV EMA
+//							case "dv10ema":
+////								System.out.println("Filling in dv10ema at                             " + metric.start.getTime().toString());
+//								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 10);
+//								break;
+//							case "dv25ema":
+//								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 25);
+//								break;
+//							case "dv50ema":
+//								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 50);
+//								break;
+//							case "dv75ema":
+//								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 75);
+//								break;
+//								
+//							// Other DV
+//							case "dv2":
+//								MetricsCalculator.fillInDV2(mce, last, metric);
+//								break;
+//		
+//							// RSI
+//							case "rsi2":
+//								MetricsCalculator.fillInRSI(mce, last, metric, 2);
+//								break;
+							case "rsi5":
+								MetricsCalculator.fillInRSI(mce, last, metric, 5);					
 								break;
-							case "dv25ema":
-								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 25);
-								break;
-							case "dv50ema":
-								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 50);
-								break;
-							case "dv75ema":
-								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 75);
-								break;
-								
+//							case "rsi14":
+//								MetricsCalculator.fillInRSI(mce, last, metric, 14);
+//								break;
 						}
 					}
 					index++;
@@ -93,25 +108,6 @@ public class MetricsCalculatorRealtime {
 				
 				switch (mk.name) {
 
-					// Other DV
-					case "dv2":
-						
-						break;
-					case "dvfading4":
-						
-						break;
-						
-					// RSI
-					case "rsi2":
-						
-						break;
-					case "rsi5":
-											
-						break;
-					case "rsi14":
-						
-						break;
-						
 					// RSI Alpha
 					case "rsi2alpha":
 						
@@ -123,7 +119,7 @@ public class MetricsCalculatorRealtime {
 						
 						break;
 						
-					// RSI Alpha
+					// RSI EMA
 					case "rsi75ema":
 						
 						break;
@@ -325,25 +321,22 @@ public class MetricsCalculatorRealtime {
 //							MetricsCalculator.fillInWeightedDVEMA(null, ms, 75);
 //							QueryManager.insertIntoMetrics(ms);
 //						}
-						
-						// Other DV
-						if (metric.equals("dv2")) {
-							QueryManager.insertRealtimeMetrics(maxStartFromBar, MetricsCalculator.fillInDV2(ms));
-						}
-						if (metric.equals("dvfading4")) {
-							QueryManager.insertRealtimeMetrics(maxStartFromBar, MetricsCalculator.fillInDVFading4(ms));
-						}
-						
-						// RSI
-						if (metric.equals("rsi2")) {
-							QueryManager.insertRealtimeMetrics(maxStartFromBar, MetricsCalculator.fillInRSI(ms, 2));
-						}
-						if (metric.equals("rsi5")) {
-							QueryManager.insertRealtimeMetrics(maxStartFromBar, MetricsCalculator.fillInRSI(ms, 5));
-						}
-						if (metric.equals("rsi14")) {
-							QueryManager.insertRealtimeMetrics(maxStartFromBar, MetricsCalculator.fillInRSI(ms, 14));
-						}
+//						
+//						// Other DV
+//						if (metric.equals("dv2")) {
+//							QueryManager.insertRealtimeMetrics(maxStartFromBar, MetricsCalculator.fillInDV2(ms));
+//						}
+//						
+//						// RSI
+//						if (metric.equals("rsi2")) {
+//							QueryManager.insertRealtimeMetrics(maxStartFromBar, MetricsCalculator.fillInRSI(ms, 2));
+//						}
+//						if (metric.equals("rsi5")) {
+//							QueryManager.insertRealtimeMetrics(maxStartFromBar, MetricsCalculator.fillInRSI(ms, 5));
+//						}
+//						if (metric.equals("rsi14")) {
+//							QueryManager.insertRealtimeMetrics(maxStartFromBar, MetricsCalculator.fillInRSI(ms, 14));
+//						}
 						
 						// RSI Alpha
 						if (metric.equals("rsi2alpha")) {

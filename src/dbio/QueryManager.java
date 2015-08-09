@@ -1,5 +1,6 @@
 package dbio;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -13,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -1042,7 +1044,7 @@ public class QueryManager {
 						counter++;
 					}
 					metricSequenceHash.put(mk, ms);
-					System.out.println("Adding " + counter + " metrics to MetricSequence for " + mk.toString());
+//					System.out.println("Adding " + counter + " metrics to MetricSequence for " + mk.toString());
 					
 					rs.close();
 					s.close();
@@ -2262,10 +2264,16 @@ public class QueryManager {
 					// Get the VarName and VarValue out of the MCE hash
 					Map.Entry pair = (Map.Entry)i.next();
 					String varName = pair.getKey().toString();
-					Float varValue = null;
+					Array varValue = null;
 					Object o = pair.getValue();
 					if (!(o instanceof Calendar)) {
-						varValue = Float.parseFloat(o.toString());
+						if (o instanceof Float || o instanceof Integer || o instanceof Double) {
+							varValue = c.createArrayOf("float", new Float[] {Float.parseFloat(o.toString())});
+						}
+						else if (o instanceof List) {
+							List l = (List)o;
+							varValue = c.createArrayOf("float", l.toArray());
+						}
 						
 						String q1 = "INSERT INTO metriccalcessentials(name, symbol, duration, start, varname, varvalue) VALUES (?, ?, ?, ?, ?, ?)";
 						PreparedStatement s1 = c.prepareStatement(q1);
@@ -2275,7 +2283,7 @@ public class QueryManager {
 						Calendar start = (Calendar)mce.get("start");
 						s1.setTimestamp(4, new java.sql.Timestamp(start.getTime().getTime()));
 						s1.setString(5, varName);
-						s1.setFloat(6, varValue);
+						s1.setArray(6, varValue);
 						
 						s1.executeUpdate();
 						s1.close();
@@ -2288,24 +2296,27 @@ public class QueryManager {
 					// Get the VarName and VarValue out of the MCE hash
 					Map.Entry pair = (Map.Entry)i.next();
 					String varName = pair.getKey().toString();
-					Float varValue = null;
+					Array varValue = null;
 					Object o = pair.getValue();
 					if (!(o instanceof Calendar)) {
-						varValue = Float.parseFloat(o.toString());
+						if (o instanceof Float || o instanceof Integer || o instanceof Double) {
+							varValue = c.createArrayOf("float", new Float[] {Float.parseFloat(o.toString())});
+						}
+						else if (o instanceof List) {
+							List l = (List)o;
+							varValue = c.createArrayOf("float", l.toArray());
+						}
 						
-						String q1 = "UPDATE metriccalcessentials SET name = ?, symbol = ?, duration = ?, start = ?, varname = ?, varvalue = ? WHERE name = ? AND symbol = ? AND duration = ? AND varname = ?";
+						String q1 = "UPDATE metriccalcessentials SET start = ?, varname = ?, varvalue = ? WHERE name = ? AND symbol = ? AND duration = ? AND varname = ?";
 						PreparedStatement s1 = c.prepareStatement(q1);
-						s1.setString(1, mk.name);
-						s1.setString(2, mk.symbol);
-						s1.setString(3, mk.duration.toString());
 						Calendar start = (Calendar)mce.get("start");
-						s1.setTimestamp(4, new java.sql.Timestamp(start.getTime().getTime()));
-						s1.setString(5, varName);
-						s1.setFloat(6, varValue);
-						s1.setString(7, mk.name);
-						s1.setString(8, mk.symbol);
-						s1.setString(9, mk.duration.toString());
-						s1.setString(10, varName);
+						s1.setTimestamp(1, new java.sql.Timestamp(start.getTime().getTime()));
+						s1.setString(2, varName);
+						s1.setArray(3, varValue);
+						s1.setString(4, mk.name);
+						s1.setString(5, mk.symbol);
+						s1.setString(6, mk.duration.toString());
+						s1.setString(7, varName);
 						
 						s1.executeUpdate();
 						s1.close();
@@ -2333,12 +2344,18 @@ public class QueryManager {
 			ResultSet rs = s.executeQuery();
 			while (rs.next()) {
 				String varName = rs.getString("varname");
-				float varValue = rs.getFloat("varvalue");
+				Array varValue = rs.getArray("varvalue");
 				Timestamp startTS = rs.getTimestamp("start");
 				Calendar start = Calendar.getInstance();
 				start.setTimeInMillis(startTS.getTime());
 				
-				mce.put(varName, varValue);
+				Float[] values = (Float[])varValue.getArray();
+				if (values.length == 1) {
+					mce.put(varName, values[0]);
+				}
+				else {
+					mce.put(varName, values);
+				}
 				mce.put("start", start);
 			}
 			s.close();
