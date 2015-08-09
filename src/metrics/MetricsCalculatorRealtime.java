@@ -54,7 +54,7 @@ public class MetricsCalculatorRealtime {
 						Calendar mceStart = (Calendar)mce.get("start");
 						if (mceStart != null) {
 							Calendar mceEnd = CalendarUtils.getBarEnd(mceStart, metric.duration);
-							System.out.println("Comparing " + mceEnd.getTime().toString() + "     to     " + metric.start.getTime().toString());
+//							System.out.println("Comparing " + mceEnd.getTime().toString() + "     to     " + metric.start.getTime().toString());
 							if (!CalendarUtils.areSame(mceEnd, metric.start)) {
 								// This is bad.  I'm somehow trying to calculate a metric for a bar that I don't have a last MCE for.
 								throw new Exception("Trying to calcualte a metric for a bar that doesn't have a previous MCE.");
@@ -65,17 +65,17 @@ public class MetricsCalculatorRealtime {
 						switch (metric.name) {
 							// DV EMA
 							case "dv10ema":
-								System.out.println("Filling in dv10ema at                             " + metric.start.getTime().toString());
+//								System.out.println("Filling in dv10ema at                             " + metric.start.getTime().toString());
 								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 10);
 								break;
 							case "dv25ema":
-						
+								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 25);
 								break;
 							case "dv50ema":
-								
+								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 50);
 								break;
 							case "dv75ema":
-								
+								MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 75);
 								break;
 								
 						}
@@ -92,19 +92,7 @@ public class MetricsCalculatorRealtime {
 				QueryManager.insertOrUpdateIntoMetrics(ms);
 				
 				switch (mk.name) {
-					// DV EMA
-					case "dv10ema":
-					
-						break;
-					case "dv25ema":
-				
-						break;
-					case "dv50ema":
-						
-						break;
-					case "dv75ema":
-						
-						break;
+
 					// Other DV
 					case "dv2":
 						
@@ -318,23 +306,7 @@ public class MetricsCalculatorRealtime {
 			for (String metric:Constants.METRICS) {
 				if (metrics.contains(metric)) {
 					for (LinkedList<Metric> ms:metricSequences) {
-						// AV EMA
-						if (metric.equals("av10ema")) {
-							MetricsCalculator.fillInWeightedAVEMA(ms, 10);
-							QueryManager.insertOrUpdateIntoMetrics(ms);
-						}
-						if (metric.equals("av25ema")) {
-							MetricsCalculator.fillInWeightedAVEMA(ms, 25);
-							QueryManager.insertOrUpdateIntoMetrics(ms);
-						}
-						if (metric.equals("av50ema")) {
-							MetricsCalculator.fillInWeightedAVEMA(ms, 50);
-							QueryManager.insertOrUpdateIntoMetrics(ms);
-						}
-						if (metric.equals("av75ema")) {
-							MetricsCalculator.fillInWeightedAVEMA(ms, 75);
-							QueryManager.insertOrUpdateIntoMetrics(ms);
-						}
+
 								
 //						// DV EMA
 //						if (metric.equals("dv10ema")) {

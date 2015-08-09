@@ -176,154 +176,214 @@ public class MetricsCalculator {
 	/**
 	 * Related to DV, AV is exponentially weighted with a weight of parameter "weight"
 	 * 
-	 * @param metricSequence
+	 * @param mce
+	 * @param last - If this metric is the last in the metric sequence.
+	 * @param metric
 	 * @param weight
 	 * @return
 	 */
-	public static LinkedList<Metric> fillInWeightedAVEMA(LinkedList<Metric> metricSequence, int weight) {
+	public static void fillInWeightedAVEMA(HashMap<String, Object> mce, boolean last, Metric metric, int weight) {
 		// Initialize Variables
 		float yesterdaysAV = 0;
 		float yesterdaysAdjClose = 0;
 	  	int c = 1;
 	  	
-	  	for (Metric metric:metricSequence) {
-	  		float adjHigh = metric.getAdjHigh();
-			float adjLow = metric.getAdjLow();
-			float adjClose = metric.getAdjClose();
-	  		
-			if (c > 1) {
-				if (yesterdaysAdjClose > adjHigh) {
-					adjHigh = yesterdaysAdjClose;
-				}
-				if (yesterdaysAdjClose < adjLow) {
-					adjLow = yesterdaysAdjClose;
-				}
-				
-				float todaysValue = adjClose / ((adjHigh + adjLow) / 2f);
-				float todaysAV = (todaysValue - 1f) * 100f;
-			  	if (c > 2) {
-			  		todaysAV = ((todaysAV * weight / 100f) + (yesterdaysAV * (1 - (weight / 100f))));
-			  	}
-
-			  	// Set this day's AVEMA value and add it to the new sequence
-			  	if (c >= 10) {
-			  		metric.value = todaysAV;
-			  	}
-			  	else {
-			  		metric.value = null;
-			  	}
-			  	
-			  	yesterdaysAV = todaysAV;
-			}
-			metric.name = "av" + weight + "ema";
-			
-		  	yesterdaysAdjClose = adjClose;
-		  	c++;
+	  	// Load pre-computed values that can help speed up
+	  	if (mce.size() > 0) {
+	  		yesterdaysAV = (float)mce.get("yesterdaysAV");
+	  		yesterdaysAdjClose = (float)mce.get("yesterdaysAdjClose");
+	  		c = (int)(new Float(mce.get("c").toString()).floatValue()); 
 	  	}
-	  	normalizeMetricValues(metricSequence);
-	  	return metricSequence;
+	  	if (last) {
+	  		metric.calculated = false;
+	  		mce.put("yesterdaysAV", yesterdaysAV);
+	  		mce.put("yesterdaysAdjClose", yesterdaysAdjClose);
+		  	mce.put("c", c);
+	  	}
+
+  		float adjHigh = metric.getAdjHigh();
+		float adjLow = metric.getAdjLow();
+		float adjClose = metric.getAdjClose();
+  		
+		if (c > 1) {
+			if (yesterdaysAdjClose > adjHigh) {
+				adjHigh = yesterdaysAdjClose;
+			}
+			if (yesterdaysAdjClose < adjLow) {
+				adjLow = yesterdaysAdjClose;
+			}
+			
+			float todaysValue = adjClose / ((adjHigh + adjLow) / 2f);
+			float todaysAV = (todaysValue - 1f) * 100f;
+		  	if (c > 2) {
+		  		todaysAV = ((todaysAV * weight / 100f) + (yesterdaysAV * (1 - (weight / 100f))));
+		  	}
+
+		  	// Set this day's AVEMA value and add it to the new sequence
+		  	if (c >= 10) {
+		  		metric.value = todaysAV;
+		  	}
+		  	else {
+		  		metric.value = null;
+		  	}
+		  	
+		  	yesterdaysAV = todaysAV;
+		}
+		metric.name = "av" + weight + "ema";
+		
+	  	yesterdaysAdjClose = adjClose;
+	  	c++;
+	  	
+	  	// Update the MetricCalcEssentials if it's not the last one
+	  	if (!last) {
+	  		metric.calculated = true;
+		  	mce.put("yesterdaysAV", yesterdaysAV);
+		  	mce.put("yesterdaysAdjClose", yesterdaysAdjClose);
+		  	mce.put("c", c);
+		  	mce.put("start", metric.start);
+	  	}
 	}
 	
 	/**
 	 * Related to DV, BV is exponentially weighted with a weight of parameter "weight"
 	 * 
-	 * @param metricSequence
+	 * @param mce
+	 * @param last - If this metric is the last in the metric sequence.
+	 * @param metric
 	 * @param weight
 	 * @return
 	 */
-	public static LinkedList<Metric> fillInWeightedBVEMA(LinkedList<Metric> metricSequence, int weight) {
+	public static void fillInWeightedBVEMA(HashMap<String, Object> mce, boolean last, Metric metric, int weight) {
 		// Initialize Variables
 		float yesterdaysBV = 0;
 		float yesterdaysAdjClose = 0;
 	  	int c = 1;
 	  	
-	  	for (Metric metric:metricSequence) {
-	  		float adjHigh = metric.getAdjHigh();
-			float adjLow = metric.getAdjLow();
-			float adjClose = metric.getAdjClose();
-	  		
-			if (c > 1) {
-				if (yesterdaysAdjClose > adjHigh) {
-					adjHigh = yesterdaysAdjClose;
-				}
-				if (yesterdaysAdjClose < adjLow) {
-					adjLow = yesterdaysAdjClose;
-				}
-				
-				float todaysValue = adjClose / ((adjHigh + adjLow + yesterdaysAdjClose) / 3f);
-				float todaysBV = (todaysValue - 1f) * 100f;
-			  	if (c > 2) {
-			  		todaysBV = ((todaysBV * weight / 100f) + (yesterdaysBV * (1 - (weight / 100f))));
-			  	}
-
-			  	// Set this day's BVEMA value and add it to the new sequence
-			  	if (c >= 10) {
-			  		metric.value = todaysBV;
-			  	}
-			  	else {
-			  		metric.value = null;
-			  	}
-			  	
-			  	yesterdaysBV = todaysBV;
-			}
-			metric.name = "bv" + weight + "ema";
-			
-		  	yesterdaysAdjClose = adjClose;
-		  	c++;
+	  	// Load pre-computed values that can help speed up
+	  	if (mce.size() > 0) {
+	  		yesterdaysBV = (float)mce.get("yesterdaysBV");
+	  		yesterdaysAdjClose = (float)mce.get("yesterdaysAdjClose");
+	  		c = (int)(new Float(mce.get("c").toString()).floatValue()); 
 	  	}
-	  	normalizeMetricValues(metricSequence);
-	  	return metricSequence;
+	  	if (last) {
+	  		metric.calculated = false;
+	  		mce.put("yesterdaysBV", yesterdaysBV);
+	  		mce.put("yesterdaysAdjClose", yesterdaysAdjClose);
+		  	mce.put("c", c);
+	  	}
+	  	
+  		float adjHigh = metric.getAdjHigh();
+		float adjLow = metric.getAdjLow();
+		float adjClose = metric.getAdjClose();
+  		
+		if (c > 1) {
+			if (yesterdaysAdjClose > adjHigh) {
+				adjHigh = yesterdaysAdjClose;
+			}
+			if (yesterdaysAdjClose < adjLow) {
+				adjLow = yesterdaysAdjClose;
+			}
+			
+			float todaysValue = adjClose / ((adjHigh + adjLow + yesterdaysAdjClose) / 3f);
+			float todaysBV = (todaysValue - 1f) * 100f;
+		  	if (c > 2) {
+		  		todaysBV = ((todaysBV * weight / 100f) + (yesterdaysBV * (1 - (weight / 100f))));
+		  	}
+
+		  	// Set this day's BVEMA value and add it to the new sequence
+		  	if (c >= 10) {
+		  		metric.value = todaysBV;
+		  	}
+		  	else {
+		  		metric.value = null;
+		  	}
+		  	
+		  	yesterdaysBV = todaysBV;
+		}
+		metric.name = "bv" + weight + "ema";
+		
+	  	yesterdaysAdjClose = adjClose;
+	  	c++;
+	
+	  	// Update the MetricCalcEssentials if it's not the last one
+	  	if (!last) {
+	  		metric.calculated = true;
+		  	mce.put("yesterdaysBV", yesterdaysBV);
+		  	mce.put("yesterdaysAdjClose", yesterdaysAdjClose);
+		  	mce.put("c", c);
+		  	mce.put("start", metric.start);
+	  	}
 	}
 	
 	/**
 	 * Related to DV, CV is exponentially weighted with a weight of parameter "weight"
 	 * 
-	 * @param metricSequence
+	 * @param mce
+	 * @param last - If this metric is the last in the metric sequence.
+	 * @param metric
 	 * @param weight
 	 * @return
 	 */
-	public static LinkedList<Metric> fillInWeightedCVEMA(LinkedList<Metric> metricSequence, int weight) {
+	public static void fillInWeightedCVEMA(HashMap<String, Object> mce, boolean last, Metric metric, int weight) {
 		// Initialize Variables
 		float yesterdaysCV = 0;
 		float yesterdaysAdjClose = 0;
 	  	int c = 1;
 	  	
-	  	for (Metric metric:metricSequence) {
-	  		float adjHigh = metric.getAdjHigh();
-			float adjLow = metric.getAdjLow();
-			float adjClose = metric.getAdjClose();
-	  		
-			if (c > 1) {
-				if (yesterdaysAdjClose > adjHigh) {
-					adjHigh = yesterdaysAdjClose;
-				}
-				if (yesterdaysAdjClose < adjLow) {
-					adjLow = yesterdaysAdjClose;
-				}
-				
-				float todaysValue = adjClose / ((adjHigh + adjLow + yesterdaysAdjClose + adjClose) / 4f);
-				float todaysCV = (todaysValue - 1f) * 100f;
-			  	if (c > 2) {
-			  		todaysCV = ((todaysCV * weight / 100f) + (yesterdaysCV * (1 - (weight / 100f))));
-			  	}
-
-			  	// Set this day's CVEMA value and add it to the new sequence
-			  	if (c >= 10) {
-			  		metric.value = todaysCV;
-			  	}
-			  	else {
-			  		metric.value = null;
-			  	}
-			  	
-			  	yesterdaysCV = todaysCV;
-			}
-			metric.name = "cv" + weight + "ema";
-			
-		  	yesterdaysAdjClose = adjClose;
-		  	c++;
+	  	// Load pre-computed values that can help speed up
+	  	if (mce.size() > 0) {
+	  		yesterdaysCV = (float)mce.get("yesterdaysCV");
+	  		yesterdaysAdjClose = (float)mce.get("yesterdaysAdjClose");
+	  		c = (int)(new Float(mce.get("c").toString()).floatValue()); 
 	  	}
-	  	normalizeMetricValues(metricSequence);
-	  	return metricSequence;
+	  	if (last) {
+	  		metric.calculated = false;
+	  		mce.put("yesterdaysCV", yesterdaysCV);
+	  		mce.put("yesterdaysAdjClose", yesterdaysAdjClose);
+		  	mce.put("c", c);
+	  	}
+
+  		float adjHigh = metric.getAdjHigh();
+		float adjLow = metric.getAdjLow();
+		float adjClose = metric.getAdjClose();
+  		
+		if (c > 1) {
+			if (yesterdaysAdjClose > adjHigh) {
+				adjHigh = yesterdaysAdjClose;
+			}
+			if (yesterdaysAdjClose < adjLow) {
+				adjLow = yesterdaysAdjClose;
+			}
+			
+			float todaysValue = adjClose / ((adjHigh + adjLow + yesterdaysAdjClose + adjClose) / 4f);
+			float todaysCV = (todaysValue - 1f) * 100f;
+		  	if (c > 2) {
+		  		todaysCV = ((todaysCV * weight / 100f) + (yesterdaysCV * (1 - (weight / 100f))));
+		  	}
+
+		  	// Set this day's CVEMA value and add it to the new sequence
+		  	if (c >= 10) {
+		  		metric.value = todaysCV;
+		  	}
+		  	else {
+		  		metric.value = null;
+		  	}
+		  	
+		  	yesterdaysCV = todaysCV;
+		}
+		metric.name = "cv" + weight + "ema";
+		
+	  	yesterdaysAdjClose = adjClose;
+	  	c++;
+	  	
+	  	// Update the MetricCalcEssentials if it's not the last one
+	  	if (!last) {
+	  		metric.calculated = true;
+		  	mce.put("yesterdaysCV", yesterdaysCV);
+		  	mce.put("yesterdaysAdjClose", yesterdaysAdjClose);
+		  	mce.put("c", c);
+		  	mce.put("start", metric.start);
+	  	}
 	}
 	
 	/**
@@ -343,7 +403,7 @@ public class MetricsCalculator {
 	  	// Load pre-computed values that can help speed up
 	  	if (mce.size() > 0) {
 	  		yesterdaysDV = (float)mce.get("yesterdaysDV");
-	  		c = (int)(new Float(mce.get("c").toString()).floatValue()); // kill me
+	  		c = (int)(new Float(mce.get("c").toString()).floatValue()); 
 	  	}
 	  	if (last) {
 	  		metric.calculated = false;
@@ -369,12 +429,9 @@ public class MetricsCalculator {
 	  	else {
 	  		metric.value = null;
 	  	}
-	  	
-	  	
+
 	  	yesterdaysDV = todaysDV;
 	  	c++;
-	  	
-//	  	normalizeMetricValues(ms);
 	  	
 	  	// Update the MetricCalcEssentials if it's not the last one
 	  	if (!last) {
@@ -388,81 +445,115 @@ public class MetricsCalculator {
 	/**
 	 * Related to DV, EV is exponentially weighted with a weight of parameter "weight"
 	 * 
-	 * @param metricSequence
+	 * @param mce
+	 * @param last - If this metric is the last in the metric sequence.
+	 * @param metric
 	 * @param weight
 	 * @return
 	 */
-	public static LinkedList<Metric> fillInWeightedEVEMA(LinkedList<Metric> metricSequence, int weight) {
+	public static void fillInWeightedEVEMA(HashMap<String, Object> mce, boolean last, Metric metric, int weight) {
 		// Initialize Variables
 		float yesterdaysEV = 0;
 	  	int c = 1;
 	  	
-	  	for (Metric metric:metricSequence) {
-	  		float adjHigh = metric.getAdjHigh();
-			float adjLow = metric.getAdjLow();
-			float adjOpen = metric.getAdjOpen();
-			float adjClose = metric.getAdjClose();
-	  		
-			float todaysValue = adjClose / ((adjHigh + adjLow + adjOpen) / 3f);
-			float todaysEV = (todaysValue - 1f) * 100f;
-		  	if (c > 1) {
-		  		todaysEV = ((todaysEV * weight / 100f) + (yesterdaysEV * (1 - (weight / 100f))));
-		  	}
-
-		  	// Set this day's EVEMA value and add it to the new sequence
-		  	metric.name = "ev" + weight + "ema";
-		  	if (c >= 10) {
-		  		metric.value = todaysEV;
-		  	}
-		  	else {
-		  		metric.value = null;
-		  	}
-		  	
-		  	yesterdaysEV = todaysEV;
-		  	c++;
+	  	// Load pre-computed values that can help speed up
+	  	if (mce.size() > 0) {
+	  		yesterdaysEV = (float)mce.get("yesterdaysEV");
+	  		c = (int)(new Float(mce.get("c").toString()).floatValue()); 
 	  	}
-	  	normalizeMetricValues(metricSequence);
-	  	return metricSequence;
+	  	if (last) {
+	  		metric.calculated = false;
+	  		mce.put("yesterdaysEV", yesterdaysEV);
+		  	mce.put("c", c);
+	  	}
+	  	
+  		float adjHigh = metric.getAdjHigh();
+		float adjLow = metric.getAdjLow();
+		float adjOpen = metric.getAdjOpen();
+		float adjClose = metric.getAdjClose();
+  		
+		float todaysValue = adjClose / ((adjHigh + adjLow + adjOpen) / 3f);
+		float todaysEV = (todaysValue - 1f) * 100f;
+	  	if (c > 1) {
+	  		todaysEV = ((todaysEV * weight / 100f) + (yesterdaysEV * (1 - (weight / 100f))));
+	  	}
+
+	  	// Set this day's EVEMA value and add it to the new sequence
+	  	metric.name = "ev" + weight + "ema";
+	  	if (c >= 10) {
+	  		metric.value = todaysEV;
+	  	}
+	  	else {
+	  		metric.value = null;
+	  	}
+	  	
+	  	yesterdaysEV = todaysEV;
+	  	c++;
+
+	  	// Update the MetricCalcEssentials if it's not the last one
+	  	if (!last) {
+	  		metric.calculated = true;
+		  	mce.put("yesterdaysEV", yesterdaysEV);
+		  	mce.put("c", c);
+		  	mce.put("start", metric.start);
+	  	}
 	}
 	
 	/**
 	 * Related to DV, FV is exponentially weighted with a weight of parameter "weight"
 	 * 
-	 * @param metricSequence
+	 * @param mce
+	 * @param last - If this metric is the last in the metric sequence.
+	 * @param metric
 	 * @param weight
 	 * @return
 	 */
-	public static LinkedList<Metric> fillInWeightedFVEMA(LinkedList<Metric> metricSequence, int weight) {
+	public static void fillInWeightedFVEMA(HashMap<String, Object> mce, boolean last, Metric metric, int weight) {
 		// Initialize Variables
 		float yesterdaysFV = 0;
 	  	int c = 1;
 	  	
-	  	for (Metric metric:metricSequence) {
-	  		float adjHigh = metric.getAdjHigh();
-			float adjLow = metric.getAdjLow();
-			float adjOpen = metric.getAdjOpen();
-			float adjClose = metric.getAdjClose();
-	  		
-			float todaysValue = adjClose / ((adjHigh + adjLow + adjOpen + adjClose) / 4f);
-			float todaysFV = (todaysValue - 1f) * 100f;
-		  	if (c > 1) {
-		  		todaysFV = ((todaysFV * weight / 100f) + (yesterdaysFV * (1 - (weight / 100f))));
-		  	}
-
-		  	// Set this day's FVEMA value and add it to the new sequence
-		  	metric.name = "fv" + weight + "ema";
-		  	if (c >= 10) {
-		  		metric.value = todaysFV;
-		  	}
-		  	else {
-		  		metric.value = null;
-		  	}
-		  	
-		  	yesterdaysFV = todaysFV;
-		  	c++;
+	  	// Load pre-computed values that can help speed up
+	  	if (mce.size() > 0) {
+	  		yesterdaysFV = (float)mce.get("yesterdaysFV");
+	  		c = (int)(new Float(mce.get("c").toString()).floatValue()); 
 	  	}
-	  	normalizeMetricValues(metricSequence);
-	  	return metricSequence;
+	  	if (last) {
+	  		metric.calculated = false;
+	  		mce.put("yesterdaysFV", yesterdaysFV);
+		  	mce.put("c", c);
+	  	}
+	  	
+  		float adjHigh = metric.getAdjHigh();
+		float adjLow = metric.getAdjLow();
+		float adjOpen = metric.getAdjOpen();
+		float adjClose = metric.getAdjClose();
+  		
+		float todaysValue = adjClose / ((adjHigh + adjLow + adjOpen + adjClose) / 4f);
+		float todaysFV = (todaysValue - 1f) * 100f;
+	  	if (c > 1) {
+	  		todaysFV = ((todaysFV * weight / 100f) + (yesterdaysFV * (1 - (weight / 100f))));
+	  	}
+
+	  	// Set this day's FVEMA value and add it to the new sequence
+	  	metric.name = "fv" + weight + "ema";
+	  	if (c >= 10) {
+	  		metric.value = todaysFV;
+	  	}
+	  	else {
+	  		metric.value = null;
+	  	}
+	  	
+	  	yesterdaysFV = todaysFV;
+	  	c++;
+	  	
+	  	// Update the MetricCalcEssentials if it's not the last one
+	  	if (!last) {
+	  		metric.calculated = true;
+		  	mce.put("yesterdaysFV", yesterdaysFV);
+		  	mce.put("c", c);
+		  	mce.put("start", metric.start);
+	  	}  	
 	}
 	
 	/**
