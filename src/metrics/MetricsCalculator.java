@@ -1072,6 +1072,14 @@ public class MetricsCalculator {
 	  	}
 	}
 	
+	/**
+	 * Relative Strength Index (RSI)
+	 * 
+	 * @param mce
+	 * @param last
+	 * @param metric
+	 * @param period
+	 */
 	public static void fillInRSI(HashMap<String, Object> mce, boolean last, Metric metric, int period) {
 		// Initialize Variables
 		Core core = new Core();
@@ -1088,41 +1096,42 @@ public class MetricsCalculator {
 	  				closes.add(f);
 	  			}
 	  		}
+	  		else if (rawCloses instanceof LinkedList) {
+	  			closes.addAll((LinkedList)rawCloses);
+	  		}
 		}
 		if (last) {
 	  		metric.calculated = false;
-	  		mce.put("closes", closes);
+	  		mce.put("closes", new LinkedList(closes));
 	  	}
 		
 		closes.add(metric.getAdjClose());
+		System.out.println(closes);
 		
-		MInteger outBeginIndex = new MInteger();
-		MInteger outNBElement = new MInteger();
-		
-		double[] outReal = new double[closes.size()];	
-		double[] dCloses = new double[closes.size()];
-		for (int i = 0; i < closes.size(); i++) {
-			dCloses[i] = closes.get(i);
-		}
-		RetCode retCode = core.rsi(0, closes.size() - 1, dCloses, period, outBeginIndex, outNBElement, outReal);
-		
-//		RetCode retCode = core.ultOsc(0, metricSequence.size() - 1, highs, lows, closes, 4, 10, 25, begin, length, output);
-		if (retCode == RetCode.Success) { 
-			int c2 = outBeginIndex.value; 
-//			for (Metric metric:metricSequence) {
+		if (closes.size() == period + 1) {
+			MInteger outBeginIndex = new MInteger();
+			MInteger outNBElement = new MInteger();
+			
+			double[] outReal = new double[1];	
+			double[] dCloses = new double[closes.size()];
+			for (int i = 0; i < closes.size(); i++) {
+				dCloses[i] = closes.get(i);
+			}
+			
+			RetCode retCode = core.rsi(5, 5, dCloses, period, outBeginIndex, outNBElement, outReal);
+			if (retCode == RetCode.Success) { 
 				metric.name = "rsi" + period;
-				metric.value = null;
-//				if (metricSequence.indexOf(metric) >= outBeginIndex.value) {
-					metric.value = (float)outReal[c2 - outBeginIndex.value];
-					c2++;
-//				}
-//			}
+				metric.value = (float)outReal[0];
+			}
+			System.out.println(metric.value);
+			
+			closes.removeFirst();
 		}
 		
 		// Update the MetricCalcEssentials if it's not the last one
 	  	if (!last) {
 	  		metric.calculated = true;
-		  	mce.put("closes", closes);
+		  	mce.put("closes", new LinkedList(closes));
 		  	mce.put("start", metric.start);
 	  	}
 	}
