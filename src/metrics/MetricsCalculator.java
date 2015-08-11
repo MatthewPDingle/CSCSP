@@ -1003,80 +1003,10 @@ public class MetricsCalculator {
 	}
 	
 	/**
-	 * Traditional RSI
-	 * 
-	 * @param mce
-	 * @param last - If this metric is the last in the metric sequence.
-	 * @param metric
-	 * @param period
-	 * @return
-	 */
-	public static void fillInRSI2(HashMap<String, Object> mce, boolean last, Metric metric, int period) {
-		// Initialize Variables
-	  	LinkedList<Float> changes = new LinkedList<Float>();
-	  	
-	  	// Load pre-computed values that can help speed up
-	  	if (mce.size() > 0) {
-	  		Object rawChanges = mce.get("changes");
-	  		if (rawChanges instanceof Float) {
-	  			changes.add((float)rawChanges);
-	  		}
-	  		else if (rawChanges instanceof Float[]) {
-	  			for (Float f : (Float[])rawChanges) {
-	  				changes.add(f);
-	  			}
-	  		}
-	  	}
-	  	if (last) {
-	  		metric.calculated = false;
-	  		LinkedList<Float> newChanges = new LinkedList<Float>();
-	  		newChanges.addAll(changes);
-	  		mce.put("changes", newChanges);
-	  	}
-	  	
-  		float change = metric.getChange();
-  		changes.add(change);
-  		
-  		if (changes.size() == period) {
-  			float upSum = 0f;
-  			float downSum = 0f;
-  			for (Float ch:changes) {
-  				if (ch > 0) upSum += ch;
-  				else downSum += -ch;
-  			}
-  			float avgUp = upSum / (float)period;
-  			float avgDown = downSum / (float)period;
-  			
-  			float rsi = 100f;
-		  	if (avgDown != 0) {
-		  		float rs = (avgUp / avgDown) + 1f;
-			  	rsi = 100f - (100f / rs);
-		  	}
-		  	
-		  	metric.value = rsi;
-  			
-  			changes.remove();
-  		}
-  		else {
-  			metric.value = null;
-  		}
-  		metric.name = "rsi" + period;
-	  	
-  		// Update the MetricCalcEssentials if it's not the last one
-	  	if (!last) {
-	  		metric.calculated = true;
-	  		LinkedList<Float> newChanges = new LinkedList<Float>();
-	  		newChanges.addAll(changes);
-		  	mce.put("changes", newChanges);
-		  	mce.put("start", metric.start);
-	  	}
-	}
-	
-	/**
 	 * Relative Strength Index (RSI)
 	 * 
 	 * @param mce
-	 * @param last
+	 * @param last - If this metric is the last in the metric sequence.
 	 * @param metric
 	 * @param period
 	 */
@@ -1091,12 +1021,12 @@ public class MetricsCalculator {
 	  		if (rawCloses instanceof Float) {
 	  			closes.add((float)rawCloses);
 	  		}
-	  		else if (rawCloses instanceof Float[]) {
+	  		else if (rawCloses instanceof Float[]) { // When coming from the DB
 	  			for (Float f : (Float[])rawCloses) {
 	  				closes.add(f);
 	  			}
 	  		}
-	  		else if (rawCloses instanceof LinkedList) {
+	  		else if (rawCloses instanceof LinkedList) { // When coming from here
 	  			closes.addAll((LinkedList)rawCloses);
 	  		}
 		}
@@ -1106,7 +1036,6 @@ public class MetricsCalculator {
 	  	}
 		
 		closes.add(metric.getAdjClose());
-		System.out.println(closes);
 		
 		if (closes.size() == period + 1) {
 			MInteger outBeginIndex = new MInteger();
@@ -1118,13 +1047,21 @@ public class MetricsCalculator {
 				dCloses[i] = closes.get(i);
 			}
 			
-			RetCode retCode = core.rsi(5, 5, dCloses, period, outBeginIndex, outNBElement, outReal);
+			/*
+			 * Param 1 = Begin index.  Conveniently always = period because it's the index of the last item of input and that's all we want
+			 * Param 2 = End index.  Conveniently always = period because it's the index of the last item of input and that's all we want
+			 * Param 3 = Array of period+1 closes.  Oldest to newest.  The first n=period are older closes that are needed to calculate the RSI for the last element
+			 * Param 4 = The actual period
+			 * Param 5 = Not needed here
+			 * Param 6 = Not needed here
+			 * Param 7 = Where the actual results go.  Since we're only calculating 1 RSI value, it is only an array of 1
+			 */
+			RetCode retCode = core.rsi(period, period, dCloses, period, outBeginIndex, outNBElement, outReal);
 			if (retCode == RetCode.Success) { 
 				metric.name = "rsi" + period;
 				metric.value = (float)outReal[0];
 			}
-			System.out.println(metric.value);
-			
+
 			closes.removeFirst();
 		}
 		
