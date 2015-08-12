@@ -83,16 +83,16 @@ public class MetricsCalculatorRealtime {
 //								MetricsCalculator.fillInDV2(mce, last, metric);
 //								break;
 //		
-//							// RSI
-//							case "rsi2":
-//								MetricsCalculator.fillInRSI(mce, last, metric, 2);
-//								break;
+							// RSI
+							case "rsi2":
+								MetricsCalculator.fillInRSI(mce, last, metric, 2);
+								break;
 							case "rsi5":
 								MetricsCalculator.fillInRSI(mce, last, metric, 5);					
 								break;
-//							case "rsi14":
-//								MetricsCalculator.fillInRSI(mce, last, metric, 14);
-//								break;
+							case "rsi14":
+								MetricsCalculator.fillInRSI(mce, last, metric, 14);
+								break;
 						}
 					}
 					index++;

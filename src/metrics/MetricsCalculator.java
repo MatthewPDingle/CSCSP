@@ -1073,6 +1073,42 @@ public class MetricsCalculator {
 	  	}
 	}
 	
+	public static void fillInRSI(HashMap<String, Object> mce, ArrayList<Metric> ms, int period) {
+		Core core = new Core();
+		
+		// Get the needed closes from the Metric Sequence
+		ArrayList<Double> closes = new ArrayList<Double>();
+		int countDown = period;
+		for (int i = ms.size() - 1; i >= 0; i--) {
+			Metric m = ms.get(i);
+			closes.add((double)m.getAdjClose());
+			
+			// Bail out after we have enough history so that we can calculate the first one needing a metric value
+			if (m.calculated) {
+				countDown--;
+			}
+			if (countDown == 0) {
+				break;
+			}
+		}
+		
+		// Load the closes into the structure needed by TA-lib
+		double[] dCloses = new double[closes.size()];
+		double[] outReal = new double[closes.size() - period];
+		int j = 0;
+		for (int i = closes.size() - 1; i >= 0; i--) {
+			dCloses[j++] = closes.get(i);
+		}
+		
+		MInteger outBeginIndex = new MInteger();
+		MInteger outNBElement = new MInteger();
+		
+		RetCode retCode = core.rsi(period, closes.size() - period, dCloses, period, outBeginIndex, outNBElement, outReal);
+		if (retCode == RetCode.Success) {
+			
+		}
+	}
+	
 	public static LinkedList<Metric> fillInMFI(LinkedList<Metric> metricSequence, int period) {
 		// Initialize Variables
 	  	LinkedList<Double> moneyFlows = new LinkedList<Double>();

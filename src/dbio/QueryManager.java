@@ -984,6 +984,13 @@ public class QueryManager {
 		}
 	}
 	
+	/**
+	 * Loads metric sequences (oldest to newest) starting from the bar of the last metric available, or as early as 2010-01-01 
+	 * if the bar data goes back that far.
+	 * 
+	 * @param barKeys
+	 * @return
+	 */
 	public static HashMap<MetricKey, LinkedList<Metric>> loadMetricSequenceHash(ArrayList<BarKey> barKeys) {
 		HashMap<MetricKey, LinkedList<Metric>> metricSequenceHash = new HashMap<MetricKey, LinkedList<Metric>>();
 		try {
