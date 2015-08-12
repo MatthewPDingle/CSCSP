@@ -991,8 +991,8 @@ public class QueryManager {
 	 * @param barKeys
 	 * @return
 	 */
-	public static HashMap<MetricKey, LinkedList<Metric>> loadMetricSequenceHash(ArrayList<BarKey> barKeys) {
-		HashMap<MetricKey, LinkedList<Metric>> metricSequenceHash = new HashMap<MetricKey, LinkedList<Metric>>();
+	public static HashMap<MetricKey, ArrayList<Metric>> loadMetricSequenceHash(ArrayList<BarKey> barKeys) {
+		HashMap<MetricKey, ArrayList<Metric>> metricSequenceHash = new HashMap<MetricKey, ArrayList<Metric>>();
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			
@@ -1000,17 +1000,36 @@ public class QueryManager {
 				for (String metricName : Constants.METRICS) {
 					
 					MetricKey mk = new MetricKey(metricName, bk.symbol, bk.duration);
-					LinkedList<Metric> ms = metricSequenceHash.get(mk);
+					ArrayList<Metric> ms = metricSequenceHash.get(mk);
 					if (ms == null) {
-						ms = new LinkedList<Metric>();
+						ms = new ArrayList<Metric>();
 					}
+					
+					// Get the base date
+					String q0 = "SELECT COALESCE((SELECT MAX(start) FROM metrics WHERE symbol = ? AND duration = ? AND name = ?), '2010-01-01 00:00:00')";
+					PreparedStatement s0 = c.prepareStatement(q0);
+					s0.setString(1, bk.symbol);
+					s0.setString(2, bk.duration.toString());
+					s0.setString(3, metricName);
+					ResultSet rs0 = s0.executeQuery();
+					Calendar startCal = Calendar.getInstance();
+					while (rs0.next()) {
+						Timestamp tsStart = rs0.getTimestamp(1);
+						startCal.setTimeInMillis(tsStart.getTime());
+						break;
+					}
+					System.out.println(startCal.getTime().toString());
+					startCal = CalendarUtils.addBars(startCal, bk.duration, -200);
+					System.out.println(startCal.getTime().toString());
+					rs0.close();
+					s0.close();
 					
 					String alphaComparison = "SPY"; // TODO: probably change this.  Seems weird to compare bitcoin or forex to SPY.
 					String q = "SELECT b.*, " +
 							"(SELECT close FROM bar WHERE symbol = ? AND start <= b.start ORDER BY start DESC LIMIT 1) AS alphaclose, " +
 							"(SELECT change FROM bar WHERE symbol = ? AND start <= b.start ORDER BY start DESC LIMIT 1) AS alphachange " +
 							"FROM bar b " +
-							"WHERE (b.start >= (SELECT COALESCE((SELECT MAX(start) FROM metrics WHERE symbol = ? AND duration = ? AND name = ?), '2010-01-01 00:00:00')) OR b.partial = true) " +
+							"WHERE (b.start >= ? OR b.partial = true) " +
 							"AND b.symbol = ? " +
 							"AND b.duration = ? " +
 							"ORDER BY b.start";
@@ -1018,12 +1037,10 @@ public class QueryManager {
 					PreparedStatement s = c.prepareStatement(q);
 					s.setString(1, alphaComparison);
 					s.setString(2, alphaComparison);
-					s.setString(3, bk.symbol);
-					s.setString(4, bk.duration.toString());
-					s.setString(5, metricName);
-					s.setString(6, bk.symbol);
-					s.setString(7, bk.duration.toString());
-					
+					s.setTimestamp(3, new Timestamp(startCal.getTimeInMillis()));
+					s.setString(4, bk.symbol);
+					s.setString(5, bk.duration.toString());
+
 					ResultSet rs = s.executeQuery();
 					int counter = 0;
 					
@@ -1051,7 +1068,7 @@ public class QueryManager {
 						counter++;
 					}
 					metricSequenceHash.put(mk, ms);
-//					System.out.println("Adding " + counter + " metrics to MetricSequence for " + mk.toString());
+					System.out.println("Adding " + counter + " metrics to MetricSequence for " + mk.toString());
 					
 					rs.close();
 					s.close();
@@ -1361,7 +1378,7 @@ public class QueryManager {
 		}
 	}
 	
-	public static void insertOrUpdateIntoMetrics(LinkedList<Metric> metrics) {
+	public static void insertOrUpdateIntoMetrics(ArrayList<Metric> metrics) {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			
@@ -1942,7 +1959,7 @@ public class QueryManager {
 		}
 	}
 
-	public static void insertRealtimeMetrics(Calendar maxStartFromBar, LinkedList<Metric> metricSequence) {
+	public static void insertRealtimeMetrics(Calendar maxStartFromBar, ArrayList<Metric> metricSequence) {
 		try {
 			insertOrUpdateIntoMetrics(metricSequence);
 		} 

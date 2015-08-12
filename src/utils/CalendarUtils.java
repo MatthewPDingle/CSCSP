@@ -67,6 +67,63 @@ public class CalendarUtils {
 		c.add(unit, (int) increment); 
 	} 
 	
+	/**
+	 * Adds or Subtracts a given number of bars to a calendar and returns a new calendar.
+	 * 
+	 * @param cIn
+	 * @param barSize
+	 * @param numBars - How many bars you want to add.  Use a negative number to subtract
+	 * @return
+	 */
+	public static Calendar addBars(Calendar cIn, Constants.BAR_SIZE barSize, int numBars) {
+		Calendar cOut = Calendar.getInstance();
+		cOut.setTime(cIn.getTime());
+
+		switch (barSize) {
+			case BAR_1M:
+				cOut.add(Calendar.MINUTE, numBars);
+				break;
+			case BAR_2M:
+				cOut.add(Calendar.MINUTE, 2 * numBars);
+				break;
+			case BAR_5M:
+				cOut.add(Calendar.MINUTE, 5 * numBars);
+				break;
+			case BAR_10M:
+				cOut.add(Calendar.MINUTE, 10 * numBars);
+				break;
+			case BAR_15M:
+				cOut.add(Calendar.MINUTE, 15 * numBars);
+				break;
+			case BAR_30M:
+				cOut.add(Calendar.MINUTE, 30 * numBars);
+				break;
+			case BAR_1H:
+				cOut.add(Calendar.HOUR_OF_DAY, 1 * numBars);
+				break;
+			case BAR_2H:
+				cOut.add(Calendar.HOUR_OF_DAY, 2 * numBars);
+				break;
+			case BAR_4H:
+				cOut.add(Calendar.HOUR_OF_DAY, 4 * numBars);
+				break;
+			case BAR_6H:
+				cOut.add(Calendar.HOUR_OF_DAY, 6 * numBars);
+				break;
+			case BAR_8H:
+				cOut.add(Calendar.HOUR_OF_DAY, 8 * numBars);
+				break;
+			case BAR_12H:
+				cOut.add(Calendar.HOUR_OF_DAY, 12 * numBars);
+				break;
+			case BAR_1D:
+				cOut.add(Calendar.HOUR_OF_DAY, 24 * numBars);
+				break;
+		}
+
+		return cOut;
+	}
+	
 	public static Calendar getBarStart(Calendar c, Constants.BAR_SIZE barSize) {
 		Calendar periodStart = Calendar.getInstance();
 		periodStart.setTime(c.getTime());
