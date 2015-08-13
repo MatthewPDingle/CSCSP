@@ -39,71 +39,71 @@ public class MetricsCalculatorThreadHelper extends Thread {
 //				prepareMetricInsertStatement(MetricsCalculator.fillInRSI(ms, 2));
 //				prepareMetricInsertStatement(MetricsCalculator.fillInRSI(ms, 5));
 //				prepareMetricInsertStatement(MetricsCalculator.fillInRSI(ms, 14));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInRSIAlpha(ms, 2));
-				prepareMetricInsertStatement(MetricsCalculator.fillInRSIAlpha(ms, 5));
-				prepareMetricInsertStatement(MetricsCalculator.fillInRSIAlpha(ms, 14));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedRSI(ms, 75));
-				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedRSI(ms, 50));
-				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedRSI(ms, 25));
-				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedRSI(ms, 10));	
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInMFI(ms, 2));
-				prepareMetricInsertStatement(MetricsCalculator.fillInMFI(ms, 5));
-				prepareMetricInsertStatement(MetricsCalculator.fillInMFI(ms, 14));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedDVol(ms, 75));	
-				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedDVol(ms, 50));	
-				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedDVol(ms, 25));	
-				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedDVol(ms, 10));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInUpStreaks(ms));
-				prepareMetricInsertStatement(MetricsCalculator.fillInDownStreaks(ms));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInPriceBoll(ms, 20));
-				prepareMetricInsertStatement(MetricsCalculator.fillInPriceBoll(ms, 50));
-				prepareMetricInsertStatement(MetricsCalculator.fillInPriceBoll(ms, 100));
-				prepareMetricInsertStatement(MetricsCalculator.fillInPriceBoll(ms, 200));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInGapBoll(ms, 10));
-				prepareMetricInsertStatement(MetricsCalculator.fillInGapBoll(ms, 20));
-				prepareMetricInsertStatement(MetricsCalculator.fillInGapBoll(ms, 50));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInIntradayBoll(ms, 10));
-				prepareMetricInsertStatement(MetricsCalculator.fillInIntradayBoll(ms, 20));
-				prepareMetricInsertStatement(MetricsCalculator.fillInIntradayBoll(ms, 50));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInVolumeBoll(ms, 20));
-				prepareMetricInsertStatement(MetricsCalculator.fillInVolumeBoll(ms, 50));
-				prepareMetricInsertStatement(MetricsCalculator.fillInVolumeBoll(ms, 100));
-				prepareMetricInsertStatement(MetricsCalculator.fillInVolumeBoll(ms, 200));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsR(ms, 10));
-				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsR(ms, 20));
-				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsR(ms, 50));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInMACD(ms, 12, 26, 9));
-				prepareMetricInsertStatement(MetricsCalculator.fillInMACD(ms, 20, 40, 9));
-				prepareMetricInsertStatement(MetricsCalculator.fillInMACD(ms, 40, 80, 9));
-				prepareMetricInsertStatement(MetricsCalculator.fillInMACDDivergence(ms, 12, 26, 9));
-				prepareMetricInsertStatement(MetricsCalculator.fillInMACDDivergence(ms, 20, 40, 9));
-				prepareMetricInsertStatement(MetricsCalculator.fillInMACDDivergence(ms, 40, 80, 9));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsRAlpha(ms, 10));
-				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsRAlpha(ms, 20));
-				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsRAlpha(ms, 50));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInPSAR(ms));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInUltimateOscillator(ms));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInAroonOscillator(ms));
-				
-				prepareMetricInsertStatement(MetricsCalculator.fillInCCI(ms, 10));
-				prepareMetricInsertStatement(MetricsCalculator.fillInCCI(ms, 20));
-				prepareMetricInsertStatement(MetricsCalculator.fillInCCI(ms, 40));
-				
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInRSIAlpha(ms, 2));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInRSIAlpha(ms, 5));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInRSIAlpha(ms, 14));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedRSI(ms, 75));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedRSI(ms, 50));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedRSI(ms, 25));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedRSI(ms, 10));	
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInMFI(ms, 2));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInMFI(ms, 5));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInMFI(ms, 14));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedDVol(ms, 75));	
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedDVol(ms, 50));	
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedDVol(ms, 25));	
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWeightedDVol(ms, 10));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInUpStreaks(ms));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInDownStreaks(ms));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInPriceBoll(ms, 20));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInPriceBoll(ms, 50));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInPriceBoll(ms, 100));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInPriceBoll(ms, 200));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInGapBoll(ms, 10));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInGapBoll(ms, 20));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInGapBoll(ms, 50));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInIntradayBoll(ms, 10));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInIntradayBoll(ms, 20));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInIntradayBoll(ms, 50));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInVolumeBoll(ms, 20));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInVolumeBoll(ms, 50));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInVolumeBoll(ms, 100));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInVolumeBoll(ms, 200));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsR(ms, 10));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsR(ms, 20));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsR(ms, 50));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInMACD(ms, 12, 26, 9));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInMACD(ms, 20, 40, 9));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInMACD(ms, 40, 80, 9));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInMACDDivergence(ms, 12, 26, 9));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInMACDDivergence(ms, 20, 40, 9));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInMACDDivergence(ms, 40, 80, 9));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsRAlpha(ms, 10));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsRAlpha(ms, 20));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInWilliamsRAlpha(ms, 50));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInPSAR(ms));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInUltimateOscillator(ms));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInAroonOscillator(ms));
+//				
+//				prepareMetricInsertStatement(MetricsCalculator.fillInCCI(ms, 10));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInCCI(ms, 20));
+//				prepareMetricInsertStatement(MetricsCalculator.fillInCCI(ms, 40));
+//				
 				// Required for query to gauge volatility
 				prepareMetricInsertStatement(MetricsCalculator.fillInMVOL(ms, 100));
 				

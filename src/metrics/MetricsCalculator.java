@@ -870,97 +870,6 @@ public class MetricsCalculator {
 		return metricSequence;
 	}
 	
-	/**
-	 * Same definition of Williams % R, but I add 100 to it to give a range between 0-100 instead of -100-0
-	 * 
-	 * @param metricSequence
-	 * @param period
-	 * @return
-	 */
-	public static LinkedList<Metric> fillInWilliamsRAlpha(LinkedList<Metric> metricSequence, int period) {
-		// Initialize Variables
-		LinkedList<Float> periodsAdjCloses = new LinkedList<Float>();
-		LinkedList<Float> periodsSPYAdjCloses = new LinkedList<Float>();
-		
-		float lastWilliam1 = 50f;
-		float lastWilliam2 = 50f;
-		for (Metric metric:metricSequence) {
-			float adjClose = metric.getAdjClose();
-			float spyAdjClose = metric.getAdjClose();
-
-			if (periodsAdjCloses.size() < (period - 1)) {
-		  		periodsAdjCloses.add(adjClose);
-		  		periodsSPYAdjCloses.add(spyAdjClose);
-		  		metric.value = null;
-		  		metric.name = "williamsralpha" + period;
-		  	}
-			else {
-				periodsAdjCloses.add(adjClose);
-				periodsSPYAdjCloses.add(spyAdjClose);
-				
-				float periodsHigh = 0f;
-				float periodsLow = 1000000f;
-				for (Float p:periodsAdjCloses) {
-					if (p > periodsHigh) {
-						periodsHigh = p;
-					}
-					if (p < periodsLow) {
-						periodsLow = p;
-					}
-				}
-				
-				float spyPeriodsHigh = 0f;
-				float spyPeriodsLow = 1000000f;
-				for (Float p:periodsSPYAdjCloses) {
-					if (p > spyPeriodsHigh) {
-						spyPeriodsHigh = p;
-					}
-					if (p < spyPeriodsLow) {
-						spyPeriodsLow = p;
-					}
-				}
-				
-				// WilliamsR for the stock
-				float a1 = periodsHigh - adjClose;
-				float b1 = periodsLow - periodsHigh;
-				float william1 = 50f;
-				if (b1 != 0) {
-					william1 = (a1 / b1 * 100f) + 100f;
-				}
-				else {
-					william1 = lastWilliam1;
-				}
-				lastWilliam1 = william1;
-				
-				// WilliamsR for the SPY
-				float a2 = spyPeriodsHigh - spyAdjClose;
-				float b2 = spyPeriodsLow - spyPeriodsHigh;
-				float william2 = 50f;
-				if (b2 != 0) {
-					william2 = (a2 / b2 * 100f) + 100f;
-				}
-				else {
-					william2 = lastWilliam2;
-				}
-				lastWilliam2 = william2;
-				
-				// Williams adjusted for Alpha (SPY)
-				float a3 = 50 - Math.abs(50 - william1);
-				float d3 = (william1 - william2) / 100f;
-				float b3 = a3 * d3;
-				float william3 = william1 + b3;
-				
-				// Set the WilliamsR value and add the day to the new day sequence
-				metric.value = william3;
-				metric.name = "williamsralpha" + period;
-				
-				periodsAdjCloses.remove();
-			}
-		}
-		normalizeMetricValues(metricSequence);
-		return metricSequence;
-	}
-	
 	public static LinkedList<Metric> fillInWeightedRSI(LinkedList<Metric> metricSequence, int weight) {
 		// Initialize Variables
 		float lastAvgUp = -1f; 
@@ -1003,80 +912,54 @@ public class MetricsCalculator {
 	}
 	
 	/**
-	 * Relative Strength Index (RSI)
+	 * Williams %R
+	 * Normally values are -100 to 0 but I add 100 to make it 0 to 100
 	 * 
-	 * @param mce
-	 * @param last - If this metric is the last in the metric sequence.
-	 * @param metric
+	 * @param ms
 	 * @param period
 	 */
-	public static void fillInRSI(HashMap<String, Object> mce, boolean last, Metric metric, int period) {
-		// Initialize Variables
+	public static void fillInWilliamsR(ArrayList<Metric> ms, int period) {
 		Core core = new Core();
-		LinkedList<Float> closes = new LinkedList<Float>();
-		
-		// Load pre-computed values that can help speed up
-		if (mce.size() > 0) {
-			Object rawCloses = mce.get("closes");
-	  		if (rawCloses instanceof Float) {
-	  			closes.add((float)rawCloses);
-	  		}
-	  		else if (rawCloses instanceof Float[]) { // When coming from the DB
-	  			for (Float f : (Float[])rawCloses) {
-	  				closes.add(f);
-	  			}
-	  		}
-	  		else if (rawCloses instanceof LinkedList) { // When coming from here
-	  			closes.addAll((LinkedList)rawCloses);
-	  		}
-		}
-		if (last) {
-	  		metric.calculated = false;
-	  		mce.put("closes", new LinkedList(closes));
-	  	}
-		
-		closes.add(metric.getAdjClose());
-		
-		if (closes.size() == period + 1) {
-			MInteger outBeginIndex = new MInteger();
-			MInteger outNBElement = new MInteger();
-			
-			double[] outReal = new double[1];	
-			double[] dCloses = new double[closes.size()];
-			for (int i = 0; i < closes.size(); i++) {
-				dCloses[i] = closes.get(i);
-			}
-			
-			/*
-			 * Param 1 = Begin index.  Conveniently always = period because it's the index of the last item of input and that's all we want
-			 * Param 2 = End index.  Conveniently always = period because it's the index of the last item of input and that's all we want
-			 * Param 3 = Array of period+1 closes.  Oldest to newest.  The first n=period are older closes that are needed to calculate the RSI for the last element
-			 * Param 4 = The actual period
-			 * Param 5 = Not needed here
-			 * Param 6 = Not needed here
-			 * Param 7 = Where the actual results go.  Since we're only calculating 1 RSI value, it is only an array of 1
-			 */
-			RetCode retCode = core.rsi(period, period, dCloses, period, outBeginIndex, outNBElement, outReal);
-			if (retCode == RetCode.Success) { 
-				metric.name = "rsi" + period;
-				metric.value = (float)outReal[0];
-			}
 
-			closes.removeFirst();
+		// Load the arrays needed by TA-lib.  oldest to newest
+		double[] dHighs = new double[ms.size()];
+		double[] dLows = new double[ms.size()];
+		double[] dCloses = new double[ms.size()];
+		double[] outReal = new double[ms.size()];
+		for (int i = 0; i < ms.size(); i++) {
+			dHighs[i] = ms.get(i).getAdjHigh();
+			dLows[i] = ms.get(i).getAdjLow();
+			dCloses[i] = ms.get(i).getAdjClose();
 		}
+
+		MInteger outBeginIndex = new MInteger();
+		MInteger outNBElement = new MInteger();
 		
-		// Update the MetricCalcEssentials if it's not the last one
-	  	if (!last) {
-	  		metric.calculated = true;
-		  	mce.put("closes", new LinkedList(closes));
-		  	mce.put("start", metric.start);
-	  	}
+		RetCode retCode = core.willR(period, ms.size() - 1, dHighs, dLows, dCloses, period, outBeginIndex, outNBElement, outReal);
+		if (retCode == RetCode.Success) {
+			int beginIndex = outBeginIndex.value;
+			int outIndex = 0;
+			for (int i = beginIndex; i < ms.size(); i++) {
+				Metric m = ms.get(i);
+				m.name = "williamsr" + period;
+				float rawValue = (float)outReal[outIndex++];
+				float adjValue = rawValue + 100;
+				m.value = adjValue;
+				System.out.println(m.name + " - " + m.getAdjClose() + " - " + m.value);
+			}
+		}
 	}
 	
+	/**
+	 * Relative Strength Index
+	 * 
+	 * @param ms
+	 * @param period
+	 */
 	public static void fillInRSI(ArrayList<Metric> ms, int period) {
 		Core core = new Core();
 
-		// Load the closes into the dCloses array needed by TA-lib.  dCloses and ms are oldest to newest
+		// Load the arrays needed by TA-lib.  oldest to newest
 		double[] dCloses = new double[ms.size()];
 		double[] outReal = new double[ms.size() - period];
 		for (int i = 0; i < ms.size(); i++) {
@@ -1094,196 +977,241 @@ public class MetricsCalculator {
 				Metric m = ms.get(i);
 				m.name = "rsi" + period;
 				m.value = (float)outReal[outIndex++];
-				System.out.println(m.getAdjClose() + " - " + m.value);
+				System.out.println(m.name + " - " + m.getAdjClose() + " - " + m.value);
 			}
 		}
 	}
 	
-	public static LinkedList<Metric> fillInMFI(LinkedList<Metric> metricSequence, int period) {
-		// Initialize Variables
-	  	LinkedList<Double> moneyFlows = new LinkedList<Double>();
-	  	
-	  	for (Metric metric:metricSequence) {
-	  		float adjClose = metric.getAdjClose();
-	  		float adjHigh = metric.getAdjHigh();
-	  		float adjLow = metric.getAdjLow();
-	  		float change = metric.getChange();
-	  		float sign = 1;
-	  		if (change < 0) sign = -1;
-	  		float typicalPrice = (adjClose + adjHigh + adjLow) / 3f;
-	  		double volume = metric.getVolume();
-	  		
-	  		double moneyflow = typicalPrice * volume * sign;
-	  		moneyFlows.add(moneyflow);
-	  		
-	  		if (moneyFlows.size() == period) {
-	  			double upSum = 0f;
-	  			double downSum = 0f;
-	  			for (Double mf:moneyFlows) {
-	  				if (mf > 0) upSum += mf;
-	  				else downSum += -mf;
-	  			}
-	  			double avgUp = upSum / (double)period;
-	  			double avgDown = downSum / (double)period;
-	  			
-	  			float mfi = 100f;
-			  	if (avgDown != 0) {
-			  		double rs = (avgUp / avgDown) + 1f;
-				  	mfi = 100f - (float)(100d / rs);
-			  	}
-			  	
-			  	metric.value = mfi;
-	  			
-	  			moneyFlows.remove();
-	  		}
-	  		else {
-	  			metric.value = null;
-	  		}
-	  		metric.name = "mfi" + period;
-	  	}
-	  	normalizeMetricValues(metricSequence);
-	  	return metricSequence;
-	}
-	
-	public static LinkedList<Metric> fillInPSAR(LinkedList<Metric> metricSequence) {
-		// Initialize Variables
-		Core core = new Core();
-		double[] highs = new double[metricSequence.size()];
-		double[] lows = new double[metricSequence.size()];
-		double[] output = new double[metricSequence.size()];
-		
-		MInteger begin = new MInteger();
-		MInteger length = new MInteger();
-		
-		int c = 0;
-		for (Metric metric:metricSequence) {
-			highs[c] = metric.getAdjHigh();
-			lows[c] = metric.getAdjLow();
-			c++;
-		}
-		
-		RetCode retCode = core.sar(0, metricSequence.size() - 1, highs, lows, .02, .2, begin, length, output);
-		if (retCode == RetCode.Success) { 
-			int c2 = begin.value; 
-			for (Metric metric:metricSequence) {
-				metric.name = "psar";
-				metric.value = null;
-				if (metricSequence.indexOf(metric) >= begin.value) {
-					float adjClose = metric.getAdjClose();
-					float psar = (float)output[c2 - begin.value];
-					float delta = psar - adjClose;
-					float percentAboveOrBelowClose = delta / adjClose * 100f;
-					metric.value = percentAboveOrBelowClose;
-					c2++;
-				}
-			}
-		}
-		normalizeMetricValues(metricSequence);
-	  	return metricSequence;
-	}
-	
-	public static LinkedList<Metric> fillInUltimateOscillator(LinkedList<Metric> metricSequence) {
-		// Initialize Variables
-		Core core = new Core();
-		double[] highs = new double[metricSequence.size()];
-		double[] lows = new double[metricSequence.size()];
-		double[] closes = new double[metricSequence.size()];
-		double[] output = new double[metricSequence.size()];
-		
-		MInteger begin = new MInteger();
-		MInteger length = new MInteger();
-		
-		int c = 0;
-		for (Metric metric:metricSequence) {
-			highs[c] = metric.getAdjHigh();
-			lows[c] = metric.getAdjLow();
-			closes[c] = metric.getAdjClose();
-			c++;
-		}
-		
-		RetCode retCode = core.ultOsc(0, metricSequence.size() - 1, highs, lows, closes, 4, 10, 25, begin, length, output);
-		if (retCode == RetCode.Success) { 
-			int c2 = begin.value; 
-			for (Metric metric:metricSequence) {
-				metric.name = "ultimateoscillator";
-				metric.value = null;
-				if (metricSequence.indexOf(metric) >= begin.value) {
-					metric.value = (float)output[c2 - begin.value];
-					c2++;
-				}
-			}
-		}
-		normalizeMetricValues(metricSequence);
-	  	return metricSequence;
-	}
-	
-	public static LinkedList<Metric> fillInAroonOscillator(LinkedList<Metric> metricSequence) {
-		// Initialize Variables
-		Core core = new Core();
-		double[] highs = new double[metricSequence.size()];
-		double[] lows = new double[metricSequence.size()];
-		double[] output = new double[metricSequence.size()];
-		
-		MInteger begin = new MInteger();
-		MInteger length = new MInteger();
-		
-		int c = 0;
-		for (Metric metric:metricSequence) {
-			highs[c] = metric.getAdjHigh();
-			lows[c] = metric.getAdjLow();
-			c++;
-		}
-		
-		RetCode retCode = core.aroonOsc(0, metricSequence.size() - 1, highs, lows, 25, begin, length, output);
-		if (retCode == RetCode.Success) { 
-			int c2 = begin.value; 
-			for (Metric metric:metricSequence) {
-				metric.name = "aroonoscillator";
-				metric.value = null;
-				if (metricSequence.indexOf(metric) >= begin.value) {
-					metric.value = (float)output[c2 - begin.value];
-					c2++;
-				}
-			}
-		}
-		normalizeMetricValues(metricSequence);
-	  	return metricSequence;
-	}
-	
-	public static LinkedList<Metric> fillInCCI(LinkedList<Metric> metricSequence, int period) {
-		// Initialize Variables
+	/**
+	 * Money Flow Index
+	 * 
+	 * @param ms
+	 * @param period
+	 */
+	public static void fillInMFI(ArrayList<Metric> ms, int period) {
 		Core core = new Core();
 
-		double[] highs = new double[metricSequence.size()];
-		double[] lows = new double[metricSequence.size()];
-		double[] closes = new double[metricSequence.size()];
-		double[] output = new double[metricSequence.size()];
-		
-		MInteger begin = new MInteger();
-		MInteger length = new MInteger();
-		
-		int c = 0;
-		for (Metric metric:metricSequence) {
-			highs[c] = metric.getAdjHigh();
-			lows[c] = metric.getAdjLow();
-			closes[c] = metric.getAdjClose();
-			c++;
+		// Load the arrays needed by TA-lib.  oldest to newest
+		double[] dCloses = new double[ms.size()];
+		double[] dHighs = new double[ms.size()];
+		double[] dLows = new double[ms.size()];
+		double[] dVolumes = new double[ms.size()];
+		double[] outReal = new double[ms.size() - period];
+		for (int i = 0; i < ms.size(); i++) {
+			dCloses[i] = ms.get(i).getAdjClose();
+			dHighs[i] = ms.get(i).getAdjHigh();
+			dLows[i] = ms.get(i).getAdjLow();
+			dVolumes[i] = ms.get(i).getVolume();
 		}
-		
-		RetCode retCode = core.cci(0, metricSequence.size() - 1, highs, lows, closes, period, begin, length, output);
-		if (retCode == RetCode.Success) { 
-			int c2 = begin.value; 
-			for (Metric metric:metricSequence) {
-				metric.name = "cci" + period;
-				metric.value = null;
-				if (metricSequence.indexOf(metric) >= begin.value) {
-					metric.value = (float)(output[c2 - begin.value]) / 4f;
-					c2++;
-				}
+
+		MInteger outBeginIndex = new MInteger();
+		MInteger outNBElement = new MInteger();
+	
+		RetCode retCode = core.mfi(period, ms.size() - 1, dHighs, dCloses, dLows, dVolumes, period, outBeginIndex, outNBElement, outReal);
+		if (retCode == RetCode.Success) {
+			int beginIndex = outBeginIndex.value;
+			int outIndex = 0;
+			for (int i = beginIndex; i < ms.size(); i++) {
+				Metric m = ms.get(i);
+				m.name = "mfi" + period;
+				float rawValue = (float)outReal[outIndex++];
+				m.value = rawValue;
+				System.out.println(m.name + " - " + m.getAdjClose() + " - " + rawValue);
 			}
 		}
-		normalizeMetricValues(metricSequence);
-	  	return metricSequence;
+	}
+	
+	/**
+	 * Parabolic SAR 
+	 * Normal values are similar to the closes, but I changed it to be percentage away from the close.
+	 * 
+	 * @param ms
+	 * @return
+	 */
+	public static void fillInPSAR(ArrayList<Metric> ms) {
+		Core core = new Core();
+		
+		// Load the arrays needed by TA-lib.  oldest to newest
+		double[] dHighs = new double[ms.size()];
+		double[] dLows = new double[ms.size()];
+		double[] outReal = new double[ms.size()];
+		for (int i = 0; i < ms.size(); i++) {
+			dHighs[i] = ms.get(i).getAdjHigh();
+			dLows[i] = ms.get(i).getAdjLow();
+		}
+		
+		MInteger outBeginIndex = new MInteger();
+		MInteger outNBElement = new MInteger();
+		double optInAcceleration = .02;
+		double optInMaximum = .2;
+
+		RetCode retCode = core.sar(0, ms.size() - 1, dHighs, dLows, optInAcceleration, optInMaximum, outBeginIndex, outNBElement, outReal);
+		if (retCode == RetCode.Success) {
+			int beginIndex = outBeginIndex.value;
+			int outIndex = 0;
+			for (int i = beginIndex; i < ms.size(); i++) {
+				Metric m = ms.get(i);
+				m.name = "psar";
+				float rawValue = (float)outReal[outIndex++];
+				float adjValue = (rawValue - m.getAdjClose()) / m.getAdjClose() * 100f;
+				m.value = adjValue;
+				System.out.println(m.name + " - " + m.getAdjClose() + " - " + rawValue + " / " + adjValue);
+			}
+		}
+	}
+	
+	/**
+	 * Ultimate Oscillator
+	 * 
+	 * @param ms
+	 */
+	public static void fillInUltimateOscillator(ArrayList<Metric> ms, int period1, int period2, int period3) {
+		Core core = new Core();
+		
+		// Load the arrays needed by TA-lib.  oldest to newest
+		double[] dHighs = new double[ms.size()];
+		double[] dLows = new double[ms.size()];
+		double[] dCloses = new double[ms.size()];
+		double[] outReal = new double[ms.size()];
+		for (int i = 0; i < ms.size(); i++) {
+			dHighs[i] = ms.get(i).getAdjHigh();
+			dLows[i] = ms.get(i).getAdjLow();
+			dCloses[i] = ms.get(i).getAdjClose();
+		}
+		
+		MInteger outBeginIndex = new MInteger();
+		MInteger outNBElement = new MInteger();
+
+		RetCode retCode = core.ultOsc(period1, ms.size() - 1, dHighs, dLows, dCloses, period1, period2, period3, outBeginIndex, outNBElement, outReal);
+		if (retCode == RetCode.Success) { 
+			int beginIndex = outBeginIndex.value;
+			int outIndex = 0;
+			for (int i = beginIndex; i < ms.size(); i++) {
+				Metric m = ms.get(i);
+				m.name = "ultimateoscillator" + period1 + "_" + period2 + "_" + period3;
+				float rawValue = (float)outReal[outIndex++];
+				m.value = rawValue;
+				System.out.println(m.name + " - " + m.getAdjClose() + " - " + rawValue);
+			}
+		}
+	}
+	
+	/**
+	 * Aroon Oscillator
+	 * 
+	 * @param ms
+	 * @param period
+	 */
+	public static void fillInAroonOscillator(ArrayList<Metric> ms, int period) {
+		Core core = new Core();
+		
+		// Load the arrays needed by TA-lib.  oldest to newest
+		double[] dHighs = new double[ms.size()];
+		double[] dLows = new double[ms.size()];
+		double[] outReal = new double[ms.size()];
+		for (int i = 0; i < ms.size(); i++) {
+			dHighs[i] = ms.get(i).getAdjHigh();
+			dLows[i] = ms.get(i).getAdjLow();
+		}
+		
+		MInteger outBeginIndex = new MInteger();
+		MInteger outNBElement = new MInteger();
+
+		RetCode retCode = core.aroonOsc(period, ms.size() - 1, dHighs, dLows, period, outBeginIndex, outNBElement, outReal);
+		if (retCode == RetCode.Success) { 
+			int beginIndex = outBeginIndex.value;
+			int outIndex = 0;
+			for (int i = beginIndex; i < ms.size(); i++) {
+				Metric m = ms.get(i);
+				m.name = "aroonoscillator" + period;
+				float rawValue = (float)outReal[outIndex++];
+				m.value = rawValue;
+				System.out.println(m.name + " - " + m.getAdjClose() + " - " + rawValue);
+			}
+		}
+	}
+	
+	/**
+	 * Commodity Channel Index
+	 * Normal values are with -100 to 100 but can go several times that in either direction.
+	 * I just divide the value by 5 to keep it smaller.
+	 * 
+	 * @param ms
+	 * @param period
+	 */
+	public static void fillInCCI(ArrayList<Metric> ms, int period) {
+		Core core = new Core();
+		
+		// Load the arrays needed by TA-lib.  oldest to newest
+		double[] dHighs = new double[ms.size()];
+		double[] dLows = new double[ms.size()];
+		double[] dCloses = new double[ms.size()];
+		double[] outReal = new double[ms.size()];
+		for (int i = 0; i < ms.size(); i++) {
+			dHighs[i] = ms.get(i).getAdjHigh();
+			dLows[i] = ms.get(i).getAdjLow();
+			dCloses[i] = ms.get(i).getAdjClose();
+		}
+		
+		MInteger outBeginIndex = new MInteger();
+		MInteger outNBElement = new MInteger();
+
+		RetCode retCode = core.cci(period, ms.size() - 1, dHighs, dLows, dCloses, period, outBeginIndex, outNBElement, outReal);
+		if (retCode == RetCode.Success) { 
+			int beginIndex = outBeginIndex.value;
+			int outIndex = 0;
+			for (int i = beginIndex; i < ms.size(); i++) {
+				Metric m = ms.get(i);
+				m.name = "cci" + period;
+				float rawValue = (float)outReal[outIndex++];
+				float adjValue = rawValue / 5f;
+				m.value = adjValue;
+				System.out.println(m.name + " - " + m.getAdjClose() + " - " + rawValue);
+			}
+		}
+	}
+	
+	/**
+	 * An interpretation of price Bollinger Bands.  This measures the number of standard deviations away from the simple moving average the price is
+	
+	 * @param ms
+	 * @param period
+	 */
+	public static void fillInPriceBollS(ArrayList<Metric> ms, int period) {
+		Core core = new Core();
+		
+		// Load the arrays needed by TA-lib.  oldest to newest
+		double[] dCloses = new double[ms.size()];
+		double[] outSMA = new double[ms.size()];
+		double[] outSTDDEV = new double[ms.size()];
+		for (int i = 0; i < ms.size(); i++) {
+			dCloses[i] = ms.get(i).getAdjClose();
+		}
+		
+		MInteger outBeginIndex = new MInteger();
+		MInteger outNBElement = new MInteger();
+		MInteger outBeginIndex2 = new MInteger();
+		MInteger outNBElement2 = new MInteger();
+		double optInNbDev = 1; // Multiplier for band?
+
+		RetCode smaRetCode = core.sma(period, ms.size() - 1, dCloses, period, outBeginIndex, outNBElement, outSMA);
+		RetCode stddevRetCode = core.stdDev(period, ms.size() - 1, dCloses, period, optInNbDev, outBeginIndex2, outNBElement2, outSTDDEV);
+		
+		if (smaRetCode == RetCode.Success && stddevRetCode == RetCode.Success) { 
+			int beginIndex = outBeginIndex.value;
+			int outIndex = 0;
+			for (int i = beginIndex; i < ms.size(); i++) {
+				Metric m = ms.get(i);
+				m.name = "pricebolls" + period;
+				float sma = (float)outSMA[outIndex];
+				float stddev = (float)outSTDDEV[outIndex++];
+				float adjClose = m.getAdjClose();
+				float boll = (adjClose - sma) / stddev;
+				float rawValue = boll;
+				m.value = rawValue;
+				System.out.println(m.name + " - " + m.getAdjClose() + " - " + rawValue);
+			}
+		}
 	}
 	
 	public static LinkedList<Metric> fillInBeta(LinkedList<Metric> metricSequence, int period) {
@@ -1319,57 +1247,16 @@ public class MetricsCalculator {
 		normalizeMetricValues(metricSequence);
 	  	return metricSequence;
 	}
-	
-	public static LinkedList<Metric> fillInRSIAlpha(LinkedList<Metric> metricSequence, int period) {
-		// Initialize Variables
-	  	LinkedList<Float> changes = new LinkedList<Float>();
-	  	
-	  	for (Metric metric:metricSequence) {
-	  		float change = metric.getChange();
-	  		float spyChange = metric.getAlphaChange();
-	  		float adjclose = metric.getAdjClose();
-	  		float spyAdjClose = metric.getAlphaAdjClose();
-	  		
-	  		// Normalize changes to perchanges
-	  		float perchange = change / (adjclose - change) * 100;
-	  		float spyperchange = spyChange / (spyAdjClose - spyChange) * 100;
-	  		
-	  		changes.add(perchange - spyperchange);
-	  		
-	  		if (changes.size() == period) {
-	  			float upSum = 0f;
-	  			float downSum = 0f;
-	  			for (Float ch:changes) {
-	  				if (ch > 0) upSum += ch;
-	  				else downSum += -ch;
-	  			}
-	  			float avgUp = upSum / (float)period;
-	  			float avgDown = downSum / (float)period;
-	  			
-	  			float rsi = 100f;
-			  	if (avgDown != 0) {
-			  		float rs = (avgUp / avgDown) + 1f;
-				  	rsi = 100f - (100f / rs);
-			  	}
-			  	
-			  	metric.value = rsi;
-	  			changes.remove();
-	  		}
-	  		else {
-	  			metric.value = null;
-	  		}
-	  		metric.name = "rsi" + period + "alpha";
-	  	}
-	  	normalizeMetricValues(metricSequence);
-	  	return metricSequence;
-	}
 		
-	public static LinkedList<Metric> fillInUpStreaks(LinkedList<Metric> metricSequence) {
-		// Initialize Variables
+	/**
+	 * Number of consecutive up bars
+	 * @param ms
+	 */
+	public static void fillInConsecutiveUps(ArrayList<Metric> ms) {
 		float lastAdjClose = -1f;
 		int consecutiveUpMetrics = 0;
 		
-		for (Metric metric:metricSequence) {
+		for (Metric metric:ms) {
 			float adjClose = metric.getAdjClose();
 			
 			if (adjClose > lastAdjClose && lastAdjClose >= 0f) {
@@ -1383,20 +1270,22 @@ public class MetricsCalculator {
 		  	}
 			
 			metric.value = (float)consecutiveUpMetrics;
-			metric.name = "consecutiveupdays";
+			metric.name = "consecutiveups";
 			
 		  	lastAdjClose = adjClose;
 		}
-		
-		return metricSequence;
 	}
 	
-	public static LinkedList<Metric> fillInDownStreaks(LinkedList<Metric> metricSequence) {
-		// Initialize Variables
+	/**
+	 * Number of consecutive down bars
+	 * 
+	 * @param ms
+	 */
+	public static void fillInConsecutiveDowns(ArrayList<Metric> ms) {
 		float lastAdjClose = -1f;
 	    int consecutiveDownMetrics = 0;
 		
-		for (Metric metric:metricSequence) {
+		for (Metric metric:ms) {
 			float adjClose = metric.getAdjClose();
 			
 			if (adjClose > lastAdjClose && lastAdjClose >= 0f) {
@@ -1410,12 +1299,66 @@ public class MetricsCalculator {
 		  	}
 
 			metric.value = (float)consecutiveDownMetrics;
-			metric.name = "consecutivedowndays";
+			metric.name = "consecutivedowns";
 			
 		  	lastAdjClose = adjClose;
 		}
+	}
+	
+	/**
+	 * For consecutive bars, the total movement % up or down
+	 * @param ms
+	 */
+	public static void fillInCPS(ArrayList<Metric> ms) {
+		float lastAdjClose = -1f;
+		float startingClose = 0f;
+//		float endingClose = 0f;
+		int consecutiveCount = 0;
+		String consecutiveType = "";
 		
-		return metricSequence;
+		for (Metric metric:ms) {
+			float adjClose = metric.getAdjClose();
+			
+			if (adjClose > lastAdjClose && lastAdjClose >= 0f) {
+				if (!consecutiveType.equals("up")) {
+					consecutiveCount = 0;
+					startingClose = lastAdjClose;
+//					endingClose = lastAdjClose;
+					consecutiveType = "up";
+				}
+				else {
+//					endingClose = adjClose;
+				}
+		  		consecutiveCount++;
+		  	}
+		  	else if (adjClose < lastAdjClose && lastAdjClose >= 0f) {
+		  		if (!consecutiveType.equals("down")) {
+		  			consecutiveCount = 0;
+		  			startingClose = lastAdjClose;
+//		  			endingClose = lastAdjClose;
+		  			consecutiveType = "down";
+		  		}
+		  		else {
+//					endingClose = adjClose;
+				}
+		  		consecutiveCount++;
+		  	}
+		  	else if (adjClose == lastAdjClose && lastAdjClose >= 0f) {
+		  		consecutiveType = "";
+		  		consecutiveCount = 0;
+//		  		endingClose = adjClose;
+		  	}
+			
+			float perchange = 0f;
+			if (consecutiveCount > 0) {
+				perchange = (adjClose - startingClose) / startingClose * 100f;
+			}
+			
+			metric.value = (float)perchange;
+			metric.name = "cps";
+			
+		  	lastAdjClose = adjClose;
+		}
 	}
 	
 	public static LinkedList<Metric> fillInPriceDMAs(LinkedList<Metric> metricSequence, int period) {

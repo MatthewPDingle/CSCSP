@@ -33,25 +33,6 @@ public class MetricsCalculatorRealtime {
 				ArrayList<Metric> ms = (ArrayList<Metric>)pair.getValue();
 
 				switch (mk.name) {
-//					// DV EMA
-//					case "dv10ema":
-//						MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 10);
-//						break;
-//					case "dv25ema":
-//						MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 25);
-//						break;
-//					case "dv50ema":
-//						MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 50);
-//						break;
-//					case "dv75ema":
-//						MetricsCalculator.fillInWeightedDVEMA(mce, last, metric, 75);
-//						break;
-//						
-//					// Other DV
-//					case "dv2":
-//						MetricsCalculator.fillInDV2(mce, last, metric);
-//						break;
-	
 					// RSI
 					case "rsi2":
 						MetricsCalculator.fillInRSI(ms, 2);
@@ -62,6 +43,90 @@ public class MetricsCalculatorRealtime {
 					case "rsi14":
 						MetricsCalculator.fillInRSI(ms, 14);
 						break;
+					
+					// MFI
+					case "mfi2":
+						MetricsCalculator.fillInMFI(ms, 2);
+						break;
+					case "mfi5":
+						MetricsCalculator.fillInMFI(ms, 5);					
+						break;
+					case "mfi14":
+						MetricsCalculator.fillInMFI(ms, 14);
+						break;
+						
+					// Consecutive Bars
+					case "consecutiveups":
+						MetricsCalculator.fillInConsecutiveUps(ms);
+						break;
+					case "consecutivedowns":
+						MetricsCalculator.fillInConsecutiveDowns(ms);
+						break;
+						
+					// Consecutive Percents
+					case "cps":
+						MetricsCalculator.fillInCPS(ms);
+						break;
+						
+					// CCI
+					case "cci10":
+						MetricsCalculator.fillInCCI(ms, 10);
+						break;
+					case "cci20":
+						MetricsCalculator.fillInCCI(ms, 20);					
+						break;
+					case "cci40":	
+						MetricsCalculator.fillInCCI(ms, 40);
+						break;
+						
+					// Williams R
+					case "williamsr10":
+						MetricsCalculator.fillInWilliamsR(ms, 10);
+						break;
+					case "williamsr20":
+						MetricsCalculator.fillInWilliamsR(ms, 20);					
+						break;
+					case "williamsr50":
+						MetricsCalculator.fillInWilliamsR(ms, 50);
+						break;	
+						
+					// PSAR
+					case "psar":
+						MetricsCalculator.fillInPSAR(ms);
+						break;
+						
+					// Ultimate
+					case "ultimateoscillator4_10_25":
+						MetricsCalculator.fillInUltimateOscillator(ms, 4, 10, 25);
+						break;
+					case "ultimateoscillator8_20_50":
+						MetricsCalculator.fillInUltimateOscillator(ms, 8, 20, 50);
+						break;
+					
+					// Aroon
+					case "aroonoscillator10":
+						MetricsCalculator.fillInAroonOscillator(ms, 10);
+						break;
+					case "aroonoscillator25":
+						MetricsCalculator.fillInAroonOscillator(ms, 25);
+						break;
+					case "aroonoscillator50":
+						MetricsCalculator.fillInAroonOscillator(ms, 50);
+						break;
+					
+					// Price Boll using SMA
+					case "pricebolls20":
+						MetricsCalculator.fillInPriceBollS(ms, 20);
+						break;
+					case "pricebolls50":
+						MetricsCalculator.fillInPriceBollS(ms, 50);					
+						break;
+					case "pricebolls100":
+						MetricsCalculator.fillInPriceBollS(ms, 100);
+						break;
+					case "pricebolls200":
+						MetricsCalculator.fillInPriceBollS(ms, 200);
+						break;	
 				}
 				
 				
@@ -70,64 +135,6 @@ public class MetricsCalculatorRealtime {
 				
 				switch (mk.name) {
 
-					// RSI Alpha
-					case "rsi2alpha":
-						
-						break;
-					case "rsi5alpha":
-											
-						break;
-					case "rsi14alpha":
-						
-						break;
-						
-					// RSI EMA
-					case "rsi75ema":
-						
-						break;
-					case "rsi50ema":
-											
-						break;
-					case "rsi25ema":
-						
-						break;
-					case "rsi10ema":
-						
-						break;
-					
-						// MFI
-					case "mfi2":
-						
-						break;
-					case "mfi5":
-											
-						break;
-					case "mfi14":
-						
-						break;
-						
-					// Consecutive Bars
-					case "consecutiveupdays":
-						
-						break;
-					case "consecutivedowndays":
-						
-						break;
-						
-					// Price Boll
-					case "priceboll20":
-						
-						break;
-					case "priceboll50":
-											
-						break;
-					case "priceboll100":
-						
-						break;
-					case "priceboll200":
-						
-						break;	
-						
 					// Gap Boll
 					case "gapboll10":
 						
@@ -178,27 +185,7 @@ public class MetricsCalculatorRealtime {
 						
 						break;	
 						
-					// Williams R
-					case "williamsr10":
-						
-						break;
-					case "williamsr20":
-											
-						break;
-					case "williamsr50":
-						
-						break;
 
-					// Williams R Alpha
-					case "williamsralpha10":
-						
-						break;
-					case "williamsralpha20":
-											
-						break;
-					case "williamsralpha50":
-						
-						break;
 
 					// MACD
 					case "macd12_26_9":
@@ -221,28 +208,7 @@ public class MetricsCalculatorRealtime {
 					case "macddivergence_40_80_9":
 						
 						break;	
-						
-					// CCI
-					case "cci10":
-						
-						break;
-					case "cci20":
-											
-						break;
-					case "cci40":
-						
-						break;
-						
-					// Other
-					case "psar":
-						
-						break;
-					case "ultimateoscillator":
-											
-						break;
-					case "aroonoscillator":
-						
-						break;
+		
 						
 					default:
 						break;
