@@ -336,7 +336,7 @@ public class MetricFunctionUtil {
 	
 	/**
 	 * Time Series Forecast
-	 * Normal values are close to the closes, but I normalize them to % away from close
+	 * Normal values are close to the closes, but I normalize them to % away from close & multiply x10
 	 * 
 	 * @param ms
 	 * @param period
@@ -367,7 +367,7 @@ public class MetricFunctionUtil {
 				m.name = "tsf" + period;
 				float rawValue = (float)outReal[outIndex++];
 				float adjClose = m.getAdjClose();
-				float adjValue = (rawValue - adjClose) / adjClose * 100f;
+				float adjValue = (rawValue - adjClose) / adjClose * 100f * 10f;
 				m.value = adjValue;
 //				System.out.println(m.name + " - " + m.getAdjClose() + " - " + adjValue);
 			}
@@ -520,7 +520,7 @@ public class MetricFunctionUtil {
 	
 	/**
 	 * Average True Range
-	 * Normal values are close to the close, but I convert them to percent of the close
+	 * Normal values are close to the close, but I convert them to percent of the close and multiply by 10
 	 * 
 	 * @param ms
 	 * @param period
@@ -551,7 +551,7 @@ public class MetricFunctionUtil {
 				m.name = "atr" + period;
 				float rawValue = (float)outReal[outIndex++];
 				float adjClose = ms.get(i).getAdjClose();
-				float adjValue = rawValue / adjClose * 100f;
+				float adjValue = rawValue / adjClose * 100f * 10f;
 				m.value = adjValue;
 //				System.out.println(m.name + " - " + m.getAdjClose() + " - " + adjValue);
 			}
@@ -559,7 +559,7 @@ public class MetricFunctionUtil {
 	}
 	
 	/**
-	 * Candlestick Pattern Detection - The output ends up being 0 for no, 100 for yes.
+	 * Candlestick Pattern Detection - The output ends up being 0 for no, 1 for yes.
 	 * 
 	 * @param ms
 	 * @param period
@@ -604,7 +604,11 @@ public class MetricFunctionUtil {
 				Metric m = ms.get(i);
 				m.name = patternName;
 				float rawValue = out[outIndex++];
-				m.value = rawValue;
+				float adjValue = 0f;
+				if (rawValue == 100) {
+					adjValue = 1f;
+				}
+				m.value = adjValue;
 //				System.out.println(m.name + " - " + m.getAdjClose() + " - " + adjValue);
 			}
 		}
@@ -645,7 +649,10 @@ public class MetricFunctionUtil {
 				float sma = (float)outSMA[outIndex];
 				float stddev = (float)outSTDDEV[outIndex++];
 				float adjClose = m.getAdjClose();
-				float boll = (adjClose - sma) / stddev;
+				float boll = 0;
+				if (stddev != 0) {
+					boll = (adjClose - sma) / stddev;
+				}
 				float rawValue = boll;
 				m.value = rawValue;
 //				System.out.println(m.name + " - " + m.getAdjClose() + " - " + rawValue);
@@ -688,7 +695,10 @@ public class MetricFunctionUtil {
 				float sma = (float)outSMA[outIndex];
 				float stddev = (float)outSTDDEV[outIndex++];
 				float volume = (float)m.getVolume();
-				float boll = (volume - sma) / stddev;
+				float boll = 0;
+				if (stddev != 0) {
+					boll = (volume - sma) / stddev;
+				}
 				float rawValue = boll;
 				m.value = rawValue;
 //				System.out.println(m.name + " - " + m.getVolume() + " - " + rawValue);
@@ -734,7 +744,7 @@ public class MetricFunctionUtil {
 	
 	/**
 	 * MACD
-	 * I adjust the value x1
+	 * I adjust the value x5
 	 * 
 	 * @param ms
 	 * @param period1 Fast
@@ -764,7 +774,7 @@ public class MetricFunctionUtil {
 				Metric m = ms.get(i);
 				m.name = "macd" + period1 + "_" + period2 + "_" + period3;
 				float rawValue = (float)outMACD[outIndex++];
-				float adjValue = rawValue * 1f;
+				float adjValue = rawValue * 5f;
 				m.value = adjValue;
 //				System.out.println(m.name + " - " + m.getAdjClose() + " - " + adjValue);
 			}
@@ -773,7 +783,7 @@ public class MetricFunctionUtil {
 		
 	/**
 	 * MACD Signal
-	 * I adjust the value x1
+	 * I adjust the value x5
 	 * 
 	 * @param ms
 	 * @param period1 Fast
@@ -803,7 +813,7 @@ public class MetricFunctionUtil {
 				Metric m = ms.get(i);
 				m.name = "macdsignal" + period1 + "_" + period2 + "_" + period3;
 				float rawValue = (float)outMACDSignal[outIndex++];
-				float adjValue = rawValue * 1f;
+				float adjValue = rawValue * 5f;
 				m.value = adjValue;
 //				System.out.println(m.name + " - " + m.getAdjClose() + " - " + adjValue);
 			}
@@ -812,7 +822,7 @@ public class MetricFunctionUtil {
 	
 	/**
 	 * MACD History
-	 * I adjust the value x1
+	 * I adjust the value x5
 	 * 
 	 * @param ms
 	 * @param period1 Fast
@@ -842,7 +852,7 @@ public class MetricFunctionUtil {
 				Metric m = ms.get(i);
 				m.name = "macdhistory" + period1 + "_" + period2 + "_" + period3;
 				float rawValue = (float)outMACDHist[outIndex++];
-				float adjValue = rawValue * 1f;
+				float adjValue = rawValue * 5f;
 				m.value = adjValue;
 //				System.out.println(m.name + " - " + m.getAdjClose() + " - " + adjValue);
 			}

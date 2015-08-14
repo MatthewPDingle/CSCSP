@@ -1056,7 +1056,7 @@ public class GUI {
 	
 	public JComboBox getCbBuyYAxis() {
 		cbBuyYAxis = new JComboBox(Constants.METRICS.toArray());
-		cbBuyYAxis.setSelectedItem("dv2");
+		cbBuyYAxis.setSelectedItem("rsi14");
 		cbBuyYAxis.setBounds(new Rectangle(44, 46, 193, 22));
 		cbBuyYAxis.setFont(new Font("Dialog", Font.BOLD, 12));
 		ps.setyAxisMetric(cbBuyYAxis.getSelectedItem().toString());

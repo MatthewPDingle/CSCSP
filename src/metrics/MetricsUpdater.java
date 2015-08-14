@@ -41,14 +41,14 @@ public class MetricsUpdater {
 						break;
 					
 					// MFI
-					case "mfi2":
-						MetricFunctionUtil.fillInMFI(ms, 2);
+					case "mfi8":
+						MetricFunctionUtil.fillInMFI(ms, 8);
 						break;
-					case "mfi5":
-						MetricFunctionUtil.fillInMFI(ms, 5);					
+					case "mfi12":
+						MetricFunctionUtil.fillInMFI(ms, 12);					
 						break;
-					case "mfi14":
-						MetricFunctionUtil.fillInMFI(ms, 14);
+					case "mfi16":
+						MetricFunctionUtil.fillInMFI(ms, 16);
 						break;
 						
 					// Consecutive Bars
@@ -179,15 +179,9 @@ public class MetricsUpdater {
 					case "stochasticdrsi14_3_3":
 						MetricFunctionUtil.fillInStochasticDRSI(ms, 14, 3, 3);
 						break;
-					case "stochastickrsi14_3_3":
-						MetricFunctionUtil.fillInStochasticKRSI(ms, 14, 3, 3);
-						break;	
 					case "stochasticdrsi20_5_5":
 						MetricFunctionUtil.fillInStochasticDRSI(ms, 20, 5, 5);
 						break;
-					case "stochastickrsi20_5_5":
-						MetricFunctionUtil.fillInStochasticKRSI(ms, 20, 5, 5);
-						break;	
 						
 					// Stochastic
 					case "stochasticd14_3_3":
