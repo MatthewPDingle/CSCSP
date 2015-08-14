@@ -1076,7 +1076,7 @@ public class GUI {
 		sellMetrics.addAll(Constants.OTHER_SELL_METRICS);
 		Collections.sort(sellMetrics);
 		cbMetric = new JComboBox(sellMetrics.toArray());
-		cbMetric.setSelectedItem("consecutiveupdays");
+		cbMetric.setSelectedItem("consecutiveups");
 		cbMetric.setBounds(new Rectangle(44, 22, 193, 22));
 		cbMetric.setFont(new Font("Dialog", Font.BOLD, 12));
 		ps.setSellMetric(cbMetric.getSelectedItem().toString());

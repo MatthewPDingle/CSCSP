@@ -372,14 +372,6 @@ public class MapUpdateThread extends Thread {
 				mc.addToMetricValueHash(Constants.MAP_COLOR_OPTION_END_GEOMEAN_PER_BAR,			endGeomeanPerDay);
 				
 				
-				
-				
-				
-				
-				
-				// Run main MapCell query
-//				MapCell mc = QueryManager.cellQuery(cell.xMetricPosition, xCellSize, cell.yMetricPosition, yCellSize, latestDateInBar);
-					
 				// Normalize the values of the x and y metrics to 0 to 100
 				float xMetricRange = xMetricMax - xMetricMin;
 				float xMetricScale = 100f / xMetricRange;

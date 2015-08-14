@@ -440,7 +440,7 @@ public class QueryManager {
 						q += symbolsClause +
 						"AND m1.name = '" + ps.getxAxisMetric() + "' " +
 						"AND m2.name = '" + ps.getyAxisMetric() + "' " +
-						"AND m3.name = 'priceboll20' " +
+						"AND m3.name = 'pricebolls20' " +
 						"AND m4.name = '" + ps.getSellMetric() + "' " +
 						"AND ABS(m3.value) <= " + ps.getMaxVolatility() + " " +
 						"AND b.close >= " + ps.getMinPrice() + " " +
