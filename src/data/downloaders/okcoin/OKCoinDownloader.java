@@ -17,7 +17,7 @@ import data.Converter;
 import data.Tick;
 import dbio.QueryManager;
 import gui.singletons.MetricSingleton;
-import metrics.MetricsCalculatorRealtime;
+import metrics.MetricsUpdater;
 import utils.CalendarUtils;
 import utils.StringUtils;
 
@@ -69,7 +69,7 @@ public class OKCoinDownloader {
 					}
 					firstPass = false;
 					System.out.println(Calendar.getInstance().getTime().toString() + " - Bar Downloads & Inserts Done");
-					MetricsCalculatorRealtime.calculateMetricsRealtime();
+					MetricsUpdater.calculateMetrics();
 					System.out.println(Calendar.getInstance().getTime().toString() + " - Metrics Done");
 //					Thread.sleep(1000);
 				}

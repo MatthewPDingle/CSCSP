@@ -27,7 +27,6 @@ import data.MetricKey;
 import gui.MapCell;
 import gui.MapSymbol;
 import gui.singletons.ParameterSingleton;
-import metrics.MetricSequenceDataSingleton;
 import utils.CalcUtils;
 import utils.CalendarUtils;
 import utils.ConnectionSingleton;
@@ -45,6 +44,7 @@ public class QueryManager {
 	 * @param latestDateInBasicr
 	 * @return
 	 */
+	@Deprecated
 	public static MapCell cellQuery(float x, float xCellSize, float y, float yCellSize, Calendar latestDateInBasicr) {
 		try {
 			ParameterSingleton ps = ParameterSingleton.getInstance();
@@ -2840,22 +2840,6 @@ public class QueryManager {
 		catch (Exception e) {
 			e.printStackTrace();
 			return 0;
-		}
-	}
-	
-	public class MetricIndexThreadHelper extends Thread {
-		public void run() {
-			try {
-				MetricSequenceDataSingleton msds = MetricSequenceDataSingleton.getInstance();
-				String metric = msds.popMetric();
-				while (metric != null) {
-					createMetricTableIndexes();
-					metric = msds.popMetric();
-				}
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
 		}
 	}
 }

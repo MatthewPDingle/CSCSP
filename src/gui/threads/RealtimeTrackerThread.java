@@ -14,8 +14,9 @@ import dbio.QueryManager;
 import gui.MapCellPanel;
 import gui.MapSymbol;
 import gui.singletons.MapSymbolSingleton;
+import gui.singletons.MetricSingleton;
 import gui.singletons.ParameterSingleton;
-import metrics.MetricsCalculatorRealtime;
+import metrics.MetricsUpdater;
 import trading.TradeMonitor;
 
 public class RealtimeTrackerThread extends Thread {
@@ -45,6 +46,7 @@ public class RealtimeTrackerThread extends Thread {
 	public void run() {
 		try {
 			ArrayList<BarKey> barKeys = ps.getBarKeys();
+			MetricSingleton.getInstance().init(barKeys);
 	
 			if (barKeys != null) {
 				// Download latest data and put in DB
@@ -68,7 +70,7 @@ public class RealtimeTrackerThread extends Thread {
 //				}
 				
 				// Calculate metrics for the latest data
-				MetricsCalculatorRealtime.calculateMetricsRealtime(this.usedMetrics, barKeys);
+				MetricsUpdater.calculateMetrics();
 				
 				mss.setMapSymbols(QueryManager.getMapSymbols());
 			}
@@ -172,7 +174,7 @@ public class RealtimeTrackerThread extends Thread {
 			}
 			
 			// Calculate the metrics
-			MetricsCalculatorRealtime.calculateMetricsRealtime(this.usedMetrics, barKeys);
+			MetricsUpdater.calculateMetrics();
 			mss.setMapSymbols(QueryManager.getMapSymbols());
 			
 			// Notify the GUI

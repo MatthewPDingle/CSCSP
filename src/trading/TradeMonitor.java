@@ -8,8 +8,9 @@ import data.BarKey;
 import dbio.QueryManager;
 import gui.MapSymbol;
 import gui.singletons.MapSymbolSingleton;
+import gui.singletons.MetricSingleton;
 import gui.threads.RealtimeTrackerThread;
-import metrics.MetricsCalculatorRealtime;
+import metrics.MetricsUpdater;
 
 public class TradeMonitor {
 
@@ -102,7 +103,7 @@ public class TradeMonitor {
 				ArrayList<BarKey> barKeys = new ArrayList<BarKey>();
 				barKeys.add(new BarKey(symbol, duration));
 				QueryManager.deleteMostRecentTradingDayFromMetricTables(barKeys, sellMetrics);
-				MetricsCalculatorRealtime.calculateMetricsRealtime(sellMetrics, barKeys);
+				MetricsUpdater.calculateMetrics();
 				
 				// See if this position's exit (sell or stop) criteria has been met
 				HashMap<String, Object> answers = QueryManager.doICloseThisPosition(symbol, sell, sellop, stop, stopvalue);
@@ -266,6 +267,7 @@ public class TradeMonitor {
 	public static void getRealtimeQuotesForEverything() {
 		try {
 			ArrayList<BarKey> barKeys = QueryManager.getUniqueBarKeys();
+			MetricSingleton.getInstance().init(barKeys);
 			
 			// Delete most recent trading day for the symbols we're tracking during this loop
 			for (BarKey bk : barKeys) {
@@ -280,7 +282,7 @@ public class TradeMonitor {
 			RealtimeTrackerThread.getUpdatedYahooQuotesAndSaveToDB(symbolStrings);
 			
 			// Recalculate the metrics for today
-			MetricsCalculatorRealtime.calculateMetricsRealtime(Constants.METRICS, barKeys);
+			MetricsUpdater.calculateMetrics();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
