@@ -18,8 +18,10 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.logging.log4j.LogManager;
 
 public class OKCoinAPI {
 
@@ -47,28 +49,35 @@ public class OKCoinAPI {
 	}
 
 	public String requestHttpGet(String url_prex, String url, String param) throws HttpException, IOException {
-		url = url_prex + url;
-		if (param != null && !param.equals("")) {
-			url = url + "?" + param;
+		try {
+			url = url_prex + url;
+			if (param != null && !param.equals("")) {
+				url = url + "?" + param;
+			}
+			HttpRequestBase method = this.httpGetMethod(url);
+			HttpResponse response = client.execute(method);
+			HttpEntity entity = response.getEntity();
+			if (entity == null) {
+				return "";
+			}
+			InputStream is = null;
+			String responseData = "";
+			try {
+				is = entity.getContent();
+				responseData = IOUtils.toString(is, "UTF-8");
+			} 
+			finally {
+				if (is != null) {
+					is.close();
+				}
+			}
+			return responseData;
 		}
-		HttpRequestBase method = this.httpGetMethod(url);
-		HttpResponse response = client.execute(method);
-		HttpEntity entity = response.getEntity();
-		if (entity == null) {
+		catch (HttpHostConnectException he) {
+			he.printStackTrace();
+			LogManager.getLogger("data.downloaders.okcoin").error(he.getStackTrace().toString());
 			return "";
 		}
-		InputStream is = null;
-		String responseData = "";
-		try {
-			is = entity.getContent();
-			responseData = IOUtils.toString(is, "UTF-8");
-		} 
-		finally {
-			if (is != null) {
-				is.close();
-			}
-		}
-		return responseData;
 	}
 
 	public String requestHttpPost(String url_prex, String url, Map<String, String> params) throws HttpException, IOException {

@@ -212,13 +212,13 @@ public class MetricsUpdater {
 						
 					// Candlestick Patterns
 					case "cdlhammer":
-						MetricFunctionUtil.fillInPattern(ms, "hammer");
+						MetricFunctionUtil.fillInPattern(ms, "cdlhammer");
 						break;
 					case "cdldoji":
-						MetricFunctionUtil.fillInPattern(ms, "doji");
+						MetricFunctionUtil.fillInPattern(ms, "cdldoji");
 						break;
 					case "cdlmorningstar":
-						MetricFunctionUtil.fillInPattern(ms, "morningstar");
+						MetricFunctionUtil.fillInPattern(ms, "cdlmorningstar");
 						break;
 				}
 				

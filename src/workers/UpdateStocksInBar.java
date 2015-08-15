@@ -17,6 +17,8 @@ public class UpdateStocksInBar {
 		
 		// Get symbol list from the index table
 		ArrayList<String> symbols = QueryManager.getUniqueListOfSymbols();
+		symbols.clear();
+		symbols.add("SPY");
 		
 		// Make a number of threads for parallel processing
 		ArrayList<ArrayList<String>> symbolBlockList = new ArrayList<ArrayList<String>>();

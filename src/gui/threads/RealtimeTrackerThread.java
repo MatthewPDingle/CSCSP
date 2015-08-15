@@ -36,7 +36,7 @@ public class RealtimeTrackerThread extends Thread {
 	 * @param maps
 	 */
 	public RealtimeTrackerThread(MapCellPanel mcp) {
-		usedMetrics.add("priceboll20");
+		usedMetrics.add("pricebolls20");
 		usedMetrics.addAll(getUsedMetrics(mcp));
 		this.mcp = mcp;
 		running = true;

@@ -189,11 +189,11 @@ public class OKCoinDownloader {
 				bars.add(bar);
 			}
 			
-			LogManager.getLogger("data.downloader").info("Got " + bars.size() + " bars from OKCoin tick history");
+			LogManager.getLogger("data.downloaders.okcoin").info("Got " + bars.size() + " bars from OKCoin tick history");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			LogManager.getLogger("data.downloader").error(e.getStackTrace().toString());
+			LogManager.getLogger("data.downloaders.okcoin").error(e.getStackTrace().toString());
 		}
 		
 		return bars;
@@ -275,38 +275,40 @@ public class OKCoinDownloader {
 			Float previousClose = null;
 			
 			// From oldest to newest
-			for (List jsonBar : list) {
-				String timeMS = jsonBar.get(0).toString();
-				timeMS = timeMS.replace(".", "");
-				if (timeMS.contains("E")) {
-					timeMS = timeMS.substring(0, timeMS.indexOf("E"));
-				}
-				while (timeMS.length() < 10) {
-					timeMS = timeMS + "0";
-				}
-				long ms = Long.parseLong(timeMS) * 1000;
-				Calendar periodStart = Calendar.getInstance();
-				periodStart.setTimeInMillis(ms);
-				Calendar periodEnd = Calendar.getInstance();
-				periodEnd.setTime(periodStart.getTime());
-				periodEnd.add(Calendar.MINUTE, barMinutes);
-				float open = Float.parseFloat(jsonBar.get(1).toString());
-				float high = Float.parseFloat(jsonBar.get(2).toString());
-				float low = Float.parseFloat(jsonBar.get(3).toString());
-				float close = Float.parseFloat(jsonBar.get(4).toString());
-				float volume = Float.parseFloat(jsonBar.get(5).toString());
-				float vwapEstimate = (open + close + high + low) / 4f;
-				Float change = null;
-				Float gap = null;
-				if (previousClose != null) {
-					change = close - previousClose; 
-					gap = open - previousClose;
-				}
-			
-				Bar bar = new Bar(barSymbol, open, close, high, low, vwapEstimate, volume, null, change, gap, periodStart, periodEnd, barSize, false);
-				bars.add(bar);
+			if (list != null) {
+				for (List jsonBar : list) {
+					String timeMS = jsonBar.get(0).toString();
+					timeMS = timeMS.replace(".", "");
+					if (timeMS.contains("E")) {
+						timeMS = timeMS.substring(0, timeMS.indexOf("E"));
+					}
+					while (timeMS.length() < 10) {
+						timeMS = timeMS + "0";
+					}
+					long ms = Long.parseLong(timeMS) * 1000;
+					Calendar periodStart = Calendar.getInstance();
+					periodStart.setTimeInMillis(ms);
+					Calendar periodEnd = Calendar.getInstance();
+					periodEnd.setTime(periodStart.getTime());
+					periodEnd.add(Calendar.MINUTE, barMinutes);
+					float open = Float.parseFloat(jsonBar.get(1).toString());
+					float high = Float.parseFloat(jsonBar.get(2).toString());
+					float low = Float.parseFloat(jsonBar.get(3).toString());
+					float close = Float.parseFloat(jsonBar.get(4).toString());
+					float volume = Float.parseFloat(jsonBar.get(5).toString());
+					float vwapEstimate = (open + close + high + low) / 4f;
+					Float change = null;
+					Float gap = null;
+					if (previousClose != null) {
+						change = close - previousClose; 
+						gap = open - previousClose;
+					}
 				
-				previousClose = close;
+					Bar bar = new Bar(barSymbol, open, close, high, low, vwapEstimate, volume, null, change, gap, periodStart, periodEnd, barSize, false);
+					bars.add(bar);
+					
+					previousClose = close;
+				}
 			}
 			
 			// Set the most recent one to partial and toss the oldest one (we got one more bar than we needed)
@@ -315,11 +317,11 @@ public class OKCoinDownloader {
 				bars.remove(0);
 			}
 			
-			LogManager.getLogger("data.downloader").info("Got " + bars.size() + " bars from OKCoin bar history");
+			LogManager.getLogger("data.downloaders.okcoin").info("Got " + bars.size() + " bars from OKCoin bar history");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			LogManager.getLogger("data.downloader").error(e.getStackTrace().toString());
+			LogManager.getLogger("data.downloaders.okcoin").error(e.getStackTrace().toString());
 		}
 		
 		return bars;
@@ -360,6 +362,7 @@ public class OKCoinDownloader {
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+			LogManager.getLogger("data.downloaders.okcoin").error(e.getStackTrace().toString());
 		}
 		return result;
 	}
@@ -412,6 +415,7 @@ public class OKCoinDownloader {
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+			LogManager.getLogger("data.downloaders.okcoin").error(e.getStackTrace().toString());
 		}
 		return result;
 	}

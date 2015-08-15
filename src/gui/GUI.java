@@ -1362,7 +1362,7 @@ public class GUI {
 	}
 	
 	private JTextField getTxtMinLiquidity() {
-		txtMinLiquidity = new JTextField("0"); // 2000000 Stocks
+		txtMinLiquidity = new JTextField("1"); // 2000000 Stocks
 		txtMinLiquidity.setBounds(new Rectangle(42, 22, 54, 23));
 		txtMinLiquidity.setAlignmentY(.5f);
 		txtMinLiquidity.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -1387,7 +1387,7 @@ public class GUI {
 	}
 	
 	private JTextField getTxtMaxVolatility() {
-		txtMaxVolatility = new JTextField("100"); // 1.0 Stocks
+		txtMaxVolatility = new JTextField("5"); // 1.0 Stocks
 		txtMaxVolatility.setBounds(new Rectangle(138, 22, 26, 23));
 		txtMaxVolatility.setAlignmentY(.5f);
 		txtMaxVolatility.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -1412,7 +1412,7 @@ public class GUI {
 	}
 	
 	private JTextField getTxtMinPrice() {
-		txtMinPrice = new JTextField("0.00");
+		txtMinPrice = new JTextField("0.01");
 		txtMinPrice.setBounds(new Rectangle(208, 22, 30, 23));
 		txtMinPrice.setAlignmentY(.5f);
 		txtMinPrice.setFont(new Font("Dialog", Font.BOLD, 12));
