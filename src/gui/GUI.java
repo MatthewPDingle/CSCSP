@@ -253,7 +253,7 @@ public class GUI {
 			gui.getJFrame().show();
 			gui.resetBlankMUTs();
 			mapWorker = gui.new MapWorker();
-			
+
 			if (args.length == 23) {
 				gui.runViaParams(args);
 			}
@@ -359,7 +359,10 @@ public class GUI {
 			ArrayList<String> ds = new ArrayList<String>();
 			for (String durationSymbol : durationSymbols) {
 				ds.add(durationSymbol);
+				// TODO: Select the right ones
+				//listSymbols.setSelectedValue(durationSymbol, true);
 			}
+			
 			ps.setSymbols(ds);
 			
 			btnBuildMap.doClick();

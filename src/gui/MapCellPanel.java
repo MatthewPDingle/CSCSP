@@ -124,7 +124,7 @@ public class MapCellPanel extends JPanel implements ComponentListener, Runnable,
 
 						setDefaultWorldView();
 						setCurrentWorldView();
-						zoom(-80.5);
+						zoom(-83.5);
 						panWorldViewToCellsLocation();
 						recalculateHighAndLowMetrics();
 						resetBuffer();

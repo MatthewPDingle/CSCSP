@@ -326,13 +326,13 @@ public class GeneticSearcher {
 		
 		if (type.equals("buy") || type.equals("sell")) {
 			for (String metric:Constants.METRICS) {
-//				if (!metric.equals("pricesd20") && !metric.equals("mvol100")) {
+				if (!metric.startsWith("cdl")) {
 					Float fitness = QueryManager.loadBullFitness(type, metric);
 					metricFitnessHash.put(metric, fitness);
-//				}
-//				else {
-//					metricFitnessHash.put(metric, 0f);
-//				}
+				}
+				else {
+					metricFitnessHash.put(metric, 0f);
+				}
 			}
 		}
 		if (type.equals("stop")) {
@@ -350,13 +350,13 @@ public class GeneticSearcher {
 		
 		if (type.equals("buy") || type.equals("sell")) {
 			for (String metric:Constants.METRICS) {
-//				if (!metric.equals("pricesd20")) {
+				if (!metric.startsWith("cdl")) {
 					Float fitness = QueryManager.loadBearFitness(type, metric);
 					metricFitnessHash.put(metric, fitness);
-//				}
-//				else {
-//					metricFitnessHash.put(metric, 0f);
-//				}
+				}
+				else {
+					metricFitnessHash.put(metric, 0f);
+				}
 			}
 		}
 		if (type.equals("stop")) {
@@ -397,7 +397,7 @@ public class GeneticSearcher {
 		// Fill a gene pool with all the weighted metrics
 		ArrayList<String> genePool = new ArrayList<String>();
 		for (String metric:Constants.METRICS) {
-//			if (!metric.equals("mvol100")) {
+			if (!metric.startsWith("cdl")) {
 				float fitness = 0f;
 				if (type.equals("bull")) {
 					fitness = bullishBuyMetricFitnessHash.get(metric);
@@ -411,7 +411,7 @@ public class GeneticSearcher {
 				for (int a = 0; a < fitness; a++) {
 					genePool.add(metric);
 				}
-//			}
+			}
 		}
 		
 		int index = r.nextInt(genePool.size());
@@ -422,7 +422,7 @@ public class GeneticSearcher {
 		// Fill a gene pool with all the weighted metrics
 		ArrayList<String> genePool = new ArrayList<String>();
 		for (String metric:Constants.METRICS) {
-//			if (!metric.equals("mvol100")) {
+			if (!metric.startsWith("cdl")) {
 				float fitness = 0f;
 				if (type.equals("bull")) {
 					fitness = bullishSellMetricFitnessHash.get(metric);
@@ -436,7 +436,7 @@ public class GeneticSearcher {
 				for (int a = 0; a < fitness; a++) {
 					genePool.add(metric);
 				}
-//			}
+			}
 		}
 		
 		int index = r.nextInt(genePool.size());
