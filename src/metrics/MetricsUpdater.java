@@ -1,16 +1,55 @@
 package metrics;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import constants.Constants.BAR_SIZE;
+import data.BarKey;
 import data.Metric;
 import data.MetricKey;
 import dbio.QueryManager;
 import gui.singletons.MetricSingleton;
 
 public class MetricsUpdater {
+	
+	/**
+	 * Parameters have to come in sets of 2.
+	 * First is symbol
+	 * Second is bar duration
+	 * @param args
+	 */
+	public static void main (String[] args) {
+		// Get params
+		ArrayList<String[]> params = new ArrayList<String[]>();
+		ArrayList<BarKey> barKeys = new ArrayList<BarKey>();
+		if (args != null) {
+			for (int a = 0; a < args.length; a += 2) {
+				String symbol = args[a];
+				String duration = args[a + 1];
+
+				String[] param = new String[2];
+				param[0] = symbol;
+				param[1] = duration;
+				params.add(param);
+				BarKey barKey = new BarKey(symbol, BAR_SIZE.valueOf(duration));
+				barKeys.add(barKey);
+			}
+		}
+		
+		// Loop.  First pass get 1000 bars.  All other passes, get the number specified by parameters.
+		if (params.size() > 0) {
+			MetricSingleton metricSingleton = MetricSingleton.getInstance();
+			System.out.println(Calendar.getInstance().getTime().toString() + " - Initializing MetricSingleton");
+			metricSingleton.init(barKeys);
+			System.out.println(Calendar.getInstance().getTime().toString() + " - Initializing MetricSingleton done");
+			System.out.println(Calendar.getInstance().getTime().toString() + " - Metric Calculations Starting");
+			MetricsUpdater.calculateMetrics();
+			System.out.println(Calendar.getInstance().getTime().toString() + " - Metric Calculations Done");		
+		}
+	}
 	
 	public static void calculateMetrics() {
 		try {
@@ -24,7 +63,7 @@ public class MetricsUpdater {
 				Map.Entry pair = (Map.Entry)i.next();
 				// Get this MetricKey
 				MetricKey mk = (MetricKey)pair.getKey();
-//				System.out.println("Processing " + mk.toString());
+				System.out.println("Processing " + mk.toString());
 				// Get this MetricSequence
 				ArrayList<Metric> ms = (ArrayList<Metric>)pair.getValue();
 

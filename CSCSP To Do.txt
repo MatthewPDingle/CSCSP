@@ -23,20 +23,20 @@ Other Stuff to Add or Change
 - Make a smooth animation to new location for map symbols
 - Value at Risk & Modern Portfolio Theory.  Look for a java non-linear solver.
 - Ideally my stop exit criteria would be something like waiting up to 20 days for the sell criteria to hit.  If it doesn't, dont' simply use a "sell after 20 days" cutoff, change it to something like "sell when williamsr10 rises above 50" - something that will hit quickly.
-- basicr might want to have a lastupdated timestamp column
 - Do I want do exit a position if I find that it appears in a high priority zone on an opposite map?
 - Also, do I want to keep a position that gets an exit criteria if it's still in a HP zone?
 
 
 
 New Stuff
-- Bar Type Metric
+- More Bar Type Metrics
+- Data downloaders for bitfinex, bitstamp, kraken, btc-e, forex
 - Would be nice to be able to view charts and metrics by clicking on a cell
-- Neural network on a bunch of metrics
+- Neural network on a bunch of metrics.  random forest probably better
 - Might be able to speed up map generation a little more by not including unused columns in the query and trying to make the math code tighter
 - Use of numtrades and vwap fields in bar data (maybe probably not)
 
 TODO
 - Memory leak when running GeneticSearcher
 - Cross validation and test sets
-- Metric values aren't going to be consistent on realtime tracking compared to historical values because they're going to be 0-100 normalized using different min/max
+- pricebolls metrics have suspiciously symmetrical values +/-

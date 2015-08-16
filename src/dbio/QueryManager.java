@@ -1382,30 +1382,57 @@ public class QueryManager {
 			
 			String q2 = "INSERT INTO metrics(name, symbol, start, \"end\", duration, value) VALUES (?, ?, ?, ?, ?, ?)";
 			PreparedStatement s2 = c.prepareStatement(q2);
-			boolean anyInserts = false;
-			
+
 			String q3 = "UPDATE metrics SET value = ? WHERE name = ? AND symbol = ? AND start = ? AND duration = ?";
 			PreparedStatement s3 = c.prepareStatement(q3);
-			boolean anyUpdates = false;
+
+			int numInserts = 0;
+			int numUpdates = 0;
+			
+			// Cache the bars we already have for this metric sequence
+			ArrayList<String> starts = new ArrayList<String>();
+			if (metrics != null && metrics.size() > 0) {
+				String q0 = "SELECT start FROM metrics WHERE name = ? AND symbol = ? AND duration = ?";
+				PreparedStatement s0 = c.prepareStatement(q0);
+				s0.setString(1, metrics.get(0).name);
+				s0.setString(2, metrics.get(0).symbol);
+				s0.setString(3, metrics.get(0).duration.toString());
+				
+				ResultSet rs0 = s0.executeQuery();
+				while (rs0.next()) {
+					Timestamp ts = rs0.getTimestamp("start");
+					Calendar cal = Calendar.getInstance();
+					cal.setTimeInMillis(ts.getTime());
+					starts.add(cal.getTime().toString());
+				}
+				rs0.close();
+				s0.close();
+			}
+			
 			
 			for (Metric metric : metrics) {
 				if (metric.value != null) {
 					// First see if this bar exists in the DB
-					String q = "SELECT * FROM metrics WHERE name = ? AND symbol = ? AND start = ? AND duration = ?";
-					PreparedStatement s = c.prepareStatement(q);
-					s.setString(1, metric.name);
-					s.setString(2, metric.symbol);
-					s.setTimestamp(3, new java.sql.Timestamp(metric.start.getTime().getTime()));
-					s.setString(4, metric.duration.toString());
+//					String q = "SELECT * FROM metrics WHERE name = ? AND symbol = ? AND start = ? AND duration = ?";
+//					PreparedStatement s = c.prepareStatement(q);
+//					s.setString(1, metric.name);
+//					s.setString(2, metric.symbol);
+//					s.setTimestamp(3, new java.sql.Timestamp(metric.start.getTime().getTime()));
+//					s.setString(4, metric.duration.toString());
+//					
+//					ResultSet rs = s.executeQuery();
+//					boolean exists = false;
+//					while (rs.next()) {
+//						exists = true;
+//						break;
+//					}
+//					rs.close();
+//					s.close();
 					
-					ResultSet rs = s.executeQuery();
 					boolean exists = false;
-					while (rs.next()) {
+					if (starts.contains(metric.start.getTime().toString())) {
 						exists = true;
-						break;
 					}
-					rs.close();
-					s.close();
 					
 					// If it doesn't exist, insert it
 					if (!exists) {
@@ -1421,7 +1448,7 @@ public class QueryManager {
 							s2.setFloat(6, metric.value);
 						}
 						s2.addBatch();
-						anyInserts = true;
+						numInserts++;
 					}
 					else { // Otherwise it does exist, so update it
 						if (metric.value == null) {
@@ -1435,15 +1462,17 @@ public class QueryManager {
 						s3.setTimestamp(4, new java.sql.Timestamp(metric.start.getTime().getTime()));
 						s3.setString(5, metric.duration.toString());
 						s3.addBatch();
-						anyUpdates = true;
+						numUpdates++;
 					}
 				}
 			}
 			
-			if (anyInserts) {
+			if (numInserts > 0) {
 				s2.executeBatch();
+				System.out.println("# Inserts: " + numInserts);
 			}
-			if (anyUpdates) {
+			if (numUpdates > 0) {
+				System.out.println("# Updates: " + numUpdates);
 				s3.executeBatch();
 			}
 			s2.close();
