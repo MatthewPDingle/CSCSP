@@ -1376,6 +1376,56 @@ public class QueryManager {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param metricName
+	 * @param duration - optional
+	 * @param type - "min" or "max"
+	 * @param percentile - 0-100
+	 * @return
+	 */
+	public static float getMetricValueAtPercentile(String metricName, Constants.BAR_SIZE duration, String type, int percentile) {
+		float result = 0f;
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			
+			// Create query parameters & clauses
+			String durationClause = "";
+			if (duration != null) {
+				durationClause = "AND duration = '" + duration.toString() + "' ";
+			}
+			
+			String sort1 = "ASC";
+			String sort2 = "DESC";
+			if (type.equals("max")) {
+				sort1 = "DESC";
+				sort2 = "ASC";
+			}
+			
+			float divisor = 100f / (float)percentile;
+			
+			String q = "SELECT * FROM (SELECT value FROM metrics WHERE name = ? " + durationClause + " ORDER BY value " + sort1 + " LIMIT (SELECT COUNT(*) / ? FROM metrics WHERE name = ? " + durationClause + " )) t ORDER BY value " + sort2 + " LIMIT 1";
+			PreparedStatement s = c.prepareStatement(q);
+			s.setString(1, metricName);
+			s.setFloat(2, divisor);
+			s.setString(3, metricName);
+			
+			ResultSet rs = s.executeQuery();
+			while (rs.next()) {
+				result = rs.getFloat(1);
+				break;
+			}
+			rs.close();
+			s.close();
+			
+			c.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
 	public static void insertOrUpdateIntoMetrics(ArrayList<Metric> metrics) {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
@@ -1412,7 +1462,7 @@ public class QueryManager {
 			
 			for (Metric metric : metrics) {
 				if (metric.value != null) {
-					// First see if this bar exists in the DB
+					// First see if this bar exists in the DB.  This was too slow so I put the caching code up above
 //					String q = "SELECT * FROM metrics WHERE name = ? AND symbol = ? AND start = ? AND duration = ?";
 //					PreparedStatement s = c.prepareStatement(q);
 //					s.setString(1, metric.name);

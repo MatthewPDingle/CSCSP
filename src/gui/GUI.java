@@ -211,7 +211,7 @@ public class GUI {
 		mapWorker = gui.new MapWorker();
 		mapWorker.done = true; // Don't set it to false until it actually starts something.
 		
-		if (args.length == 22) {
+		if (args.length == 23) {
 			gui.runViaParams(args);
 		}
 	}
@@ -254,7 +254,7 @@ public class GUI {
 			gui.resetBlankMUTs();
 			mapWorker = gui.new MapWorker();
 			
-			if (args.length == 22) {
+			if (args.length == 23) {
 				gui.runViaParams(args);
 			}
 
@@ -353,6 +353,14 @@ public class GUI {
 			args[21] = args[21].replaceAll("\\.csm", "");
 			chkBitcoin.setSelected(Boolean.valueOf(args[21]));
 			ps.setBitcoin(Boolean.valueOf(args[21]));
+			
+			String durationSymbolsCSV = String.valueOf(args[22]);
+			String[] durationSymbols = durationSymbolsCSV.split(",");
+			ArrayList<String> ds = new ArrayList<String>();
+			for (String durationSymbol : durationSymbols) {
+				ds.add(durationSymbol);
+			}
+			ps.setSymbols(ds);
 			
 			btnBuildMap.doClick();
 		}
@@ -905,7 +913,7 @@ public class GUI {
 		if (frame == null) {
 			frame = new JFrame();
 			frame.setSize(new Dimension(922, 738));
-			frame.setTitle("Chip Swinger Championship Stock Picker .42");
+			frame.setTitle("Chip Swinger Championship Stock Picker .43");
 			frame.setContentPane(panel);
 			frame.setVisible(true);
 			frame.addWindowListener(new java.awt.event.WindowAdapter() {

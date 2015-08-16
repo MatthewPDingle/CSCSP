@@ -36,6 +36,24 @@ CREATE INDEX metrics_end_index
   USING btree
   ("end");
 
+-- Index: metrics_name_duration_index
+
+-- DROP INDEX metrics_name_duration_index;
+
+CREATE INDEX metrics_name_duration_index
+  ON metrics
+  USING btree
+  (name COLLATE pg_catalog."default", duration COLLATE pg_catalog."default");
+
+-- Index: metrics_name_duration_value_index
+
+-- DROP INDEX metrics_name_duration_value_index;
+
+CREATE INDEX metrics_name_duration_value_index
+  ON metrics
+  USING btree
+  (name COLLATE pg_catalog."default", duration COLLATE pg_catalog."default", value);
+
 -- Index: metrics_name_index
 
 -- DROP INDEX metrics_name_index;
@@ -44,6 +62,15 @@ CREATE INDEX metrics_name_index
   ON metrics
   USING btree
   (name COLLATE pg_catalog."default");
+
+-- Index: metrics_name_symbol_start_duration_index
+
+-- DROP INDEX metrics_name_symbol_start_duration_index;
+
+CREATE INDEX metrics_name_symbol_start_duration_index
+  ON metrics
+  USING btree
+  (name COLLATE pg_catalog."default", symbol COLLATE pg_catalog."default", start, duration COLLATE pg_catalog."default");
 
 -- Index: metrics_start_index
 

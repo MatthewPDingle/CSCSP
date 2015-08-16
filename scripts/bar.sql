@@ -80,6 +80,15 @@ CREATE INDEX bar_symbol_index
   USING btree
   (symbol COLLATE pg_catalog."default");
 
+-- Index: bar_symbol_start_duration_index
+
+-- DROP INDEX bar_symbol_start_duration_index;
+
+CREATE INDEX bar_symbol_start_duration_index
+  ON bar
+  USING btree
+  (symbol COLLATE pg_catalog."default", start, duration COLLATE pg_catalog."default");
+
 -- Index: bar_symbol_start_index
 
 -- DROP INDEX bar_symbol_start_index;

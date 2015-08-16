@@ -1,8 +1,5 @@
 package search;
 
-import gui.GUI;
-import gui.singletons.ParameterSingleton;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -10,9 +7,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 
-import utils.CalendarUtils;
 import constants.Constants;
+import constants.Constants.BAR_SIZE;
 import dbio.QueryManager;
+import gui.GUI;
+import gui.singletons.ParameterSingleton;
+import utils.CalcUtils;
+import utils.CalendarUtils;
 
 public class GeneticSearcher {
 
@@ -50,9 +51,11 @@ public class GeneticSearcher {
 		searcher.printMetricFitnesses("sell");
 		searcher.printMetricFitnesses("stop");
 
+		System.out.print("Loading Metric Discrete Value Lists. ");
 		searcher.bullMetricDiscreteValueList = loadBullMetricDiscreteValueLists();
 		searcher.bearMetricDiscreteValueList = loadBearMetricDiscreteValueLists();
 		searcher.stopDiscreteValueList = loadStopDiscreteValueLists();
+		System.out.println("Done.");
 		
 		for (int a = 0; a < 4000; a++) {
 			if (a % 2 == 1) {
@@ -83,7 +86,7 @@ public class GeneticSearcher {
 		}
 			
 		// Run and test a set of maps
-		String[] params = new String[22];
+		String[] params = new String[23];
 		String buy1 = null;
 		String buy2 = null;
 		String sell = null;
@@ -93,7 +96,7 @@ public class GeneticSearcher {
 		int stopValue = 0;
 		
 		Calendar fromC = Calendar.getInstance();
-		fromC.add(Calendar.DATE, -300);
+		fromC.add(Calendar.DATE, -500);
 		
 		Calendar toC = Calendar.getInstance();
 		
@@ -163,9 +166,9 @@ public class GeneticSearcher {
 		params[8] = CalendarUtils.getGUIDateString(toC);
 		params[9] = "20";
 		params[10] = "20";
-		params[11] = "0"; // 2000000 for stocks
-		params[12] = "100"; // 1 for stocks
-		params[13] = "3.0";
+		params[11] = "1"; // 2000000 for stocks (liquidity)
+		params[12] = "5"; // 1 for stocks (volatility)
+		params[13] = ".01"; // 3 for stocks (price)
 		params[14] = "All";
 		params[15] = "All";
 		params[16] = "false";
@@ -174,6 +177,7 @@ public class GeneticSearcher {
 		params[19] = "false";
 		params[20] = "false";
 		params[21] = "true";
+		params[22] = "BAR_15M - bitstampBTCUSD"; // If you want more, separate with commas with no spaces
 
 		ParameterSingleton.getInstance().setRunFinished(false);
 		
@@ -322,13 +326,13 @@ public class GeneticSearcher {
 		
 		if (type.equals("buy") || type.equals("sell")) {
 			for (String metric:Constants.METRICS) {
-				if (!metric.equals("pricesd20") && !metric.equals("mvol100")) {
+//				if (!metric.equals("pricesd20") && !metric.equals("mvol100")) {
 					Float fitness = QueryManager.loadBullFitness(type, metric);
 					metricFitnessHash.put(metric, fitness);
-				}
-				else {
-					metricFitnessHash.put(metric, 0f);
-				}
+//				}
+//				else {
+//					metricFitnessHash.put(metric, 0f);
+//				}
 			}
 		}
 		if (type.equals("stop")) {
@@ -346,13 +350,13 @@ public class GeneticSearcher {
 		
 		if (type.equals("buy") || type.equals("sell")) {
 			for (String metric:Constants.METRICS) {
-				if (!metric.equals("pricesd20")) {
+//				if (!metric.equals("pricesd20")) {
 					Float fitness = QueryManager.loadBearFitness(type, metric);
 					metricFitnessHash.put(metric, fitness);
-				}
-				else {
-					metricFitnessHash.put(metric, 0f);
-				}
+//				}
+//				else {
+//					metricFitnessHash.put(metric, 0f);
+//				}
 			}
 		}
 		if (type.equals("stop")) {
@@ -393,7 +397,7 @@ public class GeneticSearcher {
 		// Fill a gene pool with all the weighted metrics
 		ArrayList<String> genePool = new ArrayList<String>();
 		for (String metric:Constants.METRICS) {
-			if (!metric.equals("mvol100")) {
+//			if (!metric.equals("mvol100")) {
 				float fitness = 0f;
 				if (type.equals("bull")) {
 					fitness = bullishBuyMetricFitnessHash.get(metric);
@@ -407,7 +411,7 @@ public class GeneticSearcher {
 				for (int a = 0; a < fitness; a++) {
 					genePool.add(metric);
 				}
-			}
+//			}
 		}
 		
 		int index = r.nextInt(genePool.size());
@@ -418,7 +422,7 @@ public class GeneticSearcher {
 		// Fill a gene pool with all the weighted metrics
 		ArrayList<String> genePool = new ArrayList<String>();
 		for (String metric:Constants.METRICS) {
-			if (!metric.equals("mvol100")) {
+//			if (!metric.equals("mvol100")) {
 				float fitness = 0f;
 				if (type.equals("bull")) {
 					fitness = bullishSellMetricFitnessHash.get(metric);
@@ -432,7 +436,7 @@ public class GeneticSearcher {
 				for (int a = 0; a < fitness; a++) {
 					genePool.add(metric);
 				}
-			}
+//			}
 		}
 		
 		int index = r.nextInt(genePool.size());
@@ -487,141 +491,21 @@ public class GeneticSearcher {
 	private static HashMap<String, ArrayList<Float>> loadBullMetricDiscreteValueLists() {
 		HashMap<String, ArrayList<Float>> metricDiscreteValueLists = new HashMap<String, ArrayList<Float>>();
 		
-		ArrayList<Float> dvVariants = new ArrayList<Float>();
-
-		dvVariants.add(50f);
-		dvVariants.add(65f);
-		dvVariants.add(80f);
-		dvVariants.add(90f);
-		dvVariants.add(95f);
-		metricDiscreteValueLists.put("dv10ema", dvVariants);
-		metricDiscreteValueLists.put("dv25ema", dvVariants);
-		metricDiscreteValueLists.put("dv50ema", dvVariants);
-		metricDiscreteValueLists.put("dv75ema", dvVariants);
-		metricDiscreteValueLists.put("dv2", dvVariants);
-		metricDiscreteValueLists.put("dvfading4", dvVariants);
-
-		ArrayList<Float> consecutiveVariants = new ArrayList<Float>();
-		consecutiveVariants.add(0f);
-		consecutiveVariants.add(1f);
-		consecutiveVariants.add(2f);
-		consecutiveVariants.add(3f);
-		consecutiveVariants.add(4f);
-		consecutiveVariants.add(5f);
-		consecutiveVariants.add(6f);
-		consecutiveVariants.add(7f);
-		consecutiveVariants.add(8f);
-		metricDiscreteValueLists.put("consecutiveupdays", consecutiveVariants);
-		metricDiscreteValueLists.put("consecutivedowndays", consecutiveVariants);
-		
-		ArrayList<Float> rsiAndWilliamsVariants = new ArrayList<Float>();
-		rsiAndWilliamsVariants.add(40.0f);
-		rsiAndWilliamsVariants.add(50.0f);
-		rsiAndWilliamsVariants.add(60.0f);
-		rsiAndWilliamsVariants.add(70.0f);
-		rsiAndWilliamsVariants.add(80.0f);
-		rsiAndWilliamsVariants.add(90.0f);
-		rsiAndWilliamsVariants.add(97.0f);
-		metricDiscreteValueLists.put("rsi2", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi5", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi14", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi2alpha", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi5alpha", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi14alpha", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi10ema", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi25ema", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi50ema", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi75ema", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("mfi2", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("mfi5", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("mfi14", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsr10", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsr20", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsr50", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsralpha10", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsralpha20", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsralpha50", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("ultimateoscillator", rsiAndWilliamsVariants);
-		
-		ArrayList<Float> aroonVariants = new ArrayList<Float>();
-		aroonVariants.add(50f);
-		aroonVariants.add(60f);
-		aroonVariants.add(70f);
-		aroonVariants.add(80f);
-		aroonVariants.add(90f);
-		aroonVariants.add(95f);
-		metricDiscreteValueLists.put("aroonoscillator", aroonVariants);
-		metricDiscreteValueLists.put("cci10", aroonVariants);
-		metricDiscreteValueLists.put("cci20", aroonVariants);
-		metricDiscreteValueLists.put("cci40", aroonVariants);
-		
-		ArrayList<Float> bollAndMACDDivergenceVariants = new ArrayList<Float>();
-		bollAndMACDDivergenceVariants.add(10f);
-		bollAndMACDDivergenceVariants.add(20f);
-		bollAndMACDDivergenceVariants.add(30f);
-		bollAndMACDDivergenceVariants.add(40f);
-		bollAndMACDDivergenceVariants.add(50f);
-		bollAndMACDDivergenceVariants.add(60f);
-		bollAndMACDDivergenceVariants.add(70f);
-		bollAndMACDDivergenceVariants.add(80f);
-		bollAndMACDDivergenceVariants.add(90f);
-		metricDiscreteValueLists.put("priceboll20", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("priceboll50", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("priceboll100", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("priceboll200", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("volumeboll20", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("volumeboll50", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("volumeboll100", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("volumeboll200", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("gapboll10", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("gapboll20", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("gapboll50", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("intradayboll10", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("intradayboll20", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("intradayboll50", bollAndMACDDivergenceVariants);
-		
-		ArrayList<Float> macdDivergenceVariants = new ArrayList<Float>();
-		macdDivergenceVariants.add(30f);
-		macdDivergenceVariants.add(50f);
-		macdDivergenceVariants.add(65f);
-		macdDivergenceVariants.add(80f);
-		macdDivergenceVariants.add(95f);
-		metricDiscreteValueLists.put("macddivergence12_26_9", macdDivergenceVariants);
-		metricDiscreteValueLists.put("macddivergence20_40_9", macdDivergenceVariants);
-		metricDiscreteValueLists.put("macddivergence40_80_9", macdDivergenceVariants);
-		
-		ArrayList<Float> dvolVariants = new ArrayList<Float>();
-		dvolVariants.add(15f);
-		dvolVariants.add(30f);
-		dvolVariants.add(45f);
-		dvolVariants.add(60f);
-		dvolVariants.add(75f);
-		dvolVariants.add(90f);
-		dvolVariants.add(95f);
-		metricDiscreteValueLists.put("dvol10ema", dvolVariants);
-		metricDiscreteValueLists.put("dvol25ema", dvolVariants);
-		metricDiscreteValueLists.put("dvol50ema", dvolVariants);
-		metricDiscreteValueLists.put("dvol75ema", dvolVariants);
-		
-		ArrayList<Float> macdVariants = new ArrayList<Float>();
-		macdVariants.add(40f);
-		macdVariants.add(50f);
-		macdVariants.add(60f);
-		macdVariants.add(70f);
-		macdVariants.add(80f);
-		macdVariants.add(90f);
-		metricDiscreteValueLists.put("macd12_26_9", macdVariants);
-		metricDiscreteValueLists.put("macd20_40_9", macdVariants);
-		metricDiscreteValueLists.put("macd40_80_9", macdVariants);
-		metricDiscreteValueLists.put("psar", macdVariants);
-		
-		ArrayList<Float> priceSDVariants = new ArrayList<Float>();
-		priceSDVariants.add(1.0f);
-		priceSDVariants.add(2.0f);
-		priceSDVariants.add(3.0f);
-		priceSDVariants.add(4.0f);
-		priceSDVariants.add(5.0f);
-		metricDiscreteValueLists.put("pricesd20", priceSDVariants);
+		ArrayList<Float> values = new ArrayList<Float>();
+		int[] percentiles = {1, 5, 10, 20, 33, 50, 70};
+		for (String metric : Constants.METRICS) {
+			if (!metric.startsWith("cdl")) {
+				for (int percentile : percentiles) {
+					float maxValue = QueryManager.getMetricValueAtPercentile(metric, BAR_SIZE.BAR_15M, "max", percentile);	
+					maxValue = CalcUtils.round(maxValue, 2);
+					if (!values.contains(maxValue)) {
+						values.add(maxValue);
+					}
+				}
+				metricDiscreteValueLists.put(metric, values);
+				values = new ArrayList<Float>();
+			}
+		}
 		
 		return metricDiscreteValueLists;
 	}
@@ -629,141 +513,21 @@ public class GeneticSearcher {
 	private static HashMap<String, ArrayList<Float>> loadBearMetricDiscreteValueLists() {
 		HashMap<String, ArrayList<Float>> metricDiscreteValueLists = new HashMap<String, ArrayList<Float>>();
 		
-		ArrayList<Float> dvVariants = new ArrayList<Float>();
-
-		dvVariants.add(5f);
-		dvVariants.add(10f);
-		dvVariants.add(20f);
-		dvVariants.add(35f);
-		dvVariants.add(50f);
-		metricDiscreteValueLists.put("dv10ema", dvVariants);
-		metricDiscreteValueLists.put("dv25ema", dvVariants);
-		metricDiscreteValueLists.put("dv50ema", dvVariants);
-		metricDiscreteValueLists.put("dv75ema", dvVariants);
-		metricDiscreteValueLists.put("dv2", dvVariants);
-		metricDiscreteValueLists.put("dvfading4", dvVariants);
-
-		ArrayList<Float> consecutiveVariants = new ArrayList<Float>();
-		consecutiveVariants.add(0f);
-		consecutiveVariants.add(1f);
-		consecutiveVariants.add(2f);
-		consecutiveVariants.add(3f);
-		consecutiveVariants.add(4f);
-		consecutiveVariants.add(5f);
-		consecutiveVariants.add(6f);
-		consecutiveVariants.add(7f);
-		consecutiveVariants.add(8f);
-		metricDiscreteValueLists.put("consecutiveupdays", consecutiveVariants);
-		metricDiscreteValueLists.put("consecutivedowndays", consecutiveVariants);
-		
-		ArrayList<Float> rsiAndWilliamsVariants = new ArrayList<Float>();
-		rsiAndWilliamsVariants.add(3.0f);
-		rsiAndWilliamsVariants.add(10.0f);
-		rsiAndWilliamsVariants.add(20.0f);
-		rsiAndWilliamsVariants.add(30.0f);
-		rsiAndWilliamsVariants.add(40.0f);
-		rsiAndWilliamsVariants.add(50.0f);
-		rsiAndWilliamsVariants.add(60.0f);
-		metricDiscreteValueLists.put("rsi2", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi5", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi14", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi2alpha", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi5alpha", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi14alpha", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi10ema", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi25ema", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi50ema", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("rsi75ema", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("mfi2", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("mfi5", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("mfi14", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsr10", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsr20", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsr50", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsralpha10", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsralpha20", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("williamsralpha50", rsiAndWilliamsVariants);
-		metricDiscreteValueLists.put("ultimateoscillator", rsiAndWilliamsVariants);
-		
-		ArrayList<Float> aroonVariants = new ArrayList<Float>();
-		aroonVariants.add(5f);
-		aroonVariants.add(10f);
-		aroonVariants.add(20f);
-		aroonVariants.add(30f);
-		aroonVariants.add(40f);
-		aroonVariants.add(50f);
-		metricDiscreteValueLists.put("aroonoscillator", aroonVariants);
-		metricDiscreteValueLists.put("cci10", aroonVariants);
-		metricDiscreteValueLists.put("cci20", aroonVariants);
-		metricDiscreteValueLists.put("cci40", aroonVariants);
-		
-		ArrayList<Float> bollAndMACDDivergenceVariants = new ArrayList<Float>();
-		bollAndMACDDivergenceVariants.add(10f);
-		bollAndMACDDivergenceVariants.add(20f);
-		bollAndMACDDivergenceVariants.add(30f);
-		bollAndMACDDivergenceVariants.add(40f);
-		bollAndMACDDivergenceVariants.add(50f);
-		bollAndMACDDivergenceVariants.add(60f);
-		bollAndMACDDivergenceVariants.add(70f);
-		bollAndMACDDivergenceVariants.add(80f);
-		bollAndMACDDivergenceVariants.add(90f);
-		metricDiscreteValueLists.put("priceboll20", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("priceboll50", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("priceboll100", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("priceboll200", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("volumeboll20", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("volumeboll50", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("volumeboll100", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("volumeboll200", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("gapboll10", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("gapboll20", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("gapboll50", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("intradayboll10", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("intradayboll20", bollAndMACDDivergenceVariants);
-		metricDiscreteValueLists.put("intradayboll50", bollAndMACDDivergenceVariants);
-		
-		ArrayList<Float> macdDivergenceVariants = new ArrayList<Float>();
-		macdDivergenceVariants.add(5f);
-		macdDivergenceVariants.add(20f);
-		macdDivergenceVariants.add(35f);
-		macdDivergenceVariants.add(50f);
-		macdDivergenceVariants.add(70f);
-		metricDiscreteValueLists.put("macddivergence12_26_9", macdDivergenceVariants);
-		metricDiscreteValueLists.put("macddivergence20_40_9", macdDivergenceVariants);
-		metricDiscreteValueLists.put("macddivergence40_80_9", macdDivergenceVariants);
-		
-		ArrayList<Float> dvolVariants = new ArrayList<Float>();
-		dvolVariants.add(5f);
-		dvolVariants.add(10f);
-		dvolVariants.add(25f);
-		dvolVariants.add(40f);
-		dvolVariants.add(55f);
-		dvolVariants.add(70f);
-		dvolVariants.add(85f);
-		metricDiscreteValueLists.put("dvol10ema", dvolVariants);
-		metricDiscreteValueLists.put("dvol25ema", dvolVariants);
-		metricDiscreteValueLists.put("dvol50ema", dvolVariants);
-		metricDiscreteValueLists.put("dvol75ema", dvolVariants);
-		
-		ArrayList<Float> macdVariants = new ArrayList<Float>();
-		macdVariants.add(10f);
-		macdVariants.add(20f);
-		macdVariants.add(30f);
-		macdVariants.add(40f);
-		macdVariants.add(50f);
-		macdVariants.add(60f);
-		metricDiscreteValueLists.put("macd12_26_9", macdVariants);
-		metricDiscreteValueLists.put("macd20_40_9", macdVariants);
-		metricDiscreteValueLists.put("macd40_80_9", macdVariants);
-		metricDiscreteValueLists.put("psar", macdVariants);
-		
-		ArrayList<Float> priceSDVariants = new ArrayList<Float>();
-		priceSDVariants.add(1.0f);
-		priceSDVariants.add(2.0f);
-		priceSDVariants.add(3.0f);
-		priceSDVariants.add(4.0f);
-		priceSDVariants.add(5.0f);
-		metricDiscreteValueLists.put("pricesd20", priceSDVariants);
+		ArrayList<Float> values = new ArrayList<Float>();
+		int[] percentiles = {1, 5, 10, 20, 33, 50, 70};
+		for (String metric : Constants.METRICS) {
+			if (!metric.startsWith("cdl")) {
+				for (int percentile : percentiles) {
+					float minValue = QueryManager.getMetricValueAtPercentile(metric, BAR_SIZE.BAR_15M, "min", percentile);					
+					minValue = CalcUtils.round(minValue, 2);
+					if (!values.contains(minValue)) {
+						values.add(minValue);
+					}
+				}
+				metricDiscreteValueLists.put(metric, values);
+				values = new ArrayList<Float>();
+			}
+		}
 		
 		return metricDiscreteValueLists;
 	}

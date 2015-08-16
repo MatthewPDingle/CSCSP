@@ -1,5 +1,6 @@
 package utils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -223,6 +224,12 @@ public class CalcUtils {
 			return -1f;
 		}
 	}
+	
+	public static float round(float d, int decimalPlace) {
+        BigDecimal bd = new BigDecimal(Float.toString(d));
+        bd = bd.setScale(decimalPlace, BigDecimal.ROUND_HALF_EVEN);
+        return bd.floatValue();
+    }
 	
 	public static boolean isInteger(String s) {
 	    try { 
