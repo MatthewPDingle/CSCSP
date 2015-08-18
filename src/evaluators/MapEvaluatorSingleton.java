@@ -17,16 +17,16 @@ public class MapEvaluatorSingleton {
 	private static int MAX_PERCENT_END_POSITION_FOR_CELL = 20;
 	
 	// Bullish Cell Criteria
-	private static float MIN_AGMPD = .013f; // .14f; 1D Bar Stocks
-	private static float MIN_GMPD = .013f; // .32f; 1D Bar Stocks
-	private static float MIN_SHARPE = .28f; /// .16f; 1D Bar Stocks
-	public static float MIN_SCORE = .65f; // 10AGMPD + 10GMPD + 1SHARPE for 15M Bar Bitcoin // 1.10f; (3AGMPD + 2SHARPE + 1GMPD) for 1D Bar Stocks
+	private static float MIN_AGMPD = .04f; // .14f; 1D Bar Stocks
+	private static float MIN_GMPD = .04f; // .32f; 1D Bar Stocks
+	private static float MIN_SHARPE = .30f; /// .16f; 1D Bar Stocks
+	public static float MIN_SCORE = 1.2f; // 10AGMPD + 10GMPD + 1SHARPE for 15M Bar Bitcoin // 1.10f; (3AGMPD + 2SHARPE + 1GMPD) for 1D Bar Stocks
 	
 	// Bearish Cell Criteria
-	private static float MAX_AGMPD = -.013f; // -.15f; 1D Bar Stocks
-	private static float MAX_GMPD = -.013f; // -.05f; 1D Bar Stocks
-	private static float MAX_SHARPE = -.28f; // -.15f; 1D Bar Stocks
-	public static float MAX_SCORE = -.65f; // 10AGMPD + 10GMPD + 1SHARPE for 15M Bar Bitcoin // -.85f; // (3AGMPD + 2SHARPE + 1GMPD) for 1D Bar Stocks
+	private static float MAX_AGMPD = -.04f; // -.15f; 1D Bar Stocks
+	private static float MAX_GMPD = -.04f; // -.05f; 1D Bar Stocks
+	private static float MAX_SHARPE = -.30f; // -.15f; 1D Bar Stocks
+	public static float MAX_SCORE = -1.2f; // 10AGMPD + 10GMPD + 1SHARPE for 15M Bar Bitcoin // -.85f; // (3AGMPD + 2SHARPE + 1GMPD) for 1D Bar Stocks
 	
 	private static MapEvaluatorSingleton instance = null;
 
