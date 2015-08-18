@@ -8,7 +8,7 @@ import utils.CalendarUtils;
 
 public class RandomWalk {
 
-	private static final double CONST = .495d;
+	private static final double CONST = .5d;
 	
 	private static double e0 = 0;
 	private static double e1 = 0;
@@ -46,7 +46,7 @@ public class RandomWalk {
 			Bar bar = new Bar("RandomWalk", (float)open, (float)close, (float)high, (float)low, (float)vwap, 
 					(float)volume, numTrades, (float)change, (float)gap, start, end, BAR_SIZE.BAR_15M, false);
 			System.out.println(bar);		
-			QueryManager.insertOrUpdateIntoBar(bar);
+//			QueryManager.insertOrUpdateIntoBar(bar);
 			
 			start = CalendarUtils.addBars(start, BAR_SIZE.BAR_15M, 1);
 			lastClose = close;
@@ -55,38 +55,38 @@ public class RandomWalk {
 	
 	private static double getClose(double lastClose) {
 		e0 = 0;
-		for (int b = 0; b < 10; b++) {
-			e0 += Math.random() - CONST;
+		for (int b = 0; b < 3; b++) {
+			e0 += ((Math.random() - CONST) * 10);
 		}
 		
-		double re1 = Math.random();
-		if (re1 < .1) {
-			e1 = 0;
-			for (int b = 0; b < 10; b++) {
-				e1 += Math.random() - CONST;
-			}
-		}
-		double re2 = Math.random();
-		if (re2 < .01) {
-			e2 = 0;
-			for (int b = 0; b < 10; b++) {
-				e2 += Math.random() - CONST;
-			}
-		}
-		double re3 = Math.random();
-		if (re3 < .001) {
-			e3 = 0;
-			for (int b = 0; b < 10; b++) {
-				e3 += (Math.random() - CONST) * .5d;
-			}
-		}
-		double re4 = Math.random();
-		if (re4 < .0001) {
-			e4 = 0;
-			for (int b = 0; b < 10; b++) {
-				e4 += (Math.random() - CONST) * .2d;
-			}
-		}
+//		double re1 = Math.random();
+//		if (re1 < .1) {
+//			e1 = 0;
+//			for (int b = 0; b < 10; b++) {
+//				e1 += Math.random() - CONST;
+//			}
+//		}
+//		double re2 = Math.random();
+//		if (re2 < .01) {
+//			e2 = 0;
+//			for (int b = 0; b < 10; b++) {
+//				e2 += Math.random() - CONST;
+//			}
+//		}
+//		double re3 = Math.random();
+//		if (re3 < .001) {
+//			e3 = 0;
+//			for (int b = 0; b < 10; b++) {
+//				e3 += (Math.random() - CONST) * .5d;
+//			}
+//		}
+//		double re4 = Math.random();
+//		if (re4 < .0001) {
+//			e4 = 0;
+//			for (int b = 0; b < 10; b++) {
+//				e4 += (Math.random() - CONST) * .2d;
+//			}
+//		}
 		
 		double rb1 = Math.random();
 		double b1 = 0;
