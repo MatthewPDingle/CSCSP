@@ -52,8 +52,9 @@ public class GeneticSearcher {
 		searcher.printMetricFitnesses("stop");
 
 		System.out.print("Loading Metric Discrete Value Lists. ");
-		searcher.bullMetricDiscreteValueList = loadBullMetricDiscreteValueLists();
-		searcher.bearMetricDiscreteValueList = loadBearMetricDiscreteValueLists();
+		int[] percentiles = {1, 5, 10, 20, 33, 50, 70};
+		searcher.bullMetricDiscreteValueList = loadBullMetricDiscreteValueLists(percentiles, Constants.METRICS);
+		searcher.bearMetricDiscreteValueList = loadBearMetricDiscreteValueLists(percentiles, Constants.METRICS);
 		searcher.stopDiscreteValueList = loadStopDiscreteValueLists();
 		System.out.println("Done.");
 		
@@ -488,12 +489,11 @@ public class GeneticSearcher {
 		return stopDiscreteValueLists;
 	}
 		
-	private static HashMap<String, ArrayList<Float>> loadBullMetricDiscreteValueLists() {
+	public static HashMap<String, ArrayList<Float>> loadBullMetricDiscreteValueLists(int[] percentiles, ArrayList<String> metrics) {
 		HashMap<String, ArrayList<Float>> metricDiscreteValueLists = new HashMap<String, ArrayList<Float>>();
 		
 		ArrayList<Float> values = new ArrayList<Float>();
-		int[] percentiles = {1, 5, 10, 20, 33, 50, 70};
-		for (String metric : Constants.METRICS) {
+		for (String metric : metrics) {
 			if (!metric.startsWith("cdl")) {
 				for (int percentile : percentiles) {
 					float maxValue = QueryManager.getMetricValueAtPercentile(metric, BAR_SIZE.BAR_15M, "max", percentile);	
@@ -510,12 +510,11 @@ public class GeneticSearcher {
 		return metricDiscreteValueLists;
 	}
 	
-	private static HashMap<String, ArrayList<Float>> loadBearMetricDiscreteValueLists() {
+	public static HashMap<String, ArrayList<Float>> loadBearMetricDiscreteValueLists(int[] percentiles, ArrayList<String> metrics) {
 		HashMap<String, ArrayList<Float>> metricDiscreteValueLists = new HashMap<String, ArrayList<Float>>();
 		
 		ArrayList<Float> values = new ArrayList<Float>();
-		int[] percentiles = {1, 5, 10, 20, 33, 50, 70};
-		for (String metric : Constants.METRICS) {
+		for (String metric : metrics) {
 			if (!metric.startsWith("cdl")) {
 				for (int percentile : percentiles) {
 					float minValue = QueryManager.getMetricValueAtPercentile(metric, BAR_SIZE.BAR_15M, "min", percentile);					

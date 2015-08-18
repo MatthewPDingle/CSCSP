@@ -2433,6 +2433,57 @@ public class QueryManager {
 		}
 	}
 	
+	public static ArrayList<HashMap<String, Float>> getTrainingSet(BarKey bk, Calendar start, Calendar end, ArrayList<String> metricNames) {
+		ArrayList<HashMap<String, Float>> trainingSet = new ArrayList<HashMap<String, Float>>();
+		try {
+			// Create metric clauses
+			String metricColumnClause = "";
+			for (int a = 0; a < metricNames.size(); a++) {
+				metricColumnClause += ", m" + a + ".value AS m" + a + " ";
+			}
+			
+			String metricJoinClause = "";
+			for (int a = 0; a < metricNames.size(); a++) {
+				String metricName = metricNames.get(a);
+				metricJoinClause += "LEFT OUTER JOIN metrics m" + a + " ON b.symbol = m" + a + ".symbol AND b.duration = m" + a + ".duration AND b.start = m" + a + ".start AND m" + a + ".name = '" + metricName + "' ";
+			}
+			
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+
+			String q = 	"SELECT b.* " + metricColumnClause + 
+						"FROM bar b " + metricJoinClause +
+						"WHERE b.symbol = ? AND b.duration = ? AND b.start >= ? AND b.\"end\" <= ? ORDER BY b.start DESC";
+			PreparedStatement s = c.prepareStatement(q);
+			s.setString(1, bk.symbol);
+			s.setString(2, bk.duration.toString());
+			s.setTimestamp(3, new Timestamp(start.getTimeInMillis()));
+			s.setTimestamp(4, new Timestamp(end.getTimeInMillis()));
+			
+			ResultSet rs = s.executeQuery();
+			while (rs.next()) {
+				HashMap<String, Float> record = new HashMap<String, Float>();
+				
+				float close = rs.getFloat("close");
+				record.put("close", close);
+				for (int a = 0; a < metricNames.size(); a++) {
+					String metricName = metricNames.get(a);
+					float metricValue = rs.getFloat("m" + a);
+					record.put(metricName, metricValue);
+				}
+				
+				trainingSet.add(record);
+			}
+			
+			rs.close();
+			s.close();
+			c.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return trainingSet;
+	}
+	
 	public static HashMap<String, Object> getMetricCalcEssentials(MetricKey mk) {
 		HashMap<String, Object> mce = new HashMap<String, Object>();
 		try {
