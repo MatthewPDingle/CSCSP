@@ -87,19 +87,29 @@ public class TrainingSetCreator {
 //				System.out.println(Arrays.toString(nextXCloses.toArray()));
 				
 				boolean targetGainOK = false;
-				Integer targetGainIndex = -1; // findMax(...) will set this if targetGainOK = true
-				float maxClose = findMax(nextXCloses, targetGainIndex);
-				if (maxClose >= close * (100f + targetGain) / 100f) {
-					targetGainOK = true;
-				}
+//				float maxClose = findMax(nextXCloses);
+//				int maxIndex = findMaxIndex(nextXCloses);
+				int targetGainIndex = findTargetGainIndex(nextXCloses, close, targetGain);
+//				if (maxClose >= close * (100f + targetGain) / 100f) {
+//					targetGainOK = true;
+//				}
 				
 				boolean minLossOK = false;
-				if (targetGainOK) {
+				if (targetGainIndex != -1) {
+					targetGainOK = true;
 					float minClose = findMin(nextXCloses, targetGainIndex);
 					if (minClose >= close * (100f - minLoss) / 100f) {
 						minLossOK = true;
 					}
 				}
+				
+//				boolean minLossOK = false;
+//				if (targetGainOK) {
+//					float minClose = findMin(nextXCloses, maxIndex);
+//					if (minClose >= close * (100f - minLoss) / 100f) {
+//						minLossOK = true;
+//					}
+//				}
 
 //				System.out.println(minLossOK + ", " + targetGainOK);
 				
@@ -159,14 +169,35 @@ public class TrainingSetCreator {
 		return min;
 	}
 	
-	private static float findMax(ArrayList<Float> list, Integer targetGainIndex) {
+	private static float findMax(ArrayList<Float> list) {
 		float max = -1f;
 		for (int a = 0; a < list.size(); a++) {
 			if (list.get(a) > max) {
 				max = list.get(a);
-				targetGainIndex = a;
 			}
 		}
 		return max;
+	}
+	
+	private static int findTargetGainIndex(ArrayList<Float> list, float close, float targetGain) {
+		for (int a = 0; a < list.size(); a++) {
+			float targetClose = close * (100f + targetGain) / 100f;
+			if (list.get(a) >= targetClose) {
+				return a;
+			}
+		}
+		return -1;
+	}
+	
+	private static int findMaxIndex(ArrayList<Float> list) {
+		float max = -1f;
+		int maxIndex = -1;
+		for (int a = 0; a < list.size(); a++) {
+			if (list.get(a) > max) {
+				max = list.get(a);
+				maxIndex = a;
+			}
+		}
+		return maxIndex;
 	}
 }
