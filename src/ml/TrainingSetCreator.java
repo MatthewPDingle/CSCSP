@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 
+import constants.Constants;
 import constants.Constants.BAR_SIZE;
 import data.BarKey;
 import dbio.QueryManager;
@@ -15,8 +16,8 @@ public class TrainingSetCreator {
 	public static void main(String[] args) {
 
 		Calendar periodStart = Calendar.getInstance();
-		periodStart.set(Calendar.YEAR, 2014);
-		periodStart.set(Calendar.MONTH, 0);
+		periodStart.set(Calendar.YEAR, 2014); // 2014
+		periodStart.set(Calendar.MONTH, 0); // 0
 		periodStart.set(Calendar.DAY_OF_MONTH, 1);
 		periodStart.set(Calendar.HOUR_OF_DAY, 0);
 		periodStart.set(Calendar.MINUTE, 0);
@@ -24,9 +25,9 @@ public class TrainingSetCreator {
 		periodStart.set(Calendar.MILLISECOND, 0);
 		
 		Calendar periodEnd = Calendar.getInstance();
-		periodEnd.set(Calendar.YEAR, 2014);
-		periodEnd.set(Calendar.MONTH, 7);
-		periodEnd.set(Calendar.DAY_OF_MONTH, 1);
+		periodEnd.set(Calendar.YEAR, 2015); // 2015
+		periodEnd.set(Calendar.MONTH, 4); // 4
+		periodEnd.set(Calendar.DAY_OF_MONTH, 31); // 31
 		periodEnd.set(Calendar.HOUR_OF_DAY, 0);
 		periodEnd.set(Calendar.MINUTE, 0);
 		periodEnd.set(Calendar.SECOND, 0);
@@ -51,9 +52,8 @@ public class TrainingSetCreator {
 		
 		BarKey bk = new BarKey("bitstampBTCUSD", BAR_SIZE.BAR_15M);
 		
-		create(periodStart, periodEnd, 1f, .5f, 10, bk, metricNames);
+		create(periodStart, periodEnd, 1f, .5f, 96, bk, metricNames);
 	}
-
 
 	/**
 	 * 
@@ -82,38 +82,64 @@ public class TrainingSetCreator {
 					nextXCloses.remove(0);
 				}
 				
-				System.out.println("-------");
-				System.out.println(close);
-				System.out.println(Arrays.toString(nextXCloses.toArray()));
-				
-				boolean minLossOK = false;
-				float minClose = findMin(nextXCloses);
-				if (minClose >= close * (100f - minLoss) / 100f) {
-					minLossOK = true;
-				}
+//				System.out.println("-------");
+//				System.out.println(close);
+//				System.out.println(Arrays.toString(nextXCloses.toArray()));
 				
 				boolean targetGainOK = false;
-				float maxClose = findMax(nextXCloses);
+				Integer targetGainIndex = -1; // findMax(...) will set this if targetGainOK = true
+				float maxClose = findMax(nextXCloses, targetGainIndex);
 				if (maxClose >= close * (100f + targetGain) / 100f) {
 					targetGainOK = true;
 				}
 				
-				System.out.println(minLossOK + ", " + targetGainOK);
+				boolean minLossOK = false;
+				if (targetGainOK) {
+					float minClose = findMin(nextXCloses, targetGainIndex);
+					if (minClose >= close * (100f - minLoss) / 100f) {
+						minLossOK = true;
+					}
+				}
+
+//				System.out.println(minLossOK + ", " + targetGainOK);
 				
+				// References
+				String refrencePart = close + ", ";
+
+				// Features
+				String metricPart = "";
 				for (String metricName : metricNames) {
 					ArrayList<Float> bucketCutoffValues = metricDiscreteValueHash.get(metricName);
-					float metricValue = record.get(metricName);
-					
-					int bucketNum = 0;
-					for (int a = bucketCutoffValues.size() - 1; a >= 0; a--) {
-						float bucketCutoffValue = bucketCutoffValues.get(a);
-						if (metricValue < bucketCutoffValue) {
-							break;
+					if (bucketCutoffValues != null) {
+						float metricValue = record.get(metricName);
+						
+						int bucketNum = 0;
+						for (int a = bucketCutoffValues.size() - 1; a >= 0; a--) {
+							float bucketCutoffValue = bucketCutoffValues.get(a);
+							if (metricValue < bucketCutoffValue) {
+								break;
+							}
+							bucketNum++;
 						}
-						bucketNum++;
+						
+//						System.out.println(metricName + " - " + metricValue + " in bucket #" + bucketNum);
+						metricPart += ("BUCKET" + bucketNum + ", ");
+//						metricPart += metricValue + ", ";
 					}
-					
-					System.out.println(metricName + " - " + metricValue + " in bucket #" + bucketNum);
+				}
+				
+				// Class
+				String classPart = "";
+				if (minLossOK && targetGainOK) {
+					classPart = "Buy";
+				}
+				else {
+					classPart = "No";
+				}
+				
+				if (!metricPart.equals("")) {
+					String recordLine = refrencePart + metricPart + classPart;
+					System.out.println(recordLine);
 				}
 			}
 			
@@ -123,21 +149,22 @@ public class TrainingSetCreator {
 		}
 	}
 	
-	private static float findMin(ArrayList<Float> list) {
+	private static float findMin(ArrayList<Float> list, int targetGainIndex) {
 		float min = 1000000000f;
-		for (float f : list) {
-			if (f < min) {
-				min = f;
+		for (int a = 0; a <= targetGainIndex; a++) {
+			if (list.get(a) < min) {
+				min = list.get(a);
 			}
 		}
 		return min;
 	}
 	
-	private static float findMax(ArrayList<Float> list) {
+	private static float findMax(ArrayList<Float> list, Integer targetGainIndex) {
 		float max = -1f;
-		for (float f : list) {
-			if (f > max) {
-				max = f;
+		for (int a = 0; a < list.size(); a++) {
+			if (list.get(a) > max) {
+				max = list.get(a);
+				targetGainIndex = a;
 			}
 		}
 		return max;
