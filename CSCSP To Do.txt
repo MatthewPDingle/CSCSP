@@ -32,11 +32,18 @@ New Stuff
 - More Bar Type Metrics
 - Data downloaders for bitfinex, bitstamp, kraken, btc-e, forex
 - Would be nice to be able to view charts and metrics by clicking on a cell
-- Neural network on a bunch of metrics.  random forest probably better
 - Might be able to speed up map generation a little more by not including unused columns in the query and trying to make the math code tighter
 - Use of numtrades and vwap fields in bar data (maybe probably not)
 
 TODO
 - Memory leak when running GeneticSearcher
-- Cross validation and test sets
 - pricebolls metrics have suspiciously symmetrical values +/-
+- 
+
+Model types
+- Long & Short
+- Shorter timeframe & fewer metrics, Longer timeframe & more metrics
+- Variations of metrics
+- Variations of algorithms
+- Using different bar durations
+- Combining symbols across exchanges and using exchange name as another feature

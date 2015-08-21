@@ -16,8 +16,8 @@ public class TrainingSetCreator {
 	public static void main(String[] args) {
 
 		Calendar periodStart = Calendar.getInstance();
-		periodStart.set(Calendar.YEAR, 2014); // 2014
-		periodStart.set(Calendar.MONTH, 0); // 0
+		periodStart.set(Calendar.YEAR, 2015); // 2014, 2015
+		periodStart.set(Calendar.MONTH, 5); // 0, 5
 		periodStart.set(Calendar.DAY_OF_MONTH, 1);
 		periodStart.set(Calendar.HOUR_OF_DAY, 0);
 		periodStart.set(Calendar.MINUTE, 0);
@@ -26,8 +26,8 @@ public class TrainingSetCreator {
 		
 		Calendar periodEnd = Calendar.getInstance();
 		periodEnd.set(Calendar.YEAR, 2015); // 2015
-		periodEnd.set(Calendar.MONTH, 4); // 4
-		periodEnd.set(Calendar.DAY_OF_MONTH, 31); // 31
+		periodEnd.set(Calendar.MONTH, 7); // 4, 7
+		periodEnd.set(Calendar.DAY_OF_MONTH, 13); // 31, 13
 		periodEnd.set(Calendar.HOUR_OF_DAY, 0);
 		periodEnd.set(Calendar.MINUTE, 0);
 		periodEnd.set(Calendar.SECOND, 0);
@@ -52,7 +52,7 @@ public class TrainingSetCreator {
 		
 		BarKey bk = new BarKey("bitstampBTCUSD", BAR_SIZE.BAR_15M);
 		
-		create(periodStart, periodEnd, 1f, .5f, 96, bk, metricNames);
+		create(periodStart, periodEnd, 1.2f, .2f, 48, bk, metricNames);
 	}
 
 	/**
@@ -68,15 +68,17 @@ public class TrainingSetCreator {
 	private static void create(Calendar periodStart, Calendar periodEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames) {
 		try {
 			// This is newest to oldest ordered
-			ArrayList<HashMap<String, Float>> rawTrainingSet = QueryManager.getTrainingSet(bk, periodStart, periodEnd, metricNames);
+			ArrayList<HashMap<String, Object>> rawTrainingSet = QueryManager.getTrainingSet(bk, periodStart, periodEnd, metricNames);
 			
 			// We want to bucket the metric values by these percentiles yielding 14 buckets.
 			int[] percentiles = {1, 2, 5, 10, 20, 35, 50, 65, 80, 90, 95, 98, 99};
 			HashMap<String, ArrayList<Float>> metricDiscreteValueHash = GeneticSearcher.loadBullMetricDiscreteValueLists(percentiles, metricNames);
 			
 			ArrayList<Float> nextXCloses = new ArrayList<Float>();
-			for (HashMap<String, Float> record : rawTrainingSet) {
-				float close = record.get("close");
+			ArrayList<ArrayList<Object>> valuesList = new ArrayList<ArrayList<Object>>();
+			for (HashMap<String, Object> record : rawTrainingSet) {
+				float close = (float)record.get("close");
+				float hour = (int)record.get("hour");
 				nextXCloses.add(close);
 				if (nextXCloses.size() > numPeriods) {
 					nextXCloses.remove(0);
@@ -87,13 +89,8 @@ public class TrainingSetCreator {
 //				System.out.println(Arrays.toString(nextXCloses.toArray()));
 				
 				boolean targetGainOK = false;
-//				float maxClose = findMax(nextXCloses);
-//				int maxIndex = findMaxIndex(nextXCloses);
 				int targetGainIndex = findTargetGainIndex(nextXCloses, close, targetGain);
-//				if (maxClose >= close * (100f + targetGain) / 100f) {
-//					targetGainOK = true;
-//				}
-				
+
 				boolean minLossOK = false;
 				if (targetGainIndex != -1) {
 					targetGainOK = true;
@@ -102,26 +99,18 @@ public class TrainingSetCreator {
 						minLossOK = true;
 					}
 				}
-				
-//				boolean minLossOK = false;
-//				if (targetGainOK) {
-//					float minClose = findMin(nextXCloses, maxIndex);
-//					if (minClose >= close * (100f - minLoss) / 100f) {
-//						minLossOK = true;
-//					}
-//				}
 
 //				System.out.println(minLossOK + ", " + targetGainOK);
 				
 				// References
-				String refrencePart = close + ", ";
+				String refrencePart = close + ", " + hour + ", ";
 
 				// Features
 				String metricPart = "";
 				for (String metricName : metricNames) {
 					ArrayList<Float> bucketCutoffValues = metricDiscreteValueHash.get(metricName);
 					if (bucketCutoffValues != null) {
-						float metricValue = record.get(metricName);
+						float metricValue = (float)record.get(metricName);
 						
 						int bucketNum = 0;
 						for (int a = bucketCutoffValues.size() - 1; a >= 0; a--) {
@@ -149,10 +138,15 @@ public class TrainingSetCreator {
 				
 				if (!metricPart.equals("")) {
 					String recordLine = refrencePart + metricPart + classPart;
+					ArrayList<Object> valueList = new ArrayList<Object>();
+					String[] values = recordLine.split(",");
+					valueList.addAll(Arrays.asList(values));
+					valuesList.add(valueList);
 					System.out.println(recordLine);
 				}
 			}
 			
+			Modelling.loadData(metricNames, valuesList);
 		}
 		catch (Exception e) {
 			e.printStackTrace();

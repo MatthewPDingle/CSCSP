@@ -2433,8 +2433,8 @@ public class QueryManager {
 		}
 	}
 	
-	public static ArrayList<HashMap<String, Float>> getTrainingSet(BarKey bk, Calendar start, Calendar end, ArrayList<String> metricNames) {
-		ArrayList<HashMap<String, Float>> trainingSet = new ArrayList<HashMap<String, Float>>();
+	public static ArrayList<HashMap<String, Object>> getTrainingSet(BarKey bk, Calendar start, Calendar end, ArrayList<String> metricNames) {
+		ArrayList<HashMap<String, Object>> trainingSet = new ArrayList<HashMap<String, Object>>();
 		try {
 			// Create metric clauses
 			String metricColumnClause = "";
@@ -2450,7 +2450,7 @@ public class QueryManager {
 			
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 
-			String q = 	"SELECT b.* " + metricColumnClause + 
+			String q = 	"SELECT b.*, date_part('hour', b.start) AS hour " + metricColumnClause + 
 						"FROM bar b " + metricJoinClause +
 						"WHERE b.symbol = ? AND b.duration = ? AND b.start >= ? AND b.\"end\" <= ? ORDER BY b.start DESC";
 			PreparedStatement s = c.prepareStatement(q);
@@ -2461,10 +2461,12 @@ public class QueryManager {
 			
 			ResultSet rs = s.executeQuery();
 			while (rs.next()) {
-				HashMap<String, Float> record = new HashMap<String, Float>();
+				HashMap<String, Object> record = new HashMap<String, Object>();
 				
 				float close = rs.getFloat("close");
+				int hour = rs.getInt("hour");
 				record.put("close", close);
+				record.put("hour", hour);
 				for (int a = 0; a < metricNames.size(); a++) {
 					String metricName = metricNames.get(a);
 					float metricValue = rs.getFloat("m" + a);
