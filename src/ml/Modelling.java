@@ -3,8 +3,10 @@ package ml;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Calendar;
 
+import constants.Constants.BAR_SIZE;
+import data.BarKey;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.FastVector;
@@ -31,9 +33,8 @@ public class Modelling {
 	
 	public static void main(String[] args) {
 
-		Classifier classifier = loadModel("NaiveBayes 0.model");
-		System.out.println(classifier.toString());
-	
+//		Classifier classifier = loadModel("NaiveBayes 0.model");
+//		System.out.println(classifier.toString());
 	}
 
 	public static Classifier loadModel(String modelName) {
@@ -80,6 +81,8 @@ public class Modelling {
 				Instance instance = new Instance(1, values);
 				instances.add(instance);
 			}
+			
+			instances.setClassIndex(attributes.size() - 1);
 			
 			return instances;
 		}

@@ -4,20 +4,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Random;
 
-import constants.Constants;
 import constants.Constants.BAR_SIZE;
 import data.BarKey;
 import dbio.QueryManager;
 import search.GeneticSearcher;
+import weka.classifiers.Evaluation;
+import weka.classifiers.bayes.NaiveBayes;
+import weka.core.Instances;
 
 public class TrainingSetCreator {
 
 	public static void main(String[] args) {
 
 		Calendar periodStart = Calendar.getInstance();
-		periodStart.set(Calendar.YEAR, 2015); // 2014, 2015
-		periodStart.set(Calendar.MONTH, 5); // 0, 5
+		periodStart.set(Calendar.YEAR, 2014); // 2014, 2015
+		periodStart.set(Calendar.MONTH, 0); // 0, 5
 		periodStart.set(Calendar.DAY_OF_MONTH, 1);
 		periodStart.set(Calendar.HOUR_OF_DAY, 0);
 		periodStart.set(Calendar.MINUTE, 0);
@@ -26,8 +29,8 @@ public class TrainingSetCreator {
 		
 		Calendar periodEnd = Calendar.getInstance();
 		periodEnd.set(Calendar.YEAR, 2015); // 2015
-		periodEnd.set(Calendar.MONTH, 7); // 4, 7
-		periodEnd.set(Calendar.DAY_OF_MONTH, 13); // 31, 13
+		periodEnd.set(Calendar.MONTH, 4); // 4, 7
+		periodEnd.set(Calendar.DAY_OF_MONTH, 31); // 31, 13
 		periodEnd.set(Calendar.HOUR_OF_DAY, 0);
 		periodEnd.set(Calendar.MINUTE, 0);
 		periodEnd.set(Calendar.SECOND, 0);
@@ -52,7 +55,27 @@ public class TrainingSetCreator {
 		
 		BarKey bk = new BarKey("bitstampBTCUSD", BAR_SIZE.BAR_15M);
 		
-		create(periodStart, periodEnd, 1.2f, .2f, 48, bk, metricNames);
+		try {
+			ArrayList<ArrayList<Object>> valuesList = create(periodStart, periodEnd, 1.2f, .2f, 48, bk, metricNames);
+			
+			Instances instances = Modelling.loadData(metricNames, valuesList);
+			NaiveBayes classifier = new NaiveBayes();
+			Evaluation eval = new Evaluation(instances);
+			eval.crossValidateModel(classifier, instances, 10, new Random(1));
+			double[][] confusionMatrix = eval.confusionMatrix();
+			double trueNegatives = confusionMatrix[0][0];
+			double falseNegatives = confusionMatrix[1][0];
+			double falsePositives = confusionMatrix[0][1];
+			double truePositives = confusionMatrix[1][1];
+			
+			double truePositiveRate = truePositives / (truePositives + falseNegatives);
+			double falsePositiveRate = falsePositives / (falsePositives + trueNegatives);
+			
+			System.out.println(classifier.toString());
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -65,7 +88,7 @@ public class TrainingSetCreator {
 	 * @param bk
 	 * @param metricNames
 	 */
-	private static void create(Calendar periodStart, Calendar periodEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames) {
+	public static ArrayList<ArrayList<Object>> create(Calendar periodStart, Calendar periodEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames) {
 		try {
 			// This is newest to oldest ordered
 			ArrayList<HashMap<String, Object>> rawTrainingSet = QueryManager.getTrainingSet(bk, periodStart, periodEnd, metricNames);
@@ -146,10 +169,11 @@ public class TrainingSetCreator {
 				}
 			}
 			
-			Modelling.loadData(metricNames, valuesList);
+			return valuesList;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+			return null;
 		}
 	}
 	
