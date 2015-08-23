@@ -12,29 +12,51 @@ import dbio.QueryManager;
 import search.GeneticSearcher;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.evaluation.ThresholdCurve;
+import weka.core.FastVector;
 import weka.core.Instances;
 
 public class TrainingSetCreator {
 
 	public static void main(String[] args) {
 
-		Calendar periodStart = Calendar.getInstance();
-		periodStart.set(Calendar.YEAR, 2014); // 2014, 2015
-		periodStart.set(Calendar.MONTH, 0); // 0, 5
-		periodStart.set(Calendar.DAY_OF_MONTH, 1);
-		periodStart.set(Calendar.HOUR_OF_DAY, 0);
-		periodStart.set(Calendar.MINUTE, 0);
-		periodStart.set(Calendar.SECOND, 0);
-		periodStart.set(Calendar.MILLISECOND, 0);
+		// Training Data Timeframe
+		Calendar trainStart = Calendar.getInstance();
+		trainStart.set(Calendar.YEAR, 2014); 
+		trainStart.set(Calendar.MONTH, 0); 
+		trainStart.set(Calendar.DAY_OF_MONTH, 1);
+		trainStart.set(Calendar.HOUR_OF_DAY, 0);
+		trainStart.set(Calendar.MINUTE, 0);
+		trainStart.set(Calendar.SECOND, 0);
+		trainStart.set(Calendar.MILLISECOND, 0);
 		
-		Calendar periodEnd = Calendar.getInstance();
-		periodEnd.set(Calendar.YEAR, 2015); // 2015
-		periodEnd.set(Calendar.MONTH, 4); // 4, 7
-		periodEnd.set(Calendar.DAY_OF_MONTH, 31); // 31, 13
-		periodEnd.set(Calendar.HOUR_OF_DAY, 0);
-		periodEnd.set(Calendar.MINUTE, 0);
-		periodEnd.set(Calendar.SECOND, 0);
-		periodEnd.set(Calendar.MILLISECOND, 0);
+		Calendar trainEnd = Calendar.getInstance();
+		trainEnd.set(Calendar.YEAR, 2015);
+		trainEnd.set(Calendar.MONTH, 4);
+		trainEnd.set(Calendar.DAY_OF_MONTH, 31); 
+		trainEnd.set(Calendar.HOUR_OF_DAY, 0);
+		trainEnd.set(Calendar.MINUTE, 0);
+		trainEnd.set(Calendar.SECOND, 0);
+		trainEnd.set(Calendar.MILLISECOND, 0);
+		
+		// Test Data Timeframe
+		Calendar testStart = Calendar.getInstance();
+		testStart.set(Calendar.YEAR, 2015); 
+		testStart.set(Calendar.MONTH, 5); 
+		testStart.set(Calendar.DAY_OF_MONTH, 1);
+		testStart.set(Calendar.HOUR_OF_DAY, 0);
+		testStart.set(Calendar.MINUTE, 0);
+		testStart.set(Calendar.SECOND, 0);
+		testStart.set(Calendar.MILLISECOND, 0);
+		
+		Calendar testEnd = Calendar.getInstance();
+		testEnd.set(Calendar.YEAR, 2015);
+		testEnd.set(Calendar.MONTH, 7);
+		testEnd.set(Calendar.DAY_OF_MONTH, 13);
+		testEnd.set(Calendar.HOUR_OF_DAY, 0);
+		testEnd.set(Calendar.MINUTE, 0);
+		testEnd.set(Calendar.SECOND, 0);
+		testEnd.set(Calendar.MILLISECOND, 0);
 		
 		ArrayList<String> metricNames = new ArrayList<String>();
 		metricNames.add("consecutivedowns");
@@ -56,22 +78,48 @@ public class TrainingSetCreator {
 		BarKey bk = new BarKey("bitstampBTCUSD", BAR_SIZE.BAR_15M);
 		
 		try {
-			ArrayList<ArrayList<Object>> valuesList = create(periodStart, periodEnd, 1.2f, .2f, 48, bk, metricNames);
+			ArrayList<ArrayList<Object>> trainValuesList = create(trainStart, trainEnd, 1.2f, .2f, 48, bk, metricNames);
+			ArrayList<ArrayList<Object>> testValuesList = create(testStart, testEnd, 1.2f, .2f, 48, bk, metricNames);
 			
-			Instances instances = Modelling.loadData(metricNames, valuesList);
+			// Cross Validation
+			Instances trainInstances = Modelling.loadData(metricNames, trainValuesList);
 			NaiveBayes classifier = new NaiveBayes();
-			Evaluation eval = new Evaluation(instances);
-			eval.crossValidateModel(classifier, instances, 10, new Random(1));
+			Evaluation eval = new Evaluation(trainInstances);
+			eval.crossValidateModel(classifier, trainInstances, 10, new Random(1));
+			
 			double[][] confusionMatrix = eval.confusionMatrix();
 			double trueNegatives = confusionMatrix[0][0];
 			double falseNegatives = confusionMatrix[1][0];
 			double falsePositives = confusionMatrix[0][1];
 			double truePositives = confusionMatrix[1][1];
-			
 			double truePositiveRate = truePositives / (truePositives + falseNegatives);
 			double falsePositiveRate = falsePositives / (falsePositives + trueNegatives);
+			double correctRate = eval.pctCorrect();
+			double kappa = eval.kappa();
+			double meanAbsoluteError = eval.meanAbsoluteError();
+			double rootMeanSquaredError = eval.rootMeanSquaredError();
+			double relativeAbsoluteError = eval.relativeAbsoluteError();
+			double rootRelativeSquaredError = eval.rootRelativeSquaredError();
 			
-			System.out.println(classifier.toString());
+			ThresholdCurve rocCurve = new ThresholdCurve();
+			Instances rocResult = rocCurve.getCurve(eval.predictions(), 0);
+			double rocArea = rocCurve.getROCArea(rocResult);
+
+			// Test Data
+			Instances testInstances = Modelling.loadData(metricNames, testValuesList);
+			classifier.buildClassifier(trainInstances);
+			Evaluation testEval = new Evaluation(trainInstances);
+			testEval.evaluateModel(classifier, testInstances);
+			
+			double[][] confusionMatrix2 = testEval.confusionMatrix();
+			double trueNegatives2 = confusionMatrix2[0][0];
+			double falseNegatives2 = confusionMatrix2[1][0];
+			double falsePositives2 = confusionMatrix2[0][1];
+			double truePositives2 = confusionMatrix2[1][1];
+			double truePositiveRate2 = truePositives2 / (truePositives2 + falseNegatives2);
+			double falsePositiveRate2 = falsePositives2 / (falsePositives2 + trueNegatives2);
+			
+			System.out.println(testEval.toSummaryString());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
