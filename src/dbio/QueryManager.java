@@ -27,6 +27,7 @@ import data.MetricKey;
 import gui.MapCell;
 import gui.MapSymbol;
 import gui.singletons.ParameterSingleton;
+import ml.Model;
 import utils.CalcUtils;
 import utils.CalendarUtils;
 import utils.ConnectionSingleton;
@@ -2484,6 +2485,120 @@ public class QueryManager {
 			e.printStackTrace();
 		}
 		return trainingSet;
+	}
+	
+	public static int insertModel(Model m) {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			
+			String q = "INSERT INTO models( " +
+			            "modelfile, algo, params, symbol, duration, metrics, trainstart,  " +
+			            "trainend, teststart, testend, sellmetric, sellmetricvalue, stopmetric,  " +
+			            "stopmetricvalue, numbars, traindatasetsize, traintruenegatives,  " +
+			            "trainfalsenegatives, trainfalsepositives, traintruepositives,  " +
+			            "traintruepositiverate, trainfalsepositiverate, traincorrectrate,  " +
+			            "trainkappa, trainmeanabsoluteerror, trainrootmeansquarederror,  " +
+			            "trainrelativeabsoluteerror, trainrootrelativesquarederror, trainrocarea,  " +
+			            "testdatasetsize, testtruenegatives, testfalsenegatives, testfalsepositives,  " +
+			            "testtruepositives, testtruepositiverate, testfalsepositiverate,  " +
+			            "testcorrectrate, testkappa, testmeanabsoluteerror, testrootmeansquarederror,  " +
+			            "testrelativeabsoluteerror, testrootrelativesquarederror, testrocarea) " +
+			            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			PreparedStatement ps = c.prepareStatement(q, Statement.RETURN_GENERATED_KEYS);
+			
+			if (m.modelFile == null) {
+				ps.setNull(1, Types.VARCHAR);
+			}
+			else {
+				ps.setString(1, m.modelFile);
+			}
+			ps.setString(2, m.algo);
+			if (m.params == null) {
+				ps.setNull(3, Types.VARCHAR);
+			}
+			else {
+				ps.setString(3, m.params);
+			}
+			ps.setString(4, m.bk.symbol);
+			ps.setString(5, m.bk.duration.toString());
+			ps.setArray(6, c.createArrayOf("text", m.metrics.toArray()));
+			ps.setTimestamp(7, new Timestamp(m.trainStart.getTime().getTime()));
+			ps.setTimestamp(8, new Timestamp(m.trainEnd.getTime().getTime()));
+			ps.setTimestamp(9, new Timestamp(m.testStart.getTime().getTime()));
+			ps.setTimestamp(10, new Timestamp(m.testEnd.getTime().getTime()));
+			ps.setString(11, m.sellMetric);
+			ps.setFloat(12, m.sellMetricValue);
+			ps.setString(13, m.stopMetric);
+			ps.setFloat(14, m.stopMetricValue);
+			ps.setInt(15, m.numBars);
+			ps.setInt(16, m.trainDatasetSize);
+			ps.setInt(17, m.trainTrueNegatives);
+			ps.setInt(18, m.trainFalseNegatives);
+			ps.setInt(19, m.trainFalsePositives);
+			ps.setInt(20, m.trainTruePositives);
+			ps.setDouble(21, m.trainTruePostitiveRate);
+			ps.setDouble(22, m.trainFalsePositiveRate);
+			ps.setDouble(23, m.trainCorrectRate);
+			ps.setDouble(24, m.trainKappa);
+			ps.setDouble(25, m.trainMeanAbsoluteError);
+			ps.setDouble(26, m.trainRootMeanSquaredError);
+			ps.setDouble(27, m.trainRelativeAbsoluteError);
+			ps.setDouble(28, m.trainRootRelativeSquaredError);
+			ps.setDouble(29, m.trainROCArea);
+			ps.setInt(30, m.testDatasetSize);
+			ps.setInt(31, m.testTrueNegatives);
+			ps.setInt(32, m.testFalseNegatives);
+			ps.setInt(33, m.testFalsePositives);
+			ps.setInt(34, m.testTruePositives);
+			ps.setDouble(35, m.testTruePostitiveRate);
+			ps.setDouble(36, m.testFalsePositiveRate);
+			ps.setDouble(37, m.testCorrectRate);
+			ps.setDouble(38, m.testKappa);
+			ps.setDouble(39, m.testMeanAbsoluteError);
+			ps.setDouble(40, m.testRootMeanSquaredError);
+			ps.setDouble(41, m.testRelativeAbsoluteError);
+			ps.setDouble(42, m.testRootRelativeSquaredError);
+			ps.setDouble(43, m.testROCArea);
+			
+			ps.executeUpdate();
+			ResultSet rs = ps.getGeneratedKeys();
+			int id = -1;
+			if (rs.next()) {
+				id = rs.getInt(1);
+				m.id = id;
+				m.modelFile = id + ".model";
+			}
+			rs.close();
+			ps.close();
+			c.close();
+			
+			return id;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
+	
+	public static int getNextModelID() {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "SELECT last_value FROM models_id_seq";
+			PreparedStatement ps = c.prepareStatement(q);
+			ResultSet rs = ps.executeQuery();
+			int id = -1;
+			if (rs.next()) {
+				id =  rs.getInt(1) + 1;
+			}
+			rs.close();
+			ps.close();
+			c.close();
+			return id;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}
 	}
 	
 	public static HashMap<String, Object> getMetricCalcEssentials(MetricKey mk) {

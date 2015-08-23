@@ -1,17 +1,27 @@
 package ml;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Random;
 
-import constants.Constants.BAR_SIZE;
+import constants.Constants;
 import data.BarKey;
+import dbio.QueryManager;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
+import weka.classifiers.bayes.BayesNet;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.evaluation.ThresholdCurve;
+import weka.classifiers.functions.SimpleLogistic;
+import weka.classifiers.meta.Bagging;
+import weka.classifiers.trees.J48;
+import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
@@ -95,24 +105,57 @@ public class Modelling {
 		}
 	}
 	
-	public static void buildAndEvaluateModel(Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames) {
+	public static void buildAndEvaluateModel(String algo, String params, Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, 
+			float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
 		try {
-			ArrayList<ArrayList<Object>> trainValuesList = TrainingSetCreator.createWekaArffData(trainStart, trainEnd, 1.2f, .2f, 48, bk, metricNames);
-			ArrayList<ArrayList<Object>> testValuesList = TrainingSetCreator.createWekaArffData(testStart, testEnd, 1.2f, .2f, 48, bk, metricNames);
+			String sellMetric = Constants.OTHER_SELL_METRIC_PERCENT_UP;
+			float sellMetricValue = targetGain;
+			String stopMetric = Constants.STOP_METRIC_PERCENT_DOWN;
+			float stopMetricValue = minLoss;
+			int numBars = 48;
 			
-			// Cross Validation
+			System.out.print("Creating Train & Test datasets...");
+			ArrayList<ArrayList<Object>> trainValuesList = TrainingSetCreator.createWekaArffData(trainStart, trainEnd, sellMetricValue, stopMetricValue, numBars, bk, metricNames, metricDiscreteValueHash);
+			ArrayList<ArrayList<Object>> testValuesList = TrainingSetCreator.createWekaArffData(testStart, testEnd, sellMetricValue, stopMetricValue, numBars, bk, metricNames, metricDiscreteValueHash);
+			System.out.println("Complete.");
+			
+			// Training & Cross Validation Data
+			System.out.print("Cross Validating...");
 			Instances trainInstances = Modelling.loadData(metricNames, trainValuesList);
-			NaiveBayes classifier = new NaiveBayes();
+			Classifier classifier = null;
+			if (algo.equals("NaiveBayes")) {
+				classifier = new NaiveBayes();
+			}
+			else if (algo.equals("RandomForest")) {
+				classifier = new RandomForest();
+			}
+			else if (algo.equals("J48")) {
+				classifier = new J48();
+			}
+			else if (algo.equals("SimpleLogistic")) {
+				classifier = new SimpleLogistic();
+			}
+			else if (algo.equals("Bagging")) {
+				classifier = new Bagging();
+			}
+			else if (algo.equals("BayesNet")) {
+				classifier = new BayesNet();
+			}
+			else {
+				return;
+			}
 			Evaluation trainEval = new Evaluation(trainInstances);
 			trainEval.crossValidateModel(classifier, trainInstances, 10, new Random(1));
+			System.out.println("Complete.");
 			
+			int trainDatasetSize = trainInstances.numInstances();
 			double[][] trainConfusionMatrix = trainEval.confusionMatrix();
-			double trainTrueNegatives = trainConfusionMatrix[0][0];
-			double trainFalseNegatives = trainConfusionMatrix[1][0];
-			double trainFalsePositives = trainConfusionMatrix[0][1];
-			double trainTruePositives = trainConfusionMatrix[1][1];
-			double trainTruePositiveRate = trainTruePositives / (trainTruePositives + trainFalseNegatives);
-			double trainFalsePositiveRate = trainFalsePositives / (trainFalsePositives + trainTrueNegatives);
+			int trainTrueNegatives = (int)trainConfusionMatrix[0][0];
+			int trainFalseNegatives = (int)trainConfusionMatrix[1][0];
+			int trainFalsePositives = (int)trainConfusionMatrix[0][1];
+			int trainTruePositives = (int)trainConfusionMatrix[1][1];
+			double trainTruePositiveRate = trainTruePositives / (double)(trainTruePositives + trainFalseNegatives);
+			double trainFalsePositiveRate = trainFalsePositives / (double)(trainFalsePositives + trainTrueNegatives);
 			double trainCorrectRate = trainEval.pctCorrect();
 			double trainKappa = trainEval.kappa();
 			double trainMeanAbsoluteError = trainEval.meanAbsoluteError();
@@ -125,18 +168,21 @@ public class Modelling {
 			double trainROCArea = trainCurve.getROCArea(trainCurveInstances);
 
 			// Test Data
+			System.out.print("Evaluating Test Data...");
 			Instances testInstances = Modelling.loadData(metricNames, testValuesList);
 			classifier.buildClassifier(trainInstances);
 			Evaluation testEval = new Evaluation(trainInstances);
 			testEval.evaluateModel(classifier, testInstances);
+			System.out.println("Complete.");
 			
+			int testDatasetSize = testInstances.numInstances();
 			double[][] testConfusionMatrix = testEval.confusionMatrix();
-			double testTrueNegatives = testConfusionMatrix[0][0];
-			double testFalseNegatives = testConfusionMatrix[1][0];
-			double testFalsePositives = testConfusionMatrix[0][1];
-			double testTruePositives = testConfusionMatrix[1][1];
-			double testTruePositiveRate = testTruePositives / (testTruePositives + testFalseNegatives);
-			double testFalsePositiveRate = testFalsePositives / (testFalsePositives + testTrueNegatives);
+			int testTrueNegatives = (int)testConfusionMatrix[0][0];
+			int testFalseNegatives = (int)testConfusionMatrix[1][0];
+			int testFalsePositives = (int)testConfusionMatrix[0][1];
+			int testTruePositives = (int)testConfusionMatrix[1][1];
+			double testTruePositiveRate = testTruePositives / (double)(testTruePositives + testFalseNegatives);
+			double testFalsePositiveRate = testFalsePositives / (double)(testFalsePositives + testTrueNegatives);
 			double testCorrectRate = testEval.pctCorrect();
 			double testKappa = testEval.kappa();
 			double testMeanAbsoluteError = testEval.meanAbsoluteError();
@@ -148,8 +194,27 @@ public class Modelling {
 			Instances testCurveInstances = testCurve.getCurve(testEval.predictions(), 0);
 			double testROCArea = testCurve.getROCArea(testCurveInstances);
 
+			// Save model file
+			System.out.print("Saving model file...");
+			int modelID = QueryManager.getNextModelID();
+			weka.core.SerializationHelper.write("weka/models/" + algo + modelID + ".model", classifier);
+			System.out.println("Complete.");
+						
+			Model m = new Model(algo + modelID + ".model", algo, params, bk, metricNames, trainStart, trainEnd, testStart, testEnd, 
+					sellMetric, sellMetricValue, stopMetric, stopMetricValue, numBars,
+					trainDatasetSize, trainTrueNegatives, trainFalseNegatives, trainFalsePositives, trainTruePositives,
+					trainTruePositiveRate, trainFalsePositiveRate, trainCorrectRate,
+					trainKappa, trainMeanAbsoluteError, trainRootMeanSquaredError, trainRelativeAbsoluteError, trainRootRelativeSquaredError,
+					trainROCArea,
+					testDatasetSize, testTrueNegatives, testFalseNegatives, testFalsePositives, testTruePositives,
+					testTruePositiveRate, testFalsePositiveRate, testCorrectRate,
+					testKappa, testMeanAbsoluteError, testRootMeanSquaredError, testRelativeAbsoluteError, testRootRelativeSquaredError,
+					testROCArea);
 			
-			System.out.println(testEval.toSummaryString());
+			System.out.print("Saving model to DB...");
+			QueryManager.insertModel(m);
+			System.out.println("Complete.");
+			
 		}
 		catch (Exception e) {
 			e.printStackTrace();

@@ -77,53 +77,12 @@ public class TrainingSetCreator {
 		
 		BarKey bk = new BarKey("bitstampBTCUSD", BAR_SIZE.BAR_15M);
 		
-		try {
-			ArrayList<ArrayList<Object>> trainValuesList = createWekaArffData(trainStart, trainEnd, 1.2f, .2f, 48, bk, metricNames);
-			ArrayList<ArrayList<Object>> testValuesList = createWekaArffData(testStart, testEnd, 1.2f, .2f, 48, bk, metricNames);
-			
-			// Cross Validation
-			Instances trainInstances = Modelling.loadData(metricNames, trainValuesList);
-			NaiveBayes classifier = new NaiveBayes();
-			Evaluation trainEval = new Evaluation(trainInstances);
-			trainEval.crossValidateModel(classifier, trainInstances, 10, new Random(1));
-			
-			double[][] confusionMatrix = trainEval.confusionMatrix();
-			double trueNegatives = confusionMatrix[0][0];
-			double falseNegatives = confusionMatrix[1][0];
-			double falsePositives = confusionMatrix[0][1];
-			double truePositives = confusionMatrix[1][1];
-			double truePositiveRate = truePositives / (truePositives + falseNegatives);
-			double falsePositiveRate = falsePositives / (falsePositives + trueNegatives);
-			double correctRate = trainEval.pctCorrect();
-			double kappa = trainEval.kappa();
-			double meanAbsoluteError = trainEval.meanAbsoluteError();
-			double rootMeanSquaredError = trainEval.rootMeanSquaredError();
-			double relativeAbsoluteError = trainEval.relativeAbsoluteError();
-			double rootRelativeSquaredError = trainEval.rootRelativeSquaredError();
-			
-			ThresholdCurve rocCurve = new ThresholdCurve();
-			Instances rocResult = rocCurve.getCurve(trainEval.predictions(), 0);
-			double rocArea = rocCurve.getROCArea(rocResult);
-
-			// Test Data
-			Instances testInstances = Modelling.loadData(metricNames, testValuesList);
-			classifier.buildClassifier(trainInstances);
-			Evaluation testEval = new Evaluation(trainInstances);
-			testEval.evaluateModel(classifier, testInstances);
-			
-			double[][] confusionMatrix2 = testEval.confusionMatrix();
-			double trueNegatives2 = confusionMatrix2[0][0];
-			double falseNegatives2 = confusionMatrix2[1][0];
-			double falsePositives2 = confusionMatrix2[0][1];
-			double truePositives2 = confusionMatrix2[1][1];
-			double truePositiveRate2 = truePositives2 / (truePositives2 + falseNegatives2);
-			double falsePositiveRate2 = falsePositives2 / (falsePositives2 + trueNegatives2);
-			
-			System.out.println(testEval.toSummaryString());
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+		System.out.print("Creating MetricDiscreteValueHash...");
+		int[] percentiles = {1, 2, 5, 10, 20, 35, 50, 65, 80, 90, 95, 98, 99};
+		HashMap<String, ArrayList<Float>> metricDiscreteValueHash = GeneticSearcher.loadBullMetricDiscreteValueLists(percentiles, metricNames);
+		System.out.println("Complete.");
+		
+		Modelling.buildAndEvaluateModel("NaiveBayes", null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
 	}
 
 	/**
@@ -135,17 +94,14 @@ public class TrainingSetCreator {
 	 * @param numPeriods
 	 * @param bk
 	 * @param metricNames
+	 * @param metricDiscreteValueHash
 	 * 
 	 * Returns a list that looks exactly like the @data section of a WEKA .arff file
 	 */
-	public static ArrayList<ArrayList<Object>> createWekaArffData(Calendar periodStart, Calendar periodEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames) {
+	public static ArrayList<ArrayList<Object>> createWekaArffData(Calendar periodStart, Calendar periodEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
 		try {
 			// This is newest to oldest ordered
 			ArrayList<HashMap<String, Object>> rawTrainingSet = QueryManager.getTrainingSet(bk, periodStart, periodEnd, metricNames);
-			
-			// We want to bucket the metric values by these percentiles yielding 14 buckets.
-			int[] percentiles = {1, 2, 5, 10, 20, 35, 50, 65, 80, 90, 95, 98, 99};
-			HashMap<String, ArrayList<Float>> metricDiscreteValueHash = GeneticSearcher.loadBullMetricDiscreteValueLists(percentiles, metricNames);
 			
 			ArrayList<Float> nextXCloses = new ArrayList<Float>();
 			ArrayList<ArrayList<Object>> valuesList = new ArrayList<ArrayList<Object>>();
@@ -209,7 +165,7 @@ public class TrainingSetCreator {
 					String[] values = recordLine.split(",");
 					valueList.addAll(Arrays.asList(values));
 					valuesList.add(valueList);
-					System.out.println(recordLine);
+//					System.out.println(recordLine);
 				}
 			}
 			
