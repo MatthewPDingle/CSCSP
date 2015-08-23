@@ -78,31 +78,31 @@ public class TrainingSetCreator {
 		BarKey bk = new BarKey("bitstampBTCUSD", BAR_SIZE.BAR_15M);
 		
 		try {
-			ArrayList<ArrayList<Object>> trainValuesList = create(trainStart, trainEnd, 1.2f, .2f, 48, bk, metricNames);
-			ArrayList<ArrayList<Object>> testValuesList = create(testStart, testEnd, 1.2f, .2f, 48, bk, metricNames);
+			ArrayList<ArrayList<Object>> trainValuesList = createWekaArffData(trainStart, trainEnd, 1.2f, .2f, 48, bk, metricNames);
+			ArrayList<ArrayList<Object>> testValuesList = createWekaArffData(testStart, testEnd, 1.2f, .2f, 48, bk, metricNames);
 			
 			// Cross Validation
 			Instances trainInstances = Modelling.loadData(metricNames, trainValuesList);
 			NaiveBayes classifier = new NaiveBayes();
-			Evaluation eval = new Evaluation(trainInstances);
-			eval.crossValidateModel(classifier, trainInstances, 10, new Random(1));
+			Evaluation trainEval = new Evaluation(trainInstances);
+			trainEval.crossValidateModel(classifier, trainInstances, 10, new Random(1));
 			
-			double[][] confusionMatrix = eval.confusionMatrix();
+			double[][] confusionMatrix = trainEval.confusionMatrix();
 			double trueNegatives = confusionMatrix[0][0];
 			double falseNegatives = confusionMatrix[1][0];
 			double falsePositives = confusionMatrix[0][1];
 			double truePositives = confusionMatrix[1][1];
 			double truePositiveRate = truePositives / (truePositives + falseNegatives);
 			double falsePositiveRate = falsePositives / (falsePositives + trueNegatives);
-			double correctRate = eval.pctCorrect();
-			double kappa = eval.kappa();
-			double meanAbsoluteError = eval.meanAbsoluteError();
-			double rootMeanSquaredError = eval.rootMeanSquaredError();
-			double relativeAbsoluteError = eval.relativeAbsoluteError();
-			double rootRelativeSquaredError = eval.rootRelativeSquaredError();
+			double correctRate = trainEval.pctCorrect();
+			double kappa = trainEval.kappa();
+			double meanAbsoluteError = trainEval.meanAbsoluteError();
+			double rootMeanSquaredError = trainEval.rootMeanSquaredError();
+			double relativeAbsoluteError = trainEval.relativeAbsoluteError();
+			double rootRelativeSquaredError = trainEval.rootRelativeSquaredError();
 			
 			ThresholdCurve rocCurve = new ThresholdCurve();
-			Instances rocResult = rocCurve.getCurve(eval.predictions(), 0);
+			Instances rocResult = rocCurve.getCurve(trainEval.predictions(), 0);
 			double rocArea = rocCurve.getROCArea(rocResult);
 
 			// Test Data
@@ -135,8 +135,10 @@ public class TrainingSetCreator {
 	 * @param numPeriods
 	 * @param bk
 	 * @param metricNames
+	 * 
+	 * Returns a list that looks exactly like the @data section of a WEKA .arff file
 	 */
-	public static ArrayList<ArrayList<Object>> create(Calendar periodStart, Calendar periodEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames) {
+	public static ArrayList<ArrayList<Object>> createWekaArffData(Calendar periodStart, Calendar periodEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames) {
 		try {
 			// This is newest to oldest ordered
 			ArrayList<HashMap<String, Object>> rawTrainingSet = QueryManager.getTrainingSet(bk, periodStart, periodEnd, metricNames);
@@ -154,11 +156,7 @@ public class TrainingSetCreator {
 				if (nextXCloses.size() > numPeriods) {
 					nextXCloses.remove(0);
 				}
-				
-//				System.out.println("-------");
-//				System.out.println(close);
-//				System.out.println(Arrays.toString(nextXCloses.toArray()));
-				
+		
 				boolean targetGainOK = false;
 				int targetGainIndex = findTargetGainIndex(nextXCloses, close, targetGain);
 
@@ -171,8 +169,6 @@ public class TrainingSetCreator {
 					}
 				}
 
-//				System.out.println(minLossOK + ", " + targetGainOK);
-				
 				// References
 				String refrencePart = close + ", " + hour + ", ";
 

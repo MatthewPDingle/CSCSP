@@ -4,10 +4,14 @@ import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Random;
 
 import constants.Constants.BAR_SIZE;
 import data.BarKey;
 import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
+import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.evaluation.ThresholdCurve;
 import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
@@ -71,7 +75,6 @@ public class Modelling {
 			
 			for (ArrayList<Object> valueList : valuesList) {
 				double[] values = new double[instances.numAttributes()];
-				int t = 0;
 				values[0] = Double.parseDouble(valueList.get(0).toString()); // close
 				values[1] = (int)Double.parseDouble(valueList.get(1).toString()); // hour
 				for (int i = 2; i < values.length; i++) {
@@ -89,6 +92,67 @@ public class Modelling {
 		catch (Exception e) {
 			e.printStackTrace();
 			return null;	
+		}
+	}
+	
+	public static void buildAndEvaluateModel(Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames) {
+		try {
+			ArrayList<ArrayList<Object>> trainValuesList = TrainingSetCreator.createWekaArffData(trainStart, trainEnd, 1.2f, .2f, 48, bk, metricNames);
+			ArrayList<ArrayList<Object>> testValuesList = TrainingSetCreator.createWekaArffData(testStart, testEnd, 1.2f, .2f, 48, bk, metricNames);
+			
+			// Cross Validation
+			Instances trainInstances = Modelling.loadData(metricNames, trainValuesList);
+			NaiveBayes classifier = new NaiveBayes();
+			Evaluation trainEval = new Evaluation(trainInstances);
+			trainEval.crossValidateModel(classifier, trainInstances, 10, new Random(1));
+			
+			double[][] trainConfusionMatrix = trainEval.confusionMatrix();
+			double trainTrueNegatives = trainConfusionMatrix[0][0];
+			double trainFalseNegatives = trainConfusionMatrix[1][0];
+			double trainFalsePositives = trainConfusionMatrix[0][1];
+			double trainTruePositives = trainConfusionMatrix[1][1];
+			double trainTruePositiveRate = trainTruePositives / (trainTruePositives + trainFalseNegatives);
+			double trainFalsePositiveRate = trainFalsePositives / (trainFalsePositives + trainTrueNegatives);
+			double trainCorrectRate = trainEval.pctCorrect();
+			double trainKappa = trainEval.kappa();
+			double trainMeanAbsoluteError = trainEval.meanAbsoluteError();
+			double trainRootMeanSquaredError = trainEval.rootMeanSquaredError();
+			double trainRelativeAbsoluteError = trainEval.relativeAbsoluteError();
+			double trainRootRelativeSquaredError = trainEval.rootRelativeSquaredError();
+			
+			ThresholdCurve trainCurve = new ThresholdCurve();
+			Instances trainCurveInstances = trainCurve.getCurve(trainEval.predictions(), 0);
+			double trainROCArea = trainCurve.getROCArea(trainCurveInstances);
+
+			// Test Data
+			Instances testInstances = Modelling.loadData(metricNames, testValuesList);
+			classifier.buildClassifier(trainInstances);
+			Evaluation testEval = new Evaluation(trainInstances);
+			testEval.evaluateModel(classifier, testInstances);
+			
+			double[][] testConfusionMatrix = testEval.confusionMatrix();
+			double testTrueNegatives = testConfusionMatrix[0][0];
+			double testFalseNegatives = testConfusionMatrix[1][0];
+			double testFalsePositives = testConfusionMatrix[0][1];
+			double testTruePositives = testConfusionMatrix[1][1];
+			double testTruePositiveRate = testTruePositives / (testTruePositives + testFalseNegatives);
+			double testFalsePositiveRate = testFalsePositives / (testFalsePositives + testTrueNegatives);
+			double testCorrectRate = testEval.pctCorrect();
+			double testKappa = testEval.kappa();
+			double testMeanAbsoluteError = testEval.meanAbsoluteError();
+			double testRootMeanSquaredError = testEval.rootMeanSquaredError();
+			double testRelativeAbsoluteError = testEval.relativeAbsoluteError();
+			double testRootRelativeSquaredError = testEval.rootRelativeSquaredError();
+			
+			ThresholdCurve testCurve = new ThresholdCurve();
+			Instances testCurveInstances = testCurve.getCurve(testEval.predictions(), 0);
+			double testROCArea = testCurve.getROCArea(testCurveInstances);
+
+			
+			System.out.println(testEval.toSummaryString());
+		}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
