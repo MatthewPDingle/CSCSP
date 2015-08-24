@@ -2,6 +2,7 @@ package data.downloaders.okcoin;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,8 +19,13 @@ import data.Tick;
 import dbio.QueryManager;
 import gui.singletons.MetricSingleton;
 import metrics.MetricsUpdater;
+import ml.ARFF;
+import ml.Modelling;
+import search.GeneticSearcher;
 import utils.CalendarUtils;
 import utils.StringUtils;
+import weka.classifiers.Classifier;
+import weka.core.Instances;
 
 
 public class OKCoinDownloader {
@@ -50,6 +56,34 @@ public class OKCoinDownloader {
 			}
 		}
 		
+		// Experimental
+		ArrayList<String> metricNames = new ArrayList<String>();
+		metricNames.add("consecutivedowns");
+		metricNames.add("pricebolls50");
+		metricNames.add("williamsr50");
+		metricNames.add("psar");
+		metricNames.add("mfi16");
+		metricNames.add("stochasticdrsi20_5_5");
+		metricNames.add("williamsr10");
+		metricNames.add("rsi5");
+		metricNames.add("aroonoscillator50");
+		metricNames.add("atr20");
+		metricNames.add("cci10");
+		metricNames.add("volumebolls50");
+		metricNames.add("ultimateoscillator4_10_25");
+		metricNames.add("stochasticd14_3_3");
+		metricNames.add("macd12_26_9");
+		
+		BarKey bk = new BarKey("okcoinBTCCNY", BAR_SIZE.BAR_15M);
+		
+		System.out.print("Creating MetricDiscreteValueHash...");
+		int[] percentiles = {1, 2, 5, 10, 20, 35, 50, 65, 80, 90, 95, 98, 99};
+		HashMap<String, ArrayList<Float>> metricDiscreteValueHash = GeneticSearcher.loadBullMetricDiscreteValueLists(percentiles, metricNames);
+		System.out.println("Complete.");
+		
+		Classifier cRandomForest6 = Modelling.loadModel("RandomForest6.model");
+		Classifier cNaiveBayes5 = Modelling.loadModel("NaiveBayes5.model");
+		
 		// Loop.  First pass get 1000 bars.  All other passes, get the number specified by parameters.
 		if (params.size() > 0) {
 			MetricSingleton metricSingleton = MetricSingleton.getInstance();
@@ -71,7 +105,19 @@ public class OKCoinDownloader {
 					System.out.println(Calendar.getInstance().getTime().toString() + " - Bar Downloads & Inserts Done");
 					MetricsUpdater.calculateMetrics();
 					System.out.println(Calendar.getInstance().getTime().toString() + " - Metrics Done");
-//					Thread.sleep(1000);
+
+					// Experimental
+					Calendar c = Calendar.getInstance();
+					Calendar periodStart = CalendarUtils.getBarStart(c, BAR_SIZE.BAR_15M);
+					Calendar periodEnd = CalendarUtils.getBarEnd(c, BAR_SIZE.BAR_15M);
+					ArrayList<ArrayList<Object>> unlabeledList = ARFF.createUnlabeledWekaArffData(periodStart, periodEnd, bk, metricNames, metricDiscreteValueHash);
+					Instances instances = Modelling.loadData(metricNames, unlabeledList);
+					if (instances != null && instances.firstInstance() != null) {
+						double label1 = cRandomForest6.classifyInstance(instances.firstInstance());
+						double label2 = cNaiveBayes5.classifyInstance(instances.firstInstance());
+						System.out.println("---------------------");
+						System.out.println(label1 + ", " + label2);
+					}
 				}
 				catch (Exception e) {
 					e.printStackTrace();

@@ -4,19 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Random;
 
 import constants.Constants.BAR_SIZE;
 import data.BarKey;
 import dbio.QueryManager;
 import search.GeneticSearcher;
-import weka.classifiers.Evaluation;
-import weka.classifiers.bayes.NaiveBayes;
-import weka.classifiers.evaluation.ThresholdCurve;
-import weka.core.FastVector;
-import weka.core.Instances;
 
-public class TrainingSetCreator {
+public class ARFF {
 
 	public static void main(String[] args) {
 
@@ -32,7 +26,7 @@ public class TrainingSetCreator {
 		
 		Calendar trainEnd = Calendar.getInstance();
 		trainEnd.set(Calendar.YEAR, 2015);
-		trainEnd.set(Calendar.MONTH, 4);
+		trainEnd.set(Calendar.MONTH, 2);
 		trainEnd.set(Calendar.DAY_OF_MONTH, 31); 
 		trainEnd.set(Calendar.HOUR_OF_DAY, 0);
 		trainEnd.set(Calendar.MINUTE, 0);
@@ -42,7 +36,7 @@ public class TrainingSetCreator {
 		// Test Data Timeframe
 		Calendar testStart = Calendar.getInstance();
 		testStart.set(Calendar.YEAR, 2015); 
-		testStart.set(Calendar.MONTH, 5); 
+		testStart.set(Calendar.MONTH, 3); 
 		testStart.set(Calendar.DAY_OF_MONTH, 1);
 		testStart.set(Calendar.HOUR_OF_DAY, 0);
 		testStart.set(Calendar.MINUTE, 0);
@@ -51,8 +45,8 @@ public class TrainingSetCreator {
 		
 		Calendar testEnd = Calendar.getInstance();
 		testEnd.set(Calendar.YEAR, 2015);
-		testEnd.set(Calendar.MONTH, 7);
-		testEnd.set(Calendar.DAY_OF_MONTH, 13);
+		testEnd.set(Calendar.MONTH, 5);
+		testEnd.set(Calendar.DAY_OF_MONTH, 3);
 		testEnd.set(Calendar.HOUR_OF_DAY, 0);
 		testEnd.set(Calendar.MINUTE, 0);
 		testEnd.set(Calendar.SECOND, 0);
@@ -75,14 +69,26 @@ public class TrainingSetCreator {
 		metricNames.add("stochasticd14_3_3");
 		metricNames.add("macd12_26_9");
 		
-		BarKey bk = new BarKey("bitstampBTCUSD", BAR_SIZE.BAR_15M);
+		BarKey bk = new BarKey("okcoinBTCCNY", BAR_SIZE.BAR_15M);
 		
 		System.out.print("Creating MetricDiscreteValueHash...");
 		int[] percentiles = {1, 2, 5, 10, 20, 35, 50, 65, 80, 90, 95, 98, 99};
 		HashMap<String, ArrayList<Float>> metricDiscreteValueHash = GeneticSearcher.loadBullMetricDiscreteValueLists(percentiles, metricNames);
 		System.out.println("Complete.");
 		
-		Modelling.buildAndEvaluateModel("NaiveBayes", null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("NaiveBayes", 		null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("RandomForest", 	null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("SimpleLogistic", 	null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("Bagging",		 	null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("J48", 				null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("BayesNet", 		null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		
+		Modelling.buildAndEvaluateModel("NaiveBayes", 		null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("RandomForest", 	null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("SimpleLogistic", 	null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("Bagging", 			null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("J48", 				null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("BayesNet", 		null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
 	}
 
 	/**
@@ -125,10 +131,10 @@ public class TrainingSetCreator {
 					}
 				}
 
-				// References
+				// Non-Metric Values
 				String refrencePart = close + ", " + hour + ", ";
 
-				// Features
+				// Metric Buckets (or values)
 				String metricPart = "";
 				for (String metricName : metricNames) {
 					ArrayList<Float> bucketCutoffValues = metricDiscreteValueHash.get(metricName);
@@ -144,7 +150,6 @@ public class TrainingSetCreator {
 							bucketNum++;
 						}
 						
-//						System.out.println(metricName + " - " + metricValue + " in bucket #" + bucketNum);
 						metricPart += ("BUCKET" + bucketNum + ", ");
 //						metricPart += metricValue + ", ";
 					}
@@ -165,10 +170,60 @@ public class TrainingSetCreator {
 					String[] values = recordLine.split(",");
 					valueList.addAll(Arrays.asList(values));
 					valuesList.add(valueList);
-//					System.out.println(recordLine);
 				}
 			}
 			
+			return valuesList;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public static ArrayList<ArrayList<Object>> createUnlabeledWekaArffData(Calendar periodStart, Calendar periodEnd, BarKey bk, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
+		try {
+			// This is newest to oldest ordered
+			ArrayList<HashMap<String, Object>> rawTrainingSet = QueryManager.getTrainingSet(bk, periodStart, periodEnd, metricNames);
+			
+			ArrayList<ArrayList<Object>> valuesList = new ArrayList<ArrayList<Object>>();
+			for (HashMap<String, Object> record : rawTrainingSet) {
+				// Non-Metric Values
+				float close = (float)record.get("close");
+				float hour = (int)record.get("hour");
+				String refrencePart = close + ", " + hour + ", ";
+				
+				// Metric Buckets (or values)
+				String metricPart = "";
+				for (String metricName : metricNames) {
+					ArrayList<Float> bucketCutoffValues = metricDiscreteValueHash.get(metricName);
+					if (bucketCutoffValues != null) {
+						float metricValue = (float)record.get(metricName);
+						
+						int bucketNum = 0;
+						for (int a = bucketCutoffValues.size() - 1; a >= 0; a--) {
+							float bucketCutoffValue = bucketCutoffValues.get(a);
+							if (metricValue < bucketCutoffValue) {
+								break;
+							}
+							bucketNum++;
+						}
+						
+						metricPart += ("BUCKET" + bucketNum + ", ");
+//						metricPart += metricValue + ", ";
+					}
+				}
+				// Class
+				String classPart = "?";
+				
+				if (!metricPart.equals("")) {
+					String recordLine = refrencePart + metricPart + classPart;
+					ArrayList<Object> valueList = new ArrayList<Object>();
+					String[] values = recordLine.split(",");
+					valueList.addAll(Arrays.asList(values));
+					valuesList.add(valueList);
+				}
+			}
 			return valuesList;
 		}
 		catch (Exception e) {

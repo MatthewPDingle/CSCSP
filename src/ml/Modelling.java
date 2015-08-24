@@ -1,10 +1,7 @@
 package ml;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -108,6 +105,7 @@ public class Modelling {
 	public static void buildAndEvaluateModel(String algo, String params, Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, 
 			float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
 		try {
+			System.out.println("Starting " + algo);
 			String sellMetric = Constants.OTHER_SELL_METRIC_PERCENT_UP;
 			float sellMetricValue = targetGain;
 			String stopMetric = Constants.STOP_METRIC_PERCENT_DOWN;
@@ -115,8 +113,8 @@ public class Modelling {
 			int numBars = 48;
 			
 			System.out.print("Creating Train & Test datasets...");
-			ArrayList<ArrayList<Object>> trainValuesList = TrainingSetCreator.createWekaArffData(trainStart, trainEnd, sellMetricValue, stopMetricValue, numBars, bk, metricNames, metricDiscreteValueHash);
-			ArrayList<ArrayList<Object>> testValuesList = TrainingSetCreator.createWekaArffData(testStart, testEnd, sellMetricValue, stopMetricValue, numBars, bk, metricNames, metricDiscreteValueHash);
+			ArrayList<ArrayList<Object>> trainValuesList = ARFF.createWekaArffData(trainStart, trainEnd, sellMetricValue, stopMetricValue, numBars, bk, metricNames, metricDiscreteValueHash);
+			ArrayList<ArrayList<Object>> testValuesList = ARFF.createWekaArffData(testStart, testEnd, sellMetricValue, stopMetricValue, numBars, bk, metricNames, metricDiscreteValueHash);
 			System.out.println("Complete.");
 			
 			// Training & Cross Validation Data
