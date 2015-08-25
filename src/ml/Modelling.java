@@ -9,6 +9,7 @@ import java.util.Random;
 
 import constants.Constants;
 import data.BarKey;
+import data.Model;
 import dbio.QueryManager;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
@@ -102,7 +103,7 @@ public class Modelling {
 		}
 	}
 	
-	public static void buildAndEvaluateModel(String algo, String params, Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, 
+	public static void buildAndEvaluateModel(String algo, String params, String type, Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, 
 			float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
 		try {
 			System.out.println("Starting " + algo);
@@ -113,8 +114,8 @@ public class Modelling {
 			int numBars = 48;
 			
 			System.out.print("Creating Train & Test datasets...");
-			ArrayList<ArrayList<Object>> trainValuesList = ARFF.createWekaArffData(trainStart, trainEnd, sellMetricValue, stopMetricValue, numBars, bk, metricNames, metricDiscreteValueHash);
-			ArrayList<ArrayList<Object>> testValuesList = ARFF.createWekaArffData(testStart, testEnd, sellMetricValue, stopMetricValue, numBars, bk, metricNames, metricDiscreteValueHash);
+			ArrayList<ArrayList<Object>> trainValuesList = ARFF.createWekaArffData(type, trainStart, trainEnd, sellMetricValue, stopMetricValue, numBars, bk, metricNames, metricDiscreteValueHash);
+			ArrayList<ArrayList<Object>> testValuesList = ARFF.createWekaArffData(type, testStart, testEnd, sellMetricValue, stopMetricValue, numBars, bk, metricNames, metricDiscreteValueHash);
 			System.out.println("Complete.");
 			
 			// Training & Cross Validation Data
@@ -198,7 +199,7 @@ public class Modelling {
 			weka.core.SerializationHelper.write("weka/models/" + algo + modelID + ".model", classifier);
 			System.out.println("Complete.");
 						
-			Model m = new Model(algo + modelID + ".model", algo, params, bk, metricNames, trainStart, trainEnd, testStart, testEnd, 
+			Model m = new Model(type, algo + modelID + ".model", algo, params, bk, metricNames, trainStart, trainEnd, testStart, testEnd, 
 					sellMetric, sellMetricValue, stopMetric, stopMetricValue, numBars,
 					trainDatasetSize, trainTrueNegatives, trainFalseNegatives, trainFalsePositives, trainTruePositives,
 					trainTruePositiveRate, trainFalsePositiveRate, trainCorrectRate,

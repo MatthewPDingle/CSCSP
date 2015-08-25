@@ -24,10 +24,10 @@ import data.Bar;
 import data.BarKey;
 import data.Metric;
 import data.MetricKey;
+import data.Model;
 import gui.MapCell;
 import gui.MapSymbol;
 import gui.singletons.ParameterSingleton;
-import ml.Model;
 import utils.CalcUtils;
 import utils.CalendarUtils;
 import utils.ConnectionSingleton;
@@ -992,13 +992,13 @@ public class QueryManager {
 	 * @param barKeys
 	 * @return
 	 */
-	public static HashMap<MetricKey, ArrayList<Metric>> loadMetricSequenceHash(ArrayList<BarKey> barKeys) {
+	public static HashMap<MetricKey, ArrayList<Metric>> loadMetricSequenceHash(ArrayList<BarKey> barKeys, ArrayList<String> neededMetrics) {
 		HashMap<MetricKey, ArrayList<Metric>> metricSequenceHash = new HashMap<MetricKey, ArrayList<Metric>>();
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			
 			for (BarKey bk : barKeys) {
-				for (String metricName : Constants.METRICS) {
+				for (String metricName : neededMetrics) {
 					
 					MetricKey mk = new MetricKey(metricName, bk.symbol, bk.duration);
 					ArrayList<Metric> ms = metricSequenceHash.get(mk);
@@ -1019,7 +1019,7 @@ public class QueryManager {
 						startCal.setTimeInMillis(tsStart.getTime());
 						break;
 					}
-					startCal = CalendarUtils.addBars(startCal, bk.duration, -200);
+					startCal = CalendarUtils.addBars(startCal, bk.duration, -100);
 					rs0.close();
 					s0.close();
 					
@@ -1067,7 +1067,7 @@ public class QueryManager {
 						counter++;
 					}
 					metricSequenceHash.put(mk, ms);
-					System.out.println("Adding " + counter + " metrics to MetricSequence for " + mk.toString());
+//					System.out.println("Adding " + counter + " metrics to MetricSequence for " + mk.toString());
 					
 					rs.close();
 					s.close();
@@ -1520,10 +1520,10 @@ public class QueryManager {
 			
 			if (numInserts > 0) {
 				s2.executeBatch();
-				System.out.println("# Inserts: " + numInserts);
+//				System.out.println("# Inserts: " + numInserts);
 			}
 			if (numUpdates > 0) {
-				System.out.println("# Updates: " + numUpdates);
+//				System.out.println("# Updates: " + numUpdates);
 				s3.executeBatch();
 			}
 			s2.close();
@@ -2492,7 +2492,7 @@ public class QueryManager {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			
 			String q = "INSERT INTO models( " +
-			            "modelfile, algo, params, symbol, duration, metrics, trainstart,  " +
+			            "type, modelfile, algo, params, symbol, duration, metrics, trainstart,  " +
 			            "trainend, teststart, testend, sellmetric, sellmetricvalue, stopmetric,  " +
 			            "stopmetricvalue, numbars, traindatasetsize, traintruenegatives,  " +
 			            "trainfalsenegatives, trainfalsepositives, traintruepositives,  " +
@@ -2503,62 +2503,63 @@ public class QueryManager {
 			            "testtruepositives, testtruepositiverate, testfalsepositiverate,  " +
 			            "testcorrectrate, testkappa, testmeanabsoluteerror, testrootmeansquarederror,  " +
 			            "testrelativeabsoluteerror, testrootrelativesquarederror, testrocarea) " +
-			            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement ps = c.prepareStatement(q, Statement.RETURN_GENERATED_KEYS);
 			
+			ps.setString(1, m.type);
 			if (m.modelFile == null) {
-				ps.setNull(1, Types.VARCHAR);
+				ps.setNull(2, Types.VARCHAR);
 			}
 			else {
-				ps.setString(1, m.modelFile);
+				ps.setString(2, m.modelFile);
 			}
-			ps.setString(2, m.algo);
+			ps.setString(3, m.algo);
 			if (m.params == null) {
-				ps.setNull(3, Types.VARCHAR);
+				ps.setNull(4, Types.VARCHAR);
 			}
 			else {
-				ps.setString(3, m.params);
+				ps.setString(4, m.params);
 			}
-			ps.setString(4, m.bk.symbol);
-			ps.setString(5, m.bk.duration.toString());
-			ps.setArray(6, c.createArrayOf("text", m.metrics.toArray()));
-			ps.setTimestamp(7, new Timestamp(m.trainStart.getTime().getTime()));
-			ps.setTimestamp(8, new Timestamp(m.trainEnd.getTime().getTime()));
-			ps.setTimestamp(9, new Timestamp(m.testStart.getTime().getTime()));
-			ps.setTimestamp(10, new Timestamp(m.testEnd.getTime().getTime()));
-			ps.setString(11, m.sellMetric);
-			ps.setFloat(12, m.sellMetricValue);
-			ps.setString(13, m.stopMetric);
-			ps.setFloat(14, m.stopMetricValue);
-			ps.setInt(15, m.numBars);
-			ps.setInt(16, m.trainDatasetSize);
-			ps.setInt(17, m.trainTrueNegatives);
-			ps.setInt(18, m.trainFalseNegatives);
-			ps.setInt(19, m.trainFalsePositives);
-			ps.setInt(20, m.trainTruePositives);
-			ps.setDouble(21, m.trainTruePostitiveRate);
-			ps.setDouble(22, m.trainFalsePositiveRate);
-			ps.setDouble(23, m.trainCorrectRate);
-			ps.setDouble(24, m.trainKappa);
-			ps.setDouble(25, m.trainMeanAbsoluteError);
-			ps.setDouble(26, m.trainRootMeanSquaredError);
-			ps.setDouble(27, m.trainRelativeAbsoluteError);
-			ps.setDouble(28, m.trainRootRelativeSquaredError);
-			ps.setDouble(29, m.trainROCArea);
-			ps.setInt(30, m.testDatasetSize);
-			ps.setInt(31, m.testTrueNegatives);
-			ps.setInt(32, m.testFalseNegatives);
-			ps.setInt(33, m.testFalsePositives);
-			ps.setInt(34, m.testTruePositives);
-			ps.setDouble(35, m.testTruePostitiveRate);
-			ps.setDouble(36, m.testFalsePositiveRate);
-			ps.setDouble(37, m.testCorrectRate);
-			ps.setDouble(38, m.testKappa);
-			ps.setDouble(39, m.testMeanAbsoluteError);
-			ps.setDouble(40, m.testRootMeanSquaredError);
-			ps.setDouble(41, m.testRelativeAbsoluteError);
-			ps.setDouble(42, m.testRootRelativeSquaredError);
-			ps.setDouble(43, m.testROCArea);
+			ps.setString(5, m.bk.symbol);
+			ps.setString(6, m.bk.duration.toString());
+			ps.setArray(7, c.createArrayOf("text", m.metrics.toArray()));
+			ps.setTimestamp(8, new Timestamp(m.trainStart.getTime().getTime()));
+			ps.setTimestamp(9, new Timestamp(m.trainEnd.getTime().getTime()));
+			ps.setTimestamp(10, new Timestamp(m.testStart.getTime().getTime()));
+			ps.setTimestamp(11, new Timestamp(m.testEnd.getTime().getTime()));
+			ps.setString(12, m.sellMetric);
+			ps.setFloat(13, m.sellMetricValue);
+			ps.setString(14, m.stopMetric);
+			ps.setFloat(15, m.stopMetricValue);
+			ps.setInt(16, m.numBars);
+			ps.setInt(17, m.trainDatasetSize);
+			ps.setInt(18, m.trainTrueNegatives);
+			ps.setInt(19, m.trainFalseNegatives);
+			ps.setInt(20, m.trainFalsePositives);
+			ps.setInt(21, m.trainTruePositives);
+			ps.setDouble(22, m.trainTruePostitiveRate);
+			ps.setDouble(23, m.trainFalsePositiveRate);
+			ps.setDouble(24, m.trainCorrectRate);
+			ps.setDouble(25, m.trainKappa);
+			ps.setDouble(26, m.trainMeanAbsoluteError);
+			ps.setDouble(27, m.trainRootMeanSquaredError);
+			ps.setDouble(28, m.trainRelativeAbsoluteError);
+			ps.setDouble(29, m.trainRootRelativeSquaredError);
+			ps.setDouble(30, m.trainROCArea);
+			ps.setInt(31, m.testDatasetSize);
+			ps.setInt(32, m.testTrueNegatives);
+			ps.setInt(33, m.testFalseNegatives);
+			ps.setInt(34, m.testFalsePositives);
+			ps.setInt(35, m.testTruePositives);
+			ps.setDouble(36, m.testTruePostitiveRate);
+			ps.setDouble(37, m.testFalsePositiveRate);
+			ps.setDouble(38, m.testCorrectRate);
+			ps.setDouble(39, m.testKappa);
+			ps.setDouble(40, m.testMeanAbsoluteError);
+			ps.setDouble(41, m.testRootMeanSquaredError);
+			ps.setDouble(42, m.testRelativeAbsoluteError);
+			ps.setDouble(43, m.testRootRelativeSquaredError);
+			ps.setDouble(44, m.testROCArea);
 			
 			ps.executeUpdate();
 			ResultSet rs = ps.getGeneratedKeys();

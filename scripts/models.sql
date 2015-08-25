@@ -4,7 +4,8 @@
 
 CREATE TABLE models
 (
-  id serial NOT NULL,
+  id integer NOT NULL DEFAULT nextval('models2_id_seq'::regclass),
+  type text,
   modelfile text,
   algo text,
   params text,

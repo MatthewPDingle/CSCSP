@@ -14,6 +14,9 @@ public class MetricSingleton {
 	
 	// For holding all the BarKeys
 	private ArrayList<BarKey> barKeys = null;
+	
+	// List of metrics I need updated
+	ArrayList<String> neededMetrics = null;
 
 	// For holding all the Metric Sequences
 	private HashMap<MetricKey, ArrayList<Metric>> metricSequenceHash = new HashMap<MetricKey, ArrayList<Metric>>();
@@ -32,12 +35,13 @@ public class MetricSingleton {
 		return barKeys;
 	}
 
-	public void init(ArrayList<BarKey> barKeys) {
+	public void init(ArrayList<BarKey> barKeys, ArrayList<String> neededMetrics) {
 		this.barKeys = barKeys;
+		this.neededMetrics = neededMetrics;
 	}
 	
 	public void updateMetricSequenceHash() {
-		this.metricSequenceHash = QueryManager.loadMetricSequenceHash(barKeys);
+		this.metricSequenceHash = QueryManager.loadMetricSequenceHash(barKeys, neededMetrics);
 	}
 
 	public HashMap<MetricKey, ArrayList<Metric>> getMetricSequenceHash() {

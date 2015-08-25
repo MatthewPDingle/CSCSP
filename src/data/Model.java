@@ -1,13 +1,12 @@
-package ml;
+package data;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import data.BarKey;
-
 public class Model {
 
 	public int id = -1;
+	public String type;
 	public String modelFile;
 	public String algo;
 	public String params;
@@ -53,7 +52,7 @@ public class Model {
 	public double testRootRelativeSquaredError;
 	public double testROCArea;
 	
-	public Model(String modelFile, String algo, String params, BarKey bk, ArrayList<String> metrics,
+	public Model(String type, String modelFile, String algo, String params, BarKey bk, ArrayList<String> metrics,
 			Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, String sellMetric,
 			float sellMetricValue, String stopMetric, float stopMetricValue, int numBars, int trainDatasetSize,
 			int trainTrueNegatives, int trainFalseNegatives, int trainFalsePositives, int trainTruePositives,
@@ -65,6 +64,7 @@ public class Model {
 			double testRootMeanSquaredError, double testRelativeAbsoluteError, double testRootRelativeSquaredError,
 			double testROCArea) {
 		super();
+		this.type = type;
 		this.modelFile = modelFile;
 		this.algo = algo;
 		this.params = params;

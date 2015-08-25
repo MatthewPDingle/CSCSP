@@ -267,7 +267,7 @@ public class TradeMonitor {
 	public static void getRealtimeQuotesForEverything() {
 		try {
 			ArrayList<BarKey> barKeys = QueryManager.getUniqueBarKeys();
-			MetricSingleton.getInstance().init(barKeys);
+			MetricSingleton.getInstance().init(barKeys, Constants.METRICS);
 			
 			// Delete most recent trading day for the symbols we're tracking during this loop
 			for (BarKey bk : barKeys) {

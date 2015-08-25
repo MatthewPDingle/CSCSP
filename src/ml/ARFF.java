@@ -76,23 +76,22 @@ public class ARFF {
 		HashMap<String, ArrayList<Float>> metricDiscreteValueHash = GeneticSearcher.loadBullMetricDiscreteValueLists(percentiles, metricNames);
 		System.out.println("Complete.");
 		
-		Modelling.buildAndEvaluateModel("NaiveBayes", 		null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("RandomForest", 	null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("SimpleLogistic", 	null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("Bagging",		 	null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("J48", 				null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("BayesNet", 		null, trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("NaiveBayes", 		null, "bear", trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("RandomForest", 	null, "bear", trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("Bagging",		 	null, "bear", trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("J48", 				null, "bear", trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("BayesNet", 		null, "bear", trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
 		
-		Modelling.buildAndEvaluateModel("NaiveBayes", 		null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("RandomForest", 	null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("SimpleLogistic", 	null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("Bagging", 			null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("J48", 				null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("BayesNet", 		null, trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("NaiveBayes", 		null, "bear", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("RandomForest", 	null, "bear", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("Bagging", 			null, "bear", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("J48", 				null, "bear", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("BayesNet", 		null, "bear", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
 	}
 
 	/**
 	 * 
+	 * @param type - Either "bull" or "bear"
 	 * @param periodStart
 	 * @param periodEnd
 	 * @param targetGain - %
@@ -104,7 +103,7 @@ public class ARFF {
 	 * 
 	 * Returns a list that looks exactly like the @data section of a WEKA .arff file
 	 */
-	public static ArrayList<ArrayList<Object>> createWekaArffData(Calendar periodStart, Calendar periodEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
+	public static ArrayList<ArrayList<Object>> createWekaArffData(String type, Calendar periodStart, Calendar periodEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
 		try {
 			// This is newest to oldest ordered
 			ArrayList<HashMap<String, Object>> rawTrainingSet = QueryManager.getTrainingSet(bk, periodStart, periodEnd, metricNames);
@@ -119,15 +118,29 @@ public class ARFF {
 					nextXCloses.remove(0);
 				}
 		
-				boolean targetGainOK = false;
-				int targetGainIndex = findTargetGainIndex(nextXCloses, close, targetGain);
+				boolean targetOK = false;
+				int targetIndex = -1;
+				if (type.equals("bull")) {
+					targetIndex = findTargetGainIndex(nextXCloses, close, targetGain);
+				}
+				else if (type.equals("bear")) {
+					targetIndex = findTargetLossIndex(nextXCloses, close, targetGain); // This can be thought of as targetLoss in the bear case
+				}
 
-				boolean minLossOK = false;
-				if (targetGainIndex != -1) {
-					targetGainOK = true;
-					float minClose = findMin(nextXCloses, targetGainIndex);
-					if (minClose >= close * (100f - minLoss) / 100f) {
-						minLossOK = true;
+				boolean stopOK = false;
+				if (targetIndex != -1) {
+					targetOK = true;
+					if (type.equals("bull")) {
+						float minClose = findMin(nextXCloses, targetIndex);
+						if (minClose >= close * (100f - minLoss) / 100f) {
+							stopOK = true;
+						}
+					}
+					else if (type.equals("bear")) {
+						float maxClose = findMax(nextXCloses, targetIndex);
+						if (maxClose <= close * (100f + minLoss) / 100f) {
+							stopOK = true;
+						}
 					}
 				}
 
@@ -157,7 +170,7 @@ public class ARFF {
 				
 				// Class
 				String classPart = "";
-				if (minLossOK && targetGainOK) {
+				if (stopOK && targetOK) {
 					classPart = "Buy";
 				}
 				else {
@@ -181,6 +194,15 @@ public class ARFF {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param periodStart
+	 * @param periodEnd
+	 * @param bk
+	 * @param metricNames
+	 * @param metricDiscreteValueHash
+	 * @return
+	 */
 	public static ArrayList<ArrayList<Object>> createUnlabeledWekaArffData(Calendar periodStart, Calendar periodEnd, BarKey bk, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
 		try {
 			// This is newest to oldest ordered
@@ -232,9 +254,9 @@ public class ARFF {
 		}
 	}
 	
-	private static float findMin(ArrayList<Float> list, int targetGainIndex) {
+	private static float findMin(ArrayList<Float> list, int targetIndex) {
 		float min = 1000000000f;
-		for (int a = 0; a <= targetGainIndex; a++) {
+		for (int a = 0; a <= targetIndex; a++) {
 			if (list.get(a) < min) {
 				min = list.get(a);
 			}
@@ -242,9 +264,9 @@ public class ARFF {
 		return min;
 	}
 	
-	private static float findMax(ArrayList<Float> list) {
+	private static float findMax(ArrayList<Float> list, int targetIndex) {
 		float max = -1f;
-		for (int a = 0; a < list.size(); a++) {
+		for (int a = 0; a <= targetIndex; a++) {
 			if (list.get(a) > max) {
 				max = list.get(a);
 			}
@@ -262,6 +284,22 @@ public class ARFF {
 		return -1;
 	}
 	
+	/**
+	 * @param list
+	 * @param close
+	 * @param targetLoss - Positive number
+	 * @return
+	 */
+	private static int findTargetLossIndex(ArrayList<Float> list, float close, float targetLoss) {
+		for (int a = 0; a < list.size(); a++) {
+			float targetClose = close * (100f - targetLoss) / 100f;
+			if (list.get(a) <= targetClose) {
+				return a;
+			}
+		}
+		return -1;
+	}
+	
 	private static int findMaxIndex(ArrayList<Float> list) {
 		float max = -1f;
 		int maxIndex = -1;
@@ -272,5 +310,17 @@ public class ARFF {
 			}
 		}
 		return maxIndex;
+	}
+	
+	private static int findMinIndex(ArrayList<Float> list) {
+		float min = 1000000;
+		int minIndex = -1;
+		for (int a = 0; a < list.size(); a++) {
+			if (list.get(a) < min) {
+				min = list.get(a);
+				minIndex = a;
+			}
+		}
+		return minIndex;
 	}
 }

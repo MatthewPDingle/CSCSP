@@ -39,11 +39,20 @@ public class MetricsUpdater {
 			}
 		}
 		
+		// What metrics do we want
+		ArrayList<String> metrics = new ArrayList<String>(); // Constants.METRICS
+//		metrics.add("psar");
+//		metrics.add("ultimateoscillator4_10_25");
+//		metrics.add("ultimateoscillator8_20_50");
+		metrics.add("volumebolls20");
+		metrics.add("volumebolls50");
+		metrics.add("volumebolls100");
+		
 		// Loop.  First pass get 1000 bars.  All other passes, get the number specified by parameters.
 		if (params.size() > 0) {
 			MetricSingleton metricSingleton = MetricSingleton.getInstance();
 			System.out.println(Calendar.getInstance().getTime().toString() + " - Initializing MetricSingleton");
-			metricSingleton.init(barKeys);
+			metricSingleton.init(barKeys, metrics);
 			System.out.println(Calendar.getInstance().getTime().toString() + " - Initializing MetricSingleton done");
 			System.out.println(Calendar.getInstance().getTime().toString() + " - Metric Calculations Starting");
 			MetricsUpdater.calculateMetrics();
@@ -63,7 +72,7 @@ public class MetricsUpdater {
 				Map.Entry pair = (Map.Entry)i.next();
 				// Get this MetricKey
 				MetricKey mk = (MetricKey)pair.getKey();
-				System.out.println("Processing " + mk.toString());
+//				System.out.println("Processing " + mk.toString());
 				// Get this MetricSequence
 				ArrayList<Metric> ms = (ArrayList<Metric>)pair.getValue();
 
@@ -159,9 +168,9 @@ public class MetricsUpdater {
 					case "pricebolls100":
 						MetricFunctionUtil.fillInPriceBollS(ms, 100);
 						break;
-					case "pricebolls200":
-						MetricFunctionUtil.fillInPriceBollS(ms, 200);
-						break;	
+//					case "pricebolls200":
+//						MetricFunctionUtil.fillInPriceBollS(ms, 200);
+//						break;	
 						
 					// Volume Boll using SMA
 					case "volumebolls20":
@@ -173,9 +182,9 @@ public class MetricsUpdater {
 					case "volumebolls100":
 						MetricFunctionUtil.fillInVolumeBollS(ms, 100);
 						break;
-					case "volumebolls200":
-						MetricFunctionUtil.fillInVolumeBollS(ms, 200);
-						break;	
+//					case "volumebolls200":
+//						MetricFunctionUtil.fillInVolumeBollS(ms, 200);
+//						break;	
 						
 					// MACD
 					case "macd12_26_9":

@@ -87,7 +87,7 @@ public class OKCoinDownloader {
 		// Loop.  First pass get 1000 bars.  All other passes, get the number specified by parameters.
 		if (params.size() > 0) {
 			MetricSingleton metricSingleton = MetricSingleton.getInstance();
-			metricSingleton.init(barKeys);
+			metricSingleton.init(barKeys, metricNames);
 			
 			boolean firstPass = true;
 			int numBars = 1000;
@@ -116,6 +116,7 @@ public class OKCoinDownloader {
 						double label1 = cRandomForest6.classifyInstance(instances.firstInstance());
 						double label2 = cNaiveBayes5.classifyInstance(instances.firstInstance());
 						System.out.println("---------------------");
+						System.out.println(unlabeledList.get(0).toString());
 						System.out.println(label1 + ", " + label2);
 					}
 				}

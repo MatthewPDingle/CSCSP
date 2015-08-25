@@ -46,7 +46,7 @@ public class RealtimeTrackerThread extends Thread {
 	public void run() {
 		try {
 			ArrayList<BarKey> barKeys = ps.getBarKeys();
-			MetricSingleton.getInstance().init(barKeys);
+			MetricSingleton.getInstance().init(barKeys, Constants.METRICS);
 	
 			if (barKeys != null) {
 				// Download latest data and put in DB
