@@ -4,13 +4,14 @@
 
 CREATE TABLE models
 (
-  id integer NOT NULL DEFAULT nextval('models2_id_seq'::regclass),
+  id serial NOT NULL,
   type text,
   modelfile text,
   algo text,
   params text,
   symbol text,
   duration text,
+  interbardata boolean,
   metrics text[],
   trainstart timestamp without time zone,
   trainend timestamp without time zone,

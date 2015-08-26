@@ -76,17 +76,17 @@ public class ARFF {
 		HashMap<String, ArrayList<Float>> metricDiscreteValueHash = GeneticSearcher.loadBullMetricDiscreteValueLists(percentiles, metricNames);
 		System.out.println("Complete.");
 		
-		Modelling.buildAndEvaluateModel("NaiveBayes", 		null, "bear", trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("RandomForest", 	null, "bear", trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("Bagging",		 	null, "bear", trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("J48", 				null, "bear", trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("BayesNet", 		null, "bear", trainStart, trainEnd, testStart, testEnd, 1.2f, .2f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("NaiveBayes", 		null, "bull", trainStart, trainEnd, testStart, testEnd, 3.0f, 1f, 48, bk, true, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("RandomForest", 	null, "bull", trainStart, trainEnd, testStart, testEnd, 3.0f, 1f, 48, bk, true, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("Bagging",		 	null, "bull", trainStart, trainEnd, testStart, testEnd, 3.0f, 1f, 48, bk, true, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("J48", 				null, "bull", trainStart, trainEnd, testStart, testEnd, 3.0f, 1f, 48, bk, true, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("BayesNet", 		null, "bull", trainStart, trainEnd, testStart, testEnd, 3.0f, 1f, 48, bk, true, metricNames, metricDiscreteValueHash);
 		
-		Modelling.buildAndEvaluateModel("NaiveBayes", 		null, "bear", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("RandomForest", 	null, "bear", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("Bagging", 			null, "bear", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("J48", 				null, "bear", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
-		Modelling.buildAndEvaluateModel("BayesNet", 		null, "bear", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 48, bk, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("NaiveBayes", 		null, "bull", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 24, bk, true, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("RandomForest", 	null, "bull", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 24, bk, true, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("Bagging", 			null, "bull", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 24, bk, true, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("J48", 				null, "bull", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 24, bk, true, metricNames, metricDiscreteValueHash);
+		Modelling.buildAndEvaluateModel("BayesNet", 		null, "bull", trainStart, trainEnd, testStart, testEnd, 2.0f, .5f, 24, bk, true, metricNames, metricDiscreteValueHash);
 	}
 
 	/**
@@ -103,43 +103,81 @@ public class ARFF {
 	 * 
 	 * Returns a list that looks exactly like the @data section of a WEKA .arff file
 	 */
-	public static ArrayList<ArrayList<Object>> createWekaArffData(String type, Calendar periodStart, Calendar periodEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
+	public static ArrayList<ArrayList<Object>> createWekaArffData(String type, Calendar periodStart, Calendar periodEnd, float targetGain, float minLoss, int numPeriods, BarKey bk, boolean useInterBarData, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
 		try {
 			// This is newest to oldest ordered
 			ArrayList<HashMap<String, Object>> rawTrainingSet = QueryManager.getTrainingSet(bk, periodStart, periodEnd, metricNames);
 			
 			ArrayList<Float> nextXCloses = new ArrayList<Float>();
+			ArrayList<Float> nextXHighs = new ArrayList<Float>();
+			ArrayList<Float> nextXLows = new ArrayList<Float>();
 			ArrayList<ArrayList<Object>> valuesList = new ArrayList<ArrayList<Object>>();
 			for (HashMap<String, Object> record : rawTrainingSet) {
 				float close = (float)record.get("close");
+				float high = (float)record.get("high");
+				float low = (float)record.get("low");
 				float hour = (int)record.get("hour");
 				nextXCloses.add(close);
+				nextXHighs.add(high);
+				nextXLows.add(low);
 				if (nextXCloses.size() > numPeriods) {
 					nextXCloses.remove(0);
+				}
+				if (nextXHighs.size() > numPeriods) {
+					nextXHighs.remove(0);
+				}
+				if (nextXLows.size() > numPeriods) {
+					nextXLows.remove(0);
 				}
 		
 				boolean targetOK = false;
 				int targetIndex = -1;
 				if (type.equals("bull")) {
-					targetIndex = findTargetGainIndex(nextXCloses, close, targetGain);
+					if (useInterBarData) {
+						targetIndex = findTargetGainIndex(nextXHighs, close, targetGain);
+					}
+					else {
+						targetIndex = findTargetGainIndex(nextXCloses, close, targetGain);
+					}
 				}
 				else if (type.equals("bear")) {
-					targetIndex = findTargetLossIndex(nextXCloses, close, targetGain); // This can be thought of as targetLoss in the bear case
+					if (useInterBarData) {
+						targetIndex = findTargetLossIndex(nextXLows, close, targetGain); // This can be thought of as targetLoss in the bear case
+					}
+					else {
+						targetIndex = findTargetLossIndex(nextXCloses, close, targetGain);
+					}
 				}
 
 				boolean stopOK = false;
 				if (targetIndex != -1) {
 					targetOK = true;
 					if (type.equals("bull")) {
-						float minClose = findMin(nextXCloses, targetIndex);
-						if (minClose >= close * (100f - minLoss) / 100f) {
-							stopOK = true;
+						if (useInterBarData) {
+							float minPrice = findMin(nextXLows, targetIndex);
+							if (minPrice >= low * (100f - minLoss) / 100f) {
+								stopOK = true;
+							}
+						}
+						else {
+							float minPrice = findMin(nextXCloses, targetIndex);
+							if (minPrice >= close * (100f - minLoss) / 100f) {
+								stopOK = true;
+							}
 						}
 					}
 					else if (type.equals("bear")) {
-						float maxClose = findMax(nextXCloses, targetIndex);
-						if (maxClose <= close * (100f + minLoss) / 100f) {
-							stopOK = true;
+						if (useInterBarData) {
+							float maxPrice = findMax(nextXHighs, targetIndex);
+							if (maxPrice <= high * (100f + minLoss) / 100f) {
+								stopOK = true;
+							}
+						}
+						else {
+							float maxPrice = findMax(nextXCloses, targetIndex);
+							if (maxPrice <= close * (100f + minLoss) / 100f) {
+								stopOK = true;
+							}
 						}
 					}
 				}
@@ -212,6 +250,8 @@ public class ARFF {
 			for (HashMap<String, Object> record : rawTrainingSet) {
 				// Non-Metric Values
 				float close = (float)record.get("close");
+				float high = (float)record.get("high");
+				float low = (float)record.get("low");
 				float hour = (int)record.get("hour");
 				String refrencePart = close + ", " + hour + ", ";
 				
@@ -274,10 +314,10 @@ public class ARFF {
 		return max;
 	}
 	
-	private static int findTargetGainIndex(ArrayList<Float> list, float close, float targetGain) {
-		for (int a = 0; a < list.size(); a++) {
+	private static int findTargetGainIndex(ArrayList<Float> nextXPrices, float close, float targetGain) {
+		for (int a = 0; a < nextXPrices.size(); a++) {
 			float targetClose = close * (100f + targetGain) / 100f;
-			if (list.get(a) >= targetClose) {
+			if (nextXPrices.get(a) >= targetClose) {
 				return a;
 			}
 		}
@@ -285,15 +325,15 @@ public class ARFF {
 	}
 	
 	/**
-	 * @param list
+	 * @param nextXPrices
 	 * @param close
 	 * @param targetLoss - Positive number
 	 * @return
 	 */
-	private static int findTargetLossIndex(ArrayList<Float> list, float close, float targetLoss) {
-		for (int a = 0; a < list.size(); a++) {
+	private static int findTargetLossIndex(ArrayList<Float> nextXPrices, float close, float targetLoss) {
+		for (int a = 0; a < nextXPrices.size(); a++) {
 			float targetClose = close * (100f - targetLoss) / 100f;
-			if (list.get(a) <= targetClose) {
+			if (nextXPrices.get(a) <= targetClose) {
 				return a;
 			}
 		}

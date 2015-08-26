@@ -41,12 +41,10 @@ public class MetricsUpdater {
 		
 		// What metrics do we want
 		ArrayList<String> metrics = new ArrayList<String>(); // Constants.METRICS
-//		metrics.add("psar");
-//		metrics.add("ultimateoscillator4_10_25");
-//		metrics.add("ultimateoscillator8_20_50");
-		metrics.add("volumebolls20");
-		metrics.add("volumebolls50");
-		metrics.add("volumebolls100");
+		metrics.add("atr10");
+		metrics.add("atr20");
+		metrics.add("atr40");
+
 		
 		// Loop.  First pass get 1000 bars.  All other passes, get the number specified by parameters.
 		if (params.size() > 0) {

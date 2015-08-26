@@ -2465,8 +2465,12 @@ public class QueryManager {
 				HashMap<String, Object> record = new HashMap<String, Object>();
 				
 				float close = rs.getFloat("close");
+				float high = rs.getFloat("high");
+				float low = rs.getFloat("low");
 				int hour = rs.getInt("hour");
 				record.put("close", close);
+				record.put("high", high);
+				record.put("low", low);
 				record.put("hour", hour);
 				for (int a = 0; a < metricNames.size(); a++) {
 					String metricName = metricNames.get(a);
@@ -2492,7 +2496,7 @@ public class QueryManager {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			
 			String q = "INSERT INTO models( " +
-			            "type, modelfile, algo, params, symbol, duration, metrics, trainstart,  " +
+			            "type, modelfile, algo, params, symbol, duration, interbardata, metrics, trainstart,  " +
 			            "trainend, teststart, testend, sellmetric, sellmetricvalue, stopmetric,  " +
 			            "stopmetricvalue, numbars, traindatasetsize, traintruenegatives,  " +
 			            "trainfalsenegatives, trainfalsepositives, traintruepositives,  " +
@@ -2503,7 +2507,7 @@ public class QueryManager {
 			            "testtruepositives, testtruepositiverate, testfalsepositiverate,  " +
 			            "testcorrectrate, testkappa, testmeanabsoluteerror, testrootmeansquarederror,  " +
 			            "testrelativeabsoluteerror, testrootrelativesquarederror, testrocarea) " +
-			            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement ps = c.prepareStatement(q, Statement.RETURN_GENERATED_KEYS);
 			
 			ps.setString(1, m.type);
@@ -2522,44 +2526,45 @@ public class QueryManager {
 			}
 			ps.setString(5, m.bk.symbol);
 			ps.setString(6, m.bk.duration.toString());
-			ps.setArray(7, c.createArrayOf("text", m.metrics.toArray()));
-			ps.setTimestamp(8, new Timestamp(m.trainStart.getTime().getTime()));
-			ps.setTimestamp(9, new Timestamp(m.trainEnd.getTime().getTime()));
-			ps.setTimestamp(10, new Timestamp(m.testStart.getTime().getTime()));
-			ps.setTimestamp(11, new Timestamp(m.testEnd.getTime().getTime()));
-			ps.setString(12, m.sellMetric);
-			ps.setFloat(13, m.sellMetricValue);
-			ps.setString(14, m.stopMetric);
-			ps.setFloat(15, m.stopMetricValue);
-			ps.setInt(16, m.numBars);
-			ps.setInt(17, m.trainDatasetSize);
-			ps.setInt(18, m.trainTrueNegatives);
-			ps.setInt(19, m.trainFalseNegatives);
-			ps.setInt(20, m.trainFalsePositives);
-			ps.setInt(21, m.trainTruePositives);
-			ps.setDouble(22, m.trainTruePostitiveRate);
-			ps.setDouble(23, m.trainFalsePositiveRate);
-			ps.setDouble(24, m.trainCorrectRate);
-			ps.setDouble(25, m.trainKappa);
-			ps.setDouble(26, m.trainMeanAbsoluteError);
-			ps.setDouble(27, m.trainRootMeanSquaredError);
-			ps.setDouble(28, m.trainRelativeAbsoluteError);
-			ps.setDouble(29, m.trainRootRelativeSquaredError);
-			ps.setDouble(30, m.trainROCArea);
-			ps.setInt(31, m.testDatasetSize);
-			ps.setInt(32, m.testTrueNegatives);
-			ps.setInt(33, m.testFalseNegatives);
-			ps.setInt(34, m.testFalsePositives);
-			ps.setInt(35, m.testTruePositives);
-			ps.setDouble(36, m.testTruePostitiveRate);
-			ps.setDouble(37, m.testFalsePositiveRate);
-			ps.setDouble(38, m.testCorrectRate);
-			ps.setDouble(39, m.testKappa);
-			ps.setDouble(40, m.testMeanAbsoluteError);
-			ps.setDouble(41, m.testRootMeanSquaredError);
-			ps.setDouble(42, m.testRelativeAbsoluteError);
-			ps.setDouble(43, m.testRootRelativeSquaredError);
-			ps.setDouble(44, m.testROCArea);
+			ps.setBoolean(7, m.interBarData);
+			ps.setArray(8, c.createArrayOf("text", m.metrics.toArray()));
+			ps.setTimestamp(9, new Timestamp(m.trainStart.getTime().getTime()));
+			ps.setTimestamp(10, new Timestamp(m.trainEnd.getTime().getTime()));
+			ps.setTimestamp(11, new Timestamp(m.testStart.getTime().getTime()));
+			ps.setTimestamp(12, new Timestamp(m.testEnd.getTime().getTime()));
+			ps.setString(13, m.sellMetric);
+			ps.setFloat(14, m.sellMetricValue);
+			ps.setString(15, m.stopMetric);
+			ps.setFloat(16, m.stopMetricValue);
+			ps.setInt(17, m.numBars);
+			ps.setInt(18, m.trainDatasetSize);
+			ps.setInt(19, m.trainTrueNegatives);
+			ps.setInt(20, m.trainFalseNegatives);
+			ps.setInt(21, m.trainFalsePositives);
+			ps.setInt(22, m.trainTruePositives);
+			ps.setDouble(23, m.trainTruePostitiveRate);
+			ps.setDouble(24, m.trainFalsePositiveRate);
+			ps.setDouble(25, m.trainCorrectRate);
+			ps.setDouble(26, m.trainKappa);
+			ps.setDouble(27, m.trainMeanAbsoluteError);
+			ps.setDouble(28, m.trainRootMeanSquaredError);
+			ps.setDouble(29, m.trainRelativeAbsoluteError);
+			ps.setDouble(30, m.trainRootRelativeSquaredError);
+			ps.setDouble(31, m.trainROCArea);
+			ps.setInt(32, m.testDatasetSize);
+			ps.setInt(33, m.testTrueNegatives);
+			ps.setInt(34, m.testFalseNegatives);
+			ps.setInt(35, m.testFalsePositives);
+			ps.setInt(36, m.testTruePositives);
+			ps.setDouble(37, m.testTruePostitiveRate);
+			ps.setDouble(38, m.testFalsePositiveRate);
+			ps.setDouble(39, m.testCorrectRate);
+			ps.setDouble(40, m.testKappa);
+			ps.setDouble(41, m.testMeanAbsoluteError);
+			ps.setDouble(42, m.testRootMeanSquaredError);
+			ps.setDouble(43, m.testRelativeAbsoluteError);
+			ps.setDouble(44, m.testRootRelativeSquaredError);
+			ps.setDouble(45, m.testROCArea);
 			
 			ps.executeUpdate();
 			ResultSet rs = ps.getGeneratedKeys();

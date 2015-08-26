@@ -11,6 +11,7 @@ public class Model {
 	public String algo;
 	public String params;
 	public BarKey bk;
+	public boolean interBarData;
 	public ArrayList<String> metrics;
 	public Calendar trainStart;
 	public Calendar trainEnd;
@@ -52,7 +53,7 @@ public class Model {
 	public double testRootRelativeSquaredError;
 	public double testROCArea;
 	
-	public Model(String type, String modelFile, String algo, String params, BarKey bk, ArrayList<String> metrics,
+	public Model(String type, String modelFile, String algo, String params, BarKey bk, boolean interBarData, ArrayList<String> metrics,
 			Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, String sellMetric,
 			float sellMetricValue, String stopMetric, float stopMetricValue, int numBars, int trainDatasetSize,
 			int trainTrueNegatives, int trainFalseNegatives, int trainFalsePositives, int trainTruePositives,
@@ -69,6 +70,7 @@ public class Model {
 		this.algo = algo;
 		this.params = params;
 		this.bk = bk;
+		this.interBarData = interBarData;
 		this.metrics = metrics;
 		this.trainStart = trainStart;
 		this.trainEnd = trainEnd;
