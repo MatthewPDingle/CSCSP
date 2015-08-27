@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -2489,6 +2490,99 @@ public class QueryManager {
 			e.printStackTrace();
 		}
 		return trainingSet;
+	}
+	
+	public static ArrayList<Model> getModels(String whereClause) {
+		ArrayList<Model> models = new ArrayList<Model>();
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			
+			String q = "SELECT * FROM models " + whereClause;
+			PreparedStatement ps = c.prepareStatement(q);
+			
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				int id = rs.getInt("id");
+				String type = rs.getString("type");
+				String modelFile = rs.getString("modelfile");
+				String algo = rs.getString("algo");
+				String params = rs.getString("params");
+				String symbol = rs.getString("symbol");
+				BAR_SIZE duration = BAR_SIZE.valueOf(rs.getString("duration"));
+				boolean interbarData = rs.getBoolean("interbardata");
+				Array metricArray = rs.getArray("metrics");
+				String[] metrics = (String[])metricArray.getArray();
+				ArrayList<String> metricList = new ArrayList<String>(Arrays.asList(metrics));
+				Timestamp trainStartTS = rs.getTimestamp("trainstart");
+				Calendar trainStart = Calendar.getInstance();
+				trainStart.setTimeInMillis(trainStartTS.getTime());
+				Timestamp trainEndTS = rs.getTimestamp("trainend");
+				Calendar trainEnd = Calendar.getInstance();
+				trainEnd.setTimeInMillis(trainEndTS.getTime());
+				Timestamp testStartTS = rs.getTimestamp("teststart");
+				Calendar testStart = Calendar.getInstance();
+				testStart.setTimeInMillis(testStartTS.getTime());
+				Timestamp testEndTS = rs.getTimestamp("testend");
+				Calendar testEnd = Calendar.getInstance();
+				testEnd.setTimeInMillis(testEndTS.getTime());
+				String sellMetric = rs.getString("sellmetric");
+				float sellMetricValue = rs.getFloat("sellmetricvalue");
+				String stopMetric = rs.getString("stopmetric");
+				float stopMetricValue = rs.getFloat("stopmetricvalue");
+				int numBars = rs.getInt("numbars");
+				int trainDatasetSize = rs.getInt("traindatasetsize");
+				int trainTrueNegatives = rs.getInt("traintruenegatives");
+				int trainFalseNegatives = rs.getInt("trainfalsenegatives");
+				int trainFalsePositives = rs.getInt("trainfalsepositives");
+				int trainTruePositives = rs.getInt("traintruepositives");
+				double trainTruePositiveRate = rs.getDouble("traintruepositiverate");
+				double trainFalsePositiveRate = rs.getDouble("trainfalsepositiverate");
+				double trainCorrectRate = rs.getDouble("traincorrectrate");
+				double trainKappa = rs.getDouble("trainKappa");
+				double trainMeanAbsoluteError = rs.getDouble("trainmeanabsoluteerror");
+				double trainRootMeanSquaredError = rs.getDouble("trainrootmeansquarederror");
+				double trainRelativeAbsoluteError = rs.getDouble("trainrelativeabsoluteerror");
+				double trainRootRelativeSquaredError = rs.getDouble("trainrootrelativesquarederror");
+				double trainROCArea = rs.getDouble("trainrocarea");
+				int testDatasetSize = rs.getInt("testdatasetsize");
+				int testTrueNegatives = rs.getInt("testtruenegatives");
+				int testFalseNegatives = rs.getInt("testfalsenegatives");
+				int testFalsePositives = rs.getInt("testfalsepositives");
+				int testTruePositives = rs.getInt("testtruepositives");
+				double testTruePositiveRate = rs.getDouble("testtruepositiverate");
+				double testFalsePositiveRate = rs.getDouble("testfalsepositiverate");
+				double testCorrectRate = rs.getDouble("testcorrectrate");
+				double testKappa = rs.getDouble("testKappa");
+				double testMeanAbsoluteError = rs.getDouble("testmeanabsoluteerror");
+				double testRootMeanSquaredError = rs.getDouble("testrootmeansquarederror");
+				double testRelativeAbsoluteError = rs.getDouble("testrelativeabsoluteerror");
+				double testRootRelativeSquaredError = rs.getDouble("testrootrelativesquarederror");
+				double testROCArea = rs.getDouble("testrocarea");
+				
+				Model model = new Model(type, modelFile, algo, params, new BarKey(symbol, duration), interbarData, metricList,
+						trainStart, trainEnd, testStart, testEnd, sellMetric,
+						sellMetricValue, stopMetric, stopMetricValue, numBars, trainDatasetSize,
+						trainTrueNegatives, trainFalseNegatives, trainFalsePositives, trainTruePositives,
+						trainTruePositiveRate, trainFalsePositiveRate, trainCorrectRate, trainKappa,
+						trainMeanAbsoluteError, trainRootMeanSquaredError, trainRelativeAbsoluteError,
+						trainRootRelativeSquaredError, trainROCArea, testDatasetSize, testTrueNegatives,
+						testFalseNegatives, testFalsePositives, testTruePositives, testTruePositiveRate,
+						testFalsePositiveRate, testCorrectRate, testKappa, testMeanAbsoluteError,
+						testRootMeanSquaredError, testRelativeAbsoluteError, testRootRelativeSquaredError,
+						testROCArea);
+				model.id = id;
+				
+				models.add(model);
+			}
+			
+			rs.close();
+			ps.close();
+			c.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return models;
 	}
 	
 	public static int insertModel(Model m) {
