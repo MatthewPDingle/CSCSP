@@ -104,15 +104,14 @@ public class Modelling {
 	}
 	
 	public static void buildAndEvaluateModel(String algo, String params, String type, Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, 
-			float targetGain, float minLoss, int numPeriods, BarKey bk, boolean interBarData, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
+			float targetGain, float minLoss, int numBars, BarKey bk, boolean interBarData, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
 		try {
 			System.out.println("Starting " + algo);
 			String sellMetric = Constants.OTHER_SELL_METRIC_PERCENT_UP;
 			float sellMetricValue = targetGain;
 			String stopMetric = Constants.STOP_METRIC_PERCENT_DOWN;
 			float stopMetricValue = minLoss;
-			int numBars = 48;
-			
+		
 			System.out.print("Creating Train & Test datasets...");
 			ArrayList<ArrayList<Object>> trainValuesList = ARFF.createWekaArffData(type, trainStart, trainEnd, sellMetricValue, stopMetricValue, numBars, bk, interBarData, metricNames, metricDiscreteValueHash);
 			ArrayList<ArrayList<Object>> testValuesList = ARFF.createWekaArffData(type, testStart, testEnd, sellMetricValue, stopMetricValue, numBars, bk, interBarData, metricNames, metricDiscreteValueHash);
@@ -142,6 +141,9 @@ public class Modelling {
 			}
 			else {
 				return;
+			}
+			if (params != null) {
+				classifier.setOptions(weka.core.Utils.splitOptions(params));
 			}
 			Evaluation trainEval = new Evaluation(trainInstances);
 			trainEval.crossValidateModel(classifier, trainInstances, 10, new Random(1));
