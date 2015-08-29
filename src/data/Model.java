@@ -1,7 +1,15 @@
 package data;
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Model {
 
@@ -111,4 +119,577 @@ public class Model {
 		this.testROCArea = testROCArea;
 	}
 	
+	
+	
+	public int getId() {
+		return id;
+	}
+
+
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+
+	public String getType() {
+		return type;
+	}
+
+
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+
+
+	public String getModelFile() {
+		return modelFile;
+	}
+
+
+
+	public void setModelFile(String modelFile) {
+		this.modelFile = modelFile;
+	}
+
+
+
+	public String getAlgo() {
+		return algo;
+	}
+
+
+
+	public void setAlgo(String algo) {
+		this.algo = algo;
+	}
+
+
+
+	public String getParams() {
+		return params;
+	}
+
+
+
+	public void setParams(String params) {
+		this.params = params;
+	}
+
+
+
+	public BarKey getBk() {
+		return bk;
+	}
+
+
+
+	public void setBk(BarKey bk) {
+		this.bk = bk;
+	}
+
+
+
+	public boolean isInterBarData() {
+		return interBarData;
+	}
+
+
+
+	public void setInterBarData(boolean interBarData) {
+		this.interBarData = interBarData;
+	}
+
+
+
+	public ArrayList<String> getMetrics() {
+		return metrics;
+	}
+
+
+
+	public void setMetrics(ArrayList<String> metrics) {
+		this.metrics = metrics;
+	}
+
+
+
+	public Calendar getTrainStart() {
+		return trainStart;
+	}
+
+
+
+	public void setTrainStart(Calendar trainStart) {
+		this.trainStart = trainStart;
+	}
+
+
+
+	public Calendar getTrainEnd() {
+		return trainEnd;
+	}
+
+
+
+	public void setTrainEnd(Calendar trainEnd) {
+		this.trainEnd = trainEnd;
+	}
+
+
+
+	public Calendar getTestStart() {
+		return testStart;
+	}
+
+
+
+	public void setTestStart(Calendar testStart) {
+		this.testStart = testStart;
+	}
+
+
+
+	public Calendar getTestEnd() {
+		return testEnd;
+	}
+
+
+
+	public void setTestEnd(Calendar testEnd) {
+		this.testEnd = testEnd;
+	}
+
+
+
+	public String getSellMetric() {
+		return sellMetric;
+	}
+
+
+
+	public void setSellMetric(String sellMetric) {
+		this.sellMetric = sellMetric;
+	}
+
+
+
+	public float getSellMetricValue() {
+		return sellMetricValue;
+	}
+
+
+
+	public void setSellMetricValue(float sellMetricValue) {
+		this.sellMetricValue = sellMetricValue;
+	}
+
+
+
+	public String getStopMetric() {
+		return stopMetric;
+	}
+
+
+
+	public void setStopMetric(String stopMetric) {
+		this.stopMetric = stopMetric;
+	}
+
+
+
+	public float getStopMetricValue() {
+		return stopMetricValue;
+	}
+
+
+
+	public void setStopMetricValue(float stopMetricValue) {
+		this.stopMetricValue = stopMetricValue;
+	}
+
+
+
+	public int getNumBars() {
+		return numBars;
+	}
+
+
+
+	public void setNumBars(int numBars) {
+		this.numBars = numBars;
+	}
+
+
+
+	public int getTrainDatasetSize() {
+		return trainDatasetSize;
+	}
+
+
+
+	public void setTrainDatasetSize(int trainDatasetSize) {
+		this.trainDatasetSize = trainDatasetSize;
+	}
+
+
+
+	public int getTrainTrueNegatives() {
+		return trainTrueNegatives;
+	}
+
+
+
+	public void setTrainTrueNegatives(int trainTrueNegatives) {
+		this.trainTrueNegatives = trainTrueNegatives;
+	}
+
+
+
+	public int getTrainFalseNegatives() {
+		return trainFalseNegatives;
+	}
+
+
+
+	public void setTrainFalseNegatives(int trainFalseNegatives) {
+		this.trainFalseNegatives = trainFalseNegatives;
+	}
+
+
+
+	public int getTrainFalsePositives() {
+		return trainFalsePositives;
+	}
+
+
+
+	public void setTrainFalsePositives(int trainFalsePositives) {
+		this.trainFalsePositives = trainFalsePositives;
+	}
+
+
+
+	public int getTrainTruePositives() {
+		return trainTruePositives;
+	}
+
+
+
+	public void setTrainTruePositives(int trainTruePositives) {
+		this.trainTruePositives = trainTruePositives;
+	}
+
+
+
+	public double getTrainTruePostitiveRate() {
+		return trainTruePostitiveRate;
+	}
+
+
+
+	public void setTrainTruePostitiveRate(double trainTruePostitiveRate) {
+		this.trainTruePostitiveRate = trainTruePostitiveRate;
+	}
+
+
+
+	public double getTrainFalsePositiveRate() {
+		return trainFalsePositiveRate;
+	}
+
+
+
+	public void setTrainFalsePositiveRate(double trainFalsePositiveRate) {
+		this.trainFalsePositiveRate = trainFalsePositiveRate;
+	}
+
+
+
+	public double getTrainCorrectRate() {
+		return trainCorrectRate;
+	}
+
+
+
+	public void setTrainCorrectRate(double trainCorrectRate) {
+		this.trainCorrectRate = trainCorrectRate;
+	}
+
+
+
+	public double getTrainKappa() {
+		return trainKappa;
+	}
+
+
+
+	public void setTrainKappa(double trainKappa) {
+		this.trainKappa = trainKappa;
+	}
+
+
+
+	public double getTrainMeanAbsoluteError() {
+		return trainMeanAbsoluteError;
+	}
+
+
+
+	public void setTrainMeanAbsoluteError(double trainMeanAbsoluteError) {
+		this.trainMeanAbsoluteError = trainMeanAbsoluteError;
+	}
+
+
+
+	public double getTrainRootMeanSquaredError() {
+		return trainRootMeanSquaredError;
+	}
+
+
+
+	public void setTrainRootMeanSquaredError(double trainRootMeanSquaredError) {
+		this.trainRootMeanSquaredError = trainRootMeanSquaredError;
+	}
+
+
+
+	public double getTrainRelativeAbsoluteError() {
+		return trainRelativeAbsoluteError;
+	}
+
+
+
+	public void setTrainRelativeAbsoluteError(double trainRelativeAbsoluteError) {
+		this.trainRelativeAbsoluteError = trainRelativeAbsoluteError;
+	}
+
+
+
+	public double getTrainRootRelativeSquaredError() {
+		return trainRootRelativeSquaredError;
+	}
+
+
+
+	public void setTrainRootRelativeSquaredError(double trainRootRelativeSquaredError) {
+		this.trainRootRelativeSquaredError = trainRootRelativeSquaredError;
+	}
+
+
+
+	public double getTrainROCArea() {
+		return trainROCArea;
+	}
+
+
+
+	public void setTrainROCArea(double trainROCArea) {
+		this.trainROCArea = trainROCArea;
+	}
+
+
+
+	public int getTestDatasetSize() {
+		return testDatasetSize;
+	}
+
+
+
+	public void setTestDatasetSize(int testDatasetSize) {
+		this.testDatasetSize = testDatasetSize;
+	}
+
+
+
+	public int getTestTrueNegatives() {
+		return testTrueNegatives;
+	}
+
+
+
+	public void setTestTrueNegatives(int testTrueNegatives) {
+		this.testTrueNegatives = testTrueNegatives;
+	}
+
+
+
+	public int getTestFalseNegatives() {
+		return testFalseNegatives;
+	}
+
+
+
+	public void setTestFalseNegatives(int testFalseNegatives) {
+		this.testFalseNegatives = testFalseNegatives;
+	}
+
+
+
+	public int getTestFalsePositives() {
+		return testFalsePositives;
+	}
+
+
+
+	public void setTestFalsePositives(int testFalsePositives) {
+		this.testFalsePositives = testFalsePositives;
+	}
+
+
+
+	public int getTestTruePositives() {
+		return testTruePositives;
+	}
+
+
+
+	public void setTestTruePositives(int testTruePositives) {
+		this.testTruePositives = testTruePositives;
+	}
+
+
+
+	public double getTestTruePostitiveRate() {
+		return testTruePostitiveRate;
+	}
+
+
+
+	public void setTestTruePostitiveRate(double testTruePostitiveRate) {
+		this.testTruePostitiveRate = testTruePostitiveRate;
+	}
+
+
+
+	public double getTestFalsePositiveRate() {
+		return testFalsePositiveRate;
+	}
+
+
+
+	public void setTestFalsePositiveRate(double testFalsePositiveRate) {
+		this.testFalsePositiveRate = testFalsePositiveRate;
+	}
+
+
+
+	public double getTestCorrectRate() {
+		return testCorrectRate;
+	}
+
+
+
+	public void setTestCorrectRate(double testCorrectRate) {
+		this.testCorrectRate = testCorrectRate;
+	}
+
+
+
+	public double getTestKappa() {
+		return testKappa;
+	}
+
+
+
+	public void setTestKappa(double testKappa) {
+		this.testKappa = testKappa;
+	}
+
+
+
+	public double getTestMeanAbsoluteError() {
+		return testMeanAbsoluteError;
+	}
+
+
+
+	public void setTestMeanAbsoluteError(double testMeanAbsoluteError) {
+		this.testMeanAbsoluteError = testMeanAbsoluteError;
+	}
+
+
+
+	public double getTestRootMeanSquaredError() {
+		return testRootMeanSquaredError;
+	}
+
+
+
+	public void setTestRootMeanSquaredError(double testRootMeanSquaredError) {
+		this.testRootMeanSquaredError = testRootMeanSquaredError;
+	}
+
+
+
+	public double getTestRelativeAbsoluteError() {
+		return testRelativeAbsoluteError;
+	}
+
+
+
+	public void setTestRelativeAbsoluteError(double testRelativeAbsoluteError) {
+		this.testRelativeAbsoluteError = testRelativeAbsoluteError;
+	}
+
+
+
+	public double getTestRootRelativeSquaredError() {
+		return testRootRelativeSquaredError;
+	}
+
+
+
+	public void setTestRootRelativeSquaredError(double testRootRelativeSquaredError) {
+		this.testRootRelativeSquaredError = testRootRelativeSquaredError;
+	}
+
+
+
+	public double getTestROCArea() {
+		return testROCArea;
+	}
+
+
+
+	public void setTestROCArea(double testROCArea) {
+		this.testROCArea = testROCArea;
+	}
+
+
+
+	public static ArrayList<HashMap<String, Object>> convertCollection(Collection collection) {
+	    ArrayList<HashMap<String, Object>> list = new ArrayList<HashMap<String, Object>>();
+	    for (Object element : collection) {
+	        list.add(getValues(element));
+	    }	
+	    return list;
+	}
+
+	public static HashMap<String, Object> getValues(Object o)  {
+	    HashMap<String, Object> values = new HashMap<String, Object>();
+	    try {
+		    BeanInfo info = Introspector.getBeanInfo(o.getClass());
+		    for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
+		        // This will access public properties through getters
+		        Method getter = pd.getReadMethod();
+		        if (getter != null) {
+		        	if (!pd.getName().equals("class")) {
+		        		String field = pd.getName();
+		        		if (field.equals("id") || field.equals("type") || field.equals("modelFile") || field.equals("algo")) {
+		        			values.put(pd.getName(), getter.invoke(o).toString());
+		        		}
+		        	}
+		        }
+		            
+		    }
+	    }
+	    catch (Exception e) {
+	    	e.printStackTrace();
+	    }
+	    return values;
+	}
 }
