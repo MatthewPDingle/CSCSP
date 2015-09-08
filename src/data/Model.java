@@ -4,12 +4,11 @@ import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class Model {
 
@@ -36,7 +35,7 @@ public class Model {
 	public int trainFalseNegatives;
 	public int trainFalsePositives;
 	public int trainTruePositives;
-	public double trainTruePostitiveRate;
+	public double trainTruePositiveRate;
 	public double trainFalsePositiveRate;
 	public double trainCorrectRate;
 	public double trainKappa;
@@ -51,7 +50,7 @@ public class Model {
 	public int testFalseNegatives;
 	public int testFalsePositives;
 	public int testTruePositives;
-	public double testTruePostitiveRate;
+	public double testTruePositiveRate;
 	public double testFalsePositiveRate;
 	public double testCorrectRate;
 	public double testKappa;
@@ -65,10 +64,10 @@ public class Model {
 			Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, String sellMetric,
 			float sellMetricValue, String stopMetric, float stopMetricValue, int numBars, int trainDatasetSize,
 			int trainTrueNegatives, int trainFalseNegatives, int trainFalsePositives, int trainTruePositives,
-			double trainTruePostitiveRate, double trainFalsePositiveRate, double trainCorrectRate, double trainKappa,
+			double trainTruePositiveRate, double trainFalsePositiveRate, double trainCorrectRate, double trainKappa,
 			double trainMeanAbsoluteError, double trainRootMeanSquaredError, double trainRelativeAbsoluteError,
 			double trainRootRelativeSquaredError, double trainROCArea, int testDatasetSize, int testTrueNegatives,
-			int testFalseNegatives, int testFalsePositives, int testTruePositives, double testTruePostitiveRate,
+			int testFalseNegatives, int testFalsePositives, int testTruePositives, double testTruePositiveRate,
 			double testFalsePositiveRate, double testCorrectRate, double testKappa, double testMeanAbsoluteError,
 			double testRootMeanSquaredError, double testRelativeAbsoluteError, double testRootRelativeSquaredError,
 			double testROCArea) {
@@ -94,7 +93,7 @@ public class Model {
 		this.trainFalseNegatives = trainFalseNegatives;
 		this.trainFalsePositives = trainFalsePositives;
 		this.trainTruePositives = trainTruePositives;
-		this.trainTruePostitiveRate = trainTruePostitiveRate;
+		this.trainTruePositiveRate = trainTruePositiveRate;
 		this.trainFalsePositiveRate = trainFalsePositiveRate;
 		this.trainCorrectRate = trainCorrectRate;
 		this.trainKappa = trainKappa;
@@ -108,7 +107,7 @@ public class Model {
 		this.testFalseNegatives = testFalseNegatives;
 		this.testFalsePositives = testFalsePositives;
 		this.testTruePositives = testTruePositives;
-		this.testTruePostitiveRate = testTruePostitiveRate;
+		this.testTruePositiveRate = testTruePositiveRate;
 		this.testFalsePositiveRate = testFalsePositiveRate;
 		this.testCorrectRate = testCorrectRate;
 		this.testKappa = testKappa;
@@ -385,14 +384,14 @@ public class Model {
 
 
 
-	public double getTrainTruePostitiveRate() {
-		return trainTruePostitiveRate;
+	public double getTrainTruePositiveRate() {
+		return trainTruePositiveRate;
 	}
 
 
 
-	public void setTrainTruePostitiveRate(double trainTruePostitiveRate) {
-		this.trainTruePostitiveRate = trainTruePostitiveRate;
+	public void setTrainTruePositiveRate(double trainTruePostitiveRate) {
+		this.trainTruePositiveRate = trainTruePostitiveRate;
 	}
 
 
@@ -553,14 +552,14 @@ public class Model {
 
 
 
-	public double getTestTruePostitiveRate() {
-		return testTruePostitiveRate;
+	public double getTestTruePositiveRate() {
+		return testTruePositiveRate;
 	}
 
 
 
-	public void setTestTruePostitiveRate(double testTruePostitiveRate) {
-		this.testTruePostitiveRate = testTruePostitiveRate;
+	public void setTestTruePositiveRate(double testTruePositiveRate) {
+		this.testTruePositiveRate = testTruePositiveRate;
 	}
 
 
@@ -659,7 +658,24 @@ public class Model {
 		this.testROCArea = testROCArea;
 	}
 
+	
+	public double getTrainWinPercent() {
+		if (trainTruePositiveRate + trainFalsePositiveRate == 0) {
+			return 0;
+		}
+		return trainTruePositiveRate / (trainTruePositiveRate + trainFalsePositiveRate);
+	}
 
+	public double getTestWinPercent() {
+		if (testTruePositiveRate + testFalsePositiveRate == 0) {
+			return 0;
+		}
+		return testTruePositiveRate / (testTruePositiveRate + testFalsePositiveRate);
+	}
+	
+	public int getTestNumOpportunities() {
+		return testTruePositives + testFalseNegatives;
+	}
 
 	public static ArrayList<HashMap<String, Object>> convertCollection(Collection collection) {
 	    ArrayList<HashMap<String, Object>> list = new ArrayList<HashMap<String, Object>>();
@@ -679,8 +695,23 @@ public class Model {
 		        if (getter != null) {
 		        	if (!pd.getName().equals("class")) {
 		        		String field = pd.getName();
-		        		if (field.equals("id") || field.equals("type") || field.equals("modelFile") || field.equals("algo")) {
-		        			values.put(pd.getName(), getter.invoke(o).toString());
+		        		Object oValue = getter.invoke(o);
+		        		String className = pd.getPropertyType().toString();
+		        		if (oValue != null) {
+		        			if (className.equals("class java.util.Calendar")) {
+		        				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		        				values.put(field, sdf.format(((Calendar)oValue).getTime()));
+		        			}
+		        			else if (className.equals("class data.BarKey")) {
+		        				values.put("symbol", ((BarKey)oValue).symbol);
+		        				values.put("duration", ((BarKey)oValue).duration.toString());
+		        			}
+		        			else {
+		        				values.put(field, oValue.toString());
+		        			}
+		        		}
+		        		else {
+		        			values.put(field, null);
 		        		}
 		        	}
 		        }

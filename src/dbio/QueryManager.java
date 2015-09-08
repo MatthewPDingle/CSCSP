@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -2492,9 +2493,71 @@ public class QueryManager {
 		return trainingSet;
 	}
 	
+	public static ArrayList<HashMap<String, Object>> getBarAndMetricInfo() {
+		ArrayList<HashMap<String, Object>> barAndMetricInfo = new ArrayList<HashMap<String, Object>>();
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			
+			String q = 	"SELECT b.*, m.metricmin, m.metricmax, m.metricage FROM ( " +
+						"SELECT symbol, duration, MIN(start) AS barmin, MAX(start) AS barmax, AGE(now(), MAX(start)) AS barage, COUNT(*) AS barcount " + 
+						"FROM bar GROUP BY symbol, duration ORDER BY symbol, duration) b " +
+						"LEFT OUTER JOIN (SELECT symbol, duration, MIN(start) AS metricmin, MAX(start) AS metricmax, AGE(now(), MAX(start)) AS metricage FROM metrics GROUP BY symbol, duration) m " +
+						"ON b.symbol = m.symbol AND b.duration = m.duration";
+			PreparedStatement ps = c.prepareStatement(q);
+			
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				HashMap<String, Object> record = new HashMap<String, Object>();
+				
+				String symbol = rs.getString("symbol");
+				String duration = rs.getString("duration");
+				Timestamp barminTS = rs.getTimestamp("barmin");
+				Calendar barmin = Calendar.getInstance();
+				barmin.setTimeInMillis(barminTS.getTime());
+				Timestamp barmaxTS = rs.getTimestamp("barmax");
+				Calendar barmax = Calendar.getInstance();
+				barmax.setTimeInMillis(barmaxTS.getTime());
+				String barage = rs.getString("barage");
+				int barcount = rs.getInt("barcount");
+				
+				Timestamp metricminTS = rs.getTimestamp("metricmin");
+				Calendar metricmin = Calendar.getInstance();
+				metricmin.setTimeInMillis(metricminTS.getTime());
+				Timestamp metricmaxTS = rs.getTimestamp("metricmax");
+				Calendar metricmax = Calendar.getInstance();
+				metricmax.setTimeInMillis(metricmaxTS.getTime());
+				String metricage = rs.getString("metricage");
+				
+				record.put("symbol", symbol);
+				record.put("duration", duration);
+				record.put("barmin", sdf.format(barmin.getTime()));
+				record.put("barmax", sdf.format(barmax.getTime()));
+				record.put("barage", barage);
+				record.put("barcount", barcount);
+				record.put("metricmin", sdf.format(metricmin.getTime()));
+				record.put("metricmax", sdf.format(metricmax.getTime()));
+				record.put("metricage", metricage);
+				barAndMetricInfo.add(record);
+			}
+			rs.close();
+			ps.close();
+			c.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return barAndMetricInfo;
+	}
+	
 	public static ArrayList<Model> getModels(String whereClause) {
 		ArrayList<Model> models = new ArrayList<Model>();
 		try {
+			if (whereClause == null) {
+				whereClause = "";
+			}
+			
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			
 			String q = "SELECT * FROM models " + whereClause;
@@ -2636,7 +2699,7 @@ public class QueryManager {
 			ps.setInt(20, m.trainFalseNegatives);
 			ps.setInt(21, m.trainFalsePositives);
 			ps.setInt(22, m.trainTruePositives);
-			ps.setDouble(23, m.trainTruePostitiveRate);
+			ps.setDouble(23, m.trainTruePositiveRate);
 			ps.setDouble(24, m.trainFalsePositiveRate);
 			ps.setDouble(25, m.trainCorrectRate);
 			ps.setDouble(26, m.trainKappa);
@@ -2650,7 +2713,7 @@ public class QueryManager {
 			ps.setInt(34, m.testFalseNegatives);
 			ps.setInt(35, m.testFalsePositives);
 			ps.setInt(36, m.testTruePositives);
-			ps.setDouble(37, m.testTruePostitiveRate);
+			ps.setDouble(37, m.testTruePositiveRate);
 			ps.setDouble(38, m.testFalsePositiveRate);
 			ps.setDouble(39, m.testCorrectRate);
 			ps.setDouble(40, m.testKappa);
