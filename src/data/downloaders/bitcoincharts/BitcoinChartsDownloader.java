@@ -28,9 +28,9 @@ public class BitcoinChartsDownloader {
 			if (tickname != null) {
 				if (BAR_SIZE.valueOf(barSize) != null) {
 					System.out.println("Downloading: " + filename);
-					downloadArchive(filename);
+					downloadArchive(filename, null);
 					System.out.println("Inserting ticks from file into DB");
-					Converter.processArchiveFileIntoTicks(filename);
+					Converter.processArchiveFileIntoTicks(filename, null);
 					System.out.println("Converting ticks into bars and inserting into DB");
 					Converter.processTickDataIntoBars(tickname, BAR_SIZE.valueOf(barSize));
 					System.out.println("Finished: " + filename);
@@ -45,9 +45,18 @@ public class BitcoinChartsDownloader {
 		}
 	}
 
-	public static void downloadArchive(String fileName) {
+	public static void downloadArchive(String fileName, String dataPath) {
 		try {
-			FileUtils.copyURLToFile(new URL(BitcoinChartsConstants.URL + fileName), new File("data/" + fileName));
+			if (dataPath == null) {
+				dataPath = "data";
+			}
+			
+			File dir = new File(dataPath);
+			if (!dir.exists()) {
+				dir.mkdir();
+			}
+			
+			FileUtils.copyURLToFile(new URL(BitcoinChartsConstants.URL + fileName), new File(dataPath + "/" + fileName));
 			
 			LogManager.getLogger("data.downloader").info("Downloaded file " + fileName + " from BitcoinCharts");
 		}

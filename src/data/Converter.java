@@ -1,6 +1,7 @@
 package data;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -331,7 +332,7 @@ public class Converter {
 	 * 
 	 * @param filename
 	 */
-	public static void processArchiveFileIntoTicks(String filename) {
+	public static void processArchiveFileIntoTicks(String filename, String dataPath) {
 		int numTicks = 0;
 		int numOldIgnoredTicks = 0;
 		try {
@@ -359,8 +360,17 @@ public class Converter {
 			}
 			
 			Calendar latestTick = QueryManager.getTickLatestTick(tickSymbol);
+
+			if (dataPath == null) {
+				dataPath = "data";
+			}
 			
-			InputStream fileStream = new FileInputStream("data/" + filename);
+			File dir = new File(dataPath);
+			if (!dir.exists()) {
+				dir.mkdir();
+			}
+			
+			InputStream fileStream = new FileInputStream(dataPath + "/" + filename);
 			InputStream gzipStream = new GZIPInputStream(fileStream);
 			Reader decoder = new InputStreamReader(gzipStream);
 			BufferedReader br = new BufferedReader(decoder);

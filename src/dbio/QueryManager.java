@@ -2524,10 +2524,22 @@ public class QueryManager {
 				
 				Timestamp metricminTS = rs.getTimestamp("metricmin");
 				Calendar metricmin = Calendar.getInstance();
-				metricmin.setTimeInMillis(metricminTS.getTime());
+				if (metricminTS != null) {
+					metricmin.setTimeInMillis(metricminTS.getTime());
+				}
+				else {
+					metricmin = null;
+				}
+				
 				Timestamp metricmaxTS = rs.getTimestamp("metricmax");
 				Calendar metricmax = Calendar.getInstance();
-				metricmax.setTimeInMillis(metricmaxTS.getTime());
+				if (metricmaxTS != null) {
+					metricmax.setTimeInMillis(metricmaxTS.getTime());
+				}
+				else {
+					metricmax = null;
+				}
+				
 				String metricage = rs.getString("metricage");
 				
 				record.put("symbol", symbol);
@@ -2536,8 +2548,18 @@ public class QueryManager {
 				record.put("barmax", sdf.format(barmax.getTime()));
 				record.put("barage", barage);
 				record.put("barcount", barcount);
-				record.put("metricmin", sdf.format(metricmin.getTime()));
-				record.put("metricmax", sdf.format(metricmax.getTime()));
+				if (metricmin != null) {
+					record.put("metricmin", sdf.format(metricmin.getTime()));
+				}
+				else {
+					record.put("metricmin", null);
+				}
+				if (metricmax != null) {
+					record.put("metricmax", sdf.format(metricmax.getTime()));
+				}
+				else {
+					record.put("metricmax", null);
+				}
 				record.put("metricage", metricage);
 				barAndMetricInfo.add(record);
 			}
