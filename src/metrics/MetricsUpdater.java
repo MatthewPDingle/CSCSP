@@ -45,8 +45,6 @@ public class MetricsUpdater {
 		metrics.add("atr20");
 		metrics.add("atr40");
 
-		
-		// Loop.  First pass get 1000 bars.  All other passes, get the number specified by parameters.
 		if (params.size() > 0) {
 			MetricSingleton metricSingleton = MetricSingleton.getInstance();
 			System.out.println(Calendar.getInstance().getTime().toString() + " - Initializing MetricSingleton");
@@ -57,6 +55,8 @@ public class MetricsUpdater {
 			System.out.println(Calendar.getInstance().getTime().toString() + " - Metric Calculations Done");		
 		}
 	}
+	
+	
 	
 	public static void calculateMetrics() {
 		try {

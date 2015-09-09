@@ -2891,6 +2891,7 @@ public class QueryManager {
 				listOfRecords.add(record);
 			}
 			
+			rs.close();
 			s.close();
 			c.close();
 		}
