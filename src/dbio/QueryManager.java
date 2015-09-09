@@ -2249,7 +2249,9 @@ public class QueryManager {
 				numTrades = rs.getObject("numtrades");
 				break;
 			}
+			rs.close();
 			s.close();
+			c.close();
 			
 			// If there are no trades for this existing bar, say its partial so it can be updated with bar data that contains this (if coming from tick data)
 			if (numTrades == null) {
@@ -2258,9 +2260,11 @@ public class QueryManager {
 		
 			// If it doesn't exist, insert it
 			if (!exists) {
+				Connection c2 = ConnectionSingleton.getInstance().getConnection();
+				
 				String q2 = "INSERT INTO bar(symbol, open, close, high, low, vwap, volume, numtrades, change, gap, start, \"end\", duration, partial) " + 
 							"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-				PreparedStatement s2 = c.prepareStatement(q2);
+				PreparedStatement s2 = c2.prepareStatement(q2);
 				s2.setString(1, bar.symbol);
 				s2.setFloat(2, bar.open);
 				s2.setFloat(3, bar.close);
@@ -2293,12 +2297,15 @@ public class QueryManager {
 				
 				s2.executeUpdate();
 				s2.close();
+				c2.close();
 			}
 			// It exists and it's partial, so we need to update it.
 			else if (partial) {
+				Connection c3 = ConnectionSingleton.getInstance().getConnection();
+				
 				String q3 = "UPDATE bar SET symbol = ?, open = ?, close = ?, high = ?, low = ?, vwap = ?, volume = ?, numtrades = ?, change = ?, gap = ?, start = ?, \"end\" = ?, duration = ?, partial = ? " +
 							"WHERE symbol = ? AND start = ? AND duration = ?";
-				PreparedStatement s3 = c.prepareStatement(q3);
+				PreparedStatement s3 = c3.prepareStatement(q3);
 				s3.setString(1, bar.symbol);
 				s3.setFloat(2, bar.open);
 				s3.setFloat(3, bar.close);
@@ -2334,9 +2341,8 @@ public class QueryManager {
 				
 				s3.executeUpdate();
 				s3.close();
+				c3.close();
 			}
-			
-			c.close();
 		}
 		catch (Exception e) {
 			System.err.println("Fear not - it's probably just duplicate times causing a PK violation because of FUCKING daylight savings");
