@@ -642,6 +642,39 @@ public class QueryManager {
 		return symbols;
 	}
 	
+	public static ArrayList<String> getUniqueListOfSymbols(ArrayList<String> indices) {
+		ArrayList<String> symbols = new ArrayList<String>();
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "SELECT DISTINCT symbol FROM "	+ Constants.INDEXLIST_TABLE;
+			String whereClause = "";
+			if (indices != null && indices.size() > 0) {
+				whereClause = " WHERE (";
+			}
+			for (String index : indices) {
+				whereClause += "index = '" + index + "' OR ";
+			}
+			if (whereClause.endsWith("OR ")) {
+				whereClause = whereClause.substring(0, whereClause.length() - 3);
+				whereClause += ")";
+			}
+			q += whereClause;
+			Statement s = c.createStatement();
+			ResultSet rs = s.executeQuery(q);
+			while (rs.next()) {
+				symbols.add(rs.getString("symbol"));
+			}
+			
+			rs.close();
+			s.close();
+			c.close();
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return symbols;
+	}
+	
 	public static ArrayList<BarKey> getUniqueBarKeys() {
 		ArrayList<BarKey> barKeys = new ArrayList<BarKey>();
 		try {
