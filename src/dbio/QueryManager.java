@@ -620,7 +620,61 @@ public class QueryManager {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void insertIntoMetricDiscreteValues(String metricName, BarKey bk, Calendar start, Calendar end, ArrayList<Float> percentiles, ArrayList<Float> values) {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = 	"INSERT INTO metricdiscretevalues(name, symbol, start, \"end\", duration, percentiles, \"values\") " +
+						"VALUES (?, ?, ?, ?, ?, ?, ?)";
 
+			Array percentilesArray = c.createArrayOf("float", percentiles.toArray());
+			Array valuesArray = c.createArrayOf("float", values.toArray());
+			
+			PreparedStatement ps = c.prepareStatement(q);
+			ps.setString(1, metricName);
+			ps.setString(2, bk.symbol);
+			ps.setTimestamp(3, new java.sql.Timestamp(start.getTime().getTime()));
+			ps.setTimestamp(4, new java.sql.Timestamp(end.getTime().getTime()));
+			ps.setString(5, bk.duration.toString());
+			ps.setArray(6, percentilesArray);
+			ps.setArray(7, valuesArray);
+			
+			ps.executeUpdate();
+			
+			ps.close();
+			c.close();
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static HashMap<MetricKey, ArrayList<Float>> loadMetricDisccreteValueHash() {
+		HashMap<MetricKey, ArrayList<Float>> metricDiscreteValueHash = new HashMap<MetricKey, ArrayList<Float>>();
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = 	"SELECT * FROM metricdiscretevalues";
+			
+			Statement s = c.createStatement();
+			ResultSet rs = s.executeQuery(q);
+			while (rs.next()) {
+				String metricName = rs.getString(1);
+				String symbol = rs.getString(2);
+				String duration = rs.getString(5);
+				Array valuesArray = rs.getArray(7);
+				Float[] values = (Float[])valuesArray.getArray();
+				ArrayList<Float> valuesList = new ArrayList<Float>(Arrays.asList((Float[])values));
+				
+				MetricKey mk = new MetricKey(metricName, symbol, BAR_SIZE.valueOf(duration));
+				metricDiscreteValueHash.put(mk, valuesList);
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return metricDiscreteValueHash;
+	}
+	
 	public static ArrayList<String> getUniqueListOfSymbols() {
 		ArrayList<String> symbols = new ArrayList<String>();
 		try {
@@ -696,6 +750,63 @@ public class QueryManager {
 			e.printStackTrace();
 		}
 		return barKeys;
+	}
+	
+	public static ArrayList<BarKey> getUniqueBarKeysWithMetrics() {
+		ArrayList<BarKey> barKeys = new ArrayList<BarKey>();
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "SELECT symbol, duration FROM metrics GROUP BY symbol, duration";
+			Statement s = c.createStatement();
+			ResultSet rs = s.executeQuery(q);
+			while (rs.next()) {
+				String symbol = rs.getString("symbol");
+				String duration = rs.getString("duration");
+				barKeys.add(new BarKey(symbol, duration));
+			}
+			
+			rs.close();
+			s.close();
+			c.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return barKeys;
+	}
+	
+	public static HashMap<String, Calendar> getMinMaxMetricStarts(BarKey bk) {
+		HashMap<String, Calendar> metricTimes = new HashMap<String, Calendar>();
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "SELECT MIN(start) AS minstart, MAX(start) AS maxstart FROM metrics WHERE symbol = ? AND duration = ?";
+			PreparedStatement ps = c.prepareStatement(q);
+			
+			ps.setString(1, bk.symbol);
+			ps.setString(2, bk.duration.toString());
+			
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				Timestamp tsMinStart = rs.getTimestamp("minstart");
+				Calendar minStart = Calendar.getInstance();
+				minStart.setTimeInMillis(tsMinStart.getTime());
+				
+				Timestamp tsMaxStart = rs.getTimestamp("maxstart");
+				Calendar maxStart = Calendar.getInstance();
+				maxStart.setTimeInMillis(tsMaxStart.getTime());
+				
+				metricTimes.put("min", minStart);
+				metricTimes.put("max", maxStart);
+			}
+			
+			rs.close();
+			ps.close();
+			c.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return metricTimes;
 	}
 
 	/**
@@ -1415,22 +1526,22 @@ public class QueryManager {
 	/**
 	 * 
 	 * @param metricName
-	 * @param duration - optional
+	 * @param bk - optional
 	 * @param type - "min" or "max"
 	 * @param percentile - 0-100
 	 * @return
 	 */
-	public static float getMetricValueAtPercentile(String metricName, Constants.BAR_SIZE duration, String type, int percentile) {
+	public static float getMetricValueAtPercentile(String metricName, BarKey bk, String type, float percentile) {
 		float result = 0f;
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			
 			// Create query parameters & clauses
-			String durationClause = "";
-			if (duration != null) {
-				durationClause = "AND duration = '" + duration.toString() + "' ";
+			String bkClause = "";
+			if (bk != null) {
+				bkClause = "AND duration = '" + bk.duration.toString() + "' AND symbol = '" + bk.symbol + "' ";
 			}
-			
+	
 			String sort1 = "ASC";
 			String sort2 = "DESC";
 			if (type.equals("max")) {
@@ -1438,9 +1549,9 @@ public class QueryManager {
 				sort2 = "ASC";
 			}
 			
-			float divisor = 100f / (float)percentile;
+			float divisor = 100f / percentile;
 			
-			String q = "SELECT * FROM (SELECT value FROM metrics WHERE name = ? " + durationClause + " ORDER BY value " + sort1 + " LIMIT (SELECT COUNT(*) / ? FROM metrics WHERE name = ? " + durationClause + " )) t ORDER BY value " + sort2 + " LIMIT 1";
+			String q = "SELECT * FROM (SELECT value FROM metrics WHERE name = ? " + bkClause + " ORDER BY value " + sort1 + " LIMIT (SELECT COUNT(*) / ? FROM metrics WHERE name = ? " + bkClause + " )) t ORDER BY value " + sort2 + " LIMIT 1";
 			PreparedStatement s = c.prepareStatement(q);
 			s.setString(1, metricName);
 			s.setFloat(2, divisor);

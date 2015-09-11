@@ -9,6 +9,7 @@ import java.util.Random;
 
 import constants.Constants;
 import constants.Constants.BAR_SIZE;
+import data.BarKey;
 import dbio.QueryManager;
 import gui.GUI;
 import gui.singletons.ParameterSingleton;
@@ -492,11 +493,13 @@ public class GeneticSearcher {
 	public static HashMap<String, ArrayList<Float>> loadBullMetricDiscreteValueLists(int[] percentiles, ArrayList<String> metrics) {
 		HashMap<String, ArrayList<Float>> metricDiscreteValueLists = new HashMap<String, ArrayList<Float>>();
 		
+		BarKey dummyBK = new BarKey("fart", BAR_SIZE.BAR_15M);
+		
 		ArrayList<Float> values = new ArrayList<Float>();
 		for (String metric : metrics) {
 			if (!metric.startsWith("cdl")) {
 				for (int percentile : percentiles) {
-					float maxValue = QueryManager.getMetricValueAtPercentile(metric, BAR_SIZE.BAR_15M, "max", percentile);	
+					float maxValue = QueryManager.getMetricValueAtPercentile(metric, dummyBK, "max", percentile);	
 					maxValue = CalcUtils.round(maxValue, 2);
 					if (!values.contains(maxValue)) {
 						values.add(maxValue);
@@ -513,11 +516,13 @@ public class GeneticSearcher {
 	public static HashMap<String, ArrayList<Float>> loadBearMetricDiscreteValueLists(int[] percentiles, ArrayList<String> metrics) {
 		HashMap<String, ArrayList<Float>> metricDiscreteValueLists = new HashMap<String, ArrayList<Float>>();
 		
+		BarKey dummyBK = new BarKey("fart", BAR_SIZE.BAR_15M);
+		
 		ArrayList<Float> values = new ArrayList<Float>();
 		for (String metric : metrics) {
 			if (!metric.startsWith("cdl")) {
 				for (int percentile : percentiles) {
-					float minValue = QueryManager.getMetricValueAtPercentile(metric, BAR_SIZE.BAR_15M, "min", percentile);					
+					float minValue = QueryManager.getMetricValueAtPercentile(metric, dummyBK, "min", percentile);					
 					minValue = CalcUtils.round(minValue, 2);
 					if (!values.contains(minValue)) {
 						values.add(minValue);

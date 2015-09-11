@@ -1,6 +1,8 @@
-package data;
+package data.creators;
 
 import constants.Constants.BAR_SIZE;
+import data.Converter;
+import data.TickConstants;
 
 public class BarCreator {
 
