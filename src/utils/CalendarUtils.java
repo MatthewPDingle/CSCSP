@@ -8,9 +8,18 @@ import java.util.List;
 import java.util.Map;
 
 import constants.Constants;
+import constants.Constants.BAR_SIZE;
 
 public class CalendarUtils {
 
+	public static void main(String[] args) {
+		Calendar c = Calendar.getInstance();
+		Calendar c2 = addBars(c, BAR_SIZE.BAR_15M, 1);
+
+		int numBars = getNumBars(c, c2, BAR_SIZE.BAR_15M);
+		System.out.println(numBars);
+	}
+	
 	public static long difference(Calendar c1, Calendar c2, int unit) { 
 		differenceCheckUnit(unit); 
 		Map<Integer, Long> unitEstimates = differenceGetUnitEstimates(); 
@@ -342,6 +351,33 @@ public class CalendarUtils {
 			e.printStackTrace();
 		}
 		return periodEnd;
+	}
+	
+	/**
+	 * c1 and c2 are rounded to their respective bar start times when doing this calculation.
+	 * 
+	 * @param c1
+	 * @param c2
+	 * @param barSize
+	 * @return
+	 */
+	public static int getNumBars(Calendar c1, Calendar c2, Constants.BAR_SIZE barSize) {
+		try {
+			Calendar c1Start = getBarStart(c1, barSize);
+			Calendar c2Start = getBarStart(c2, barSize);
+			long d = difference(c1Start, c2Start, Calendar.MINUTE);
+			
+			Calendar now = Calendar.getInstance();
+			Calendar nowStart = getBarStart(now, barSize);
+			Calendar endStart = getBarEnd(now, barSize);
+			long barD = difference(nowStart, endStart, Calendar.MINUTE);
+			
+			return (int)(d / barD);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}
 	}
 	
 	public static boolean areSame(Calendar c1, Calendar c2) {

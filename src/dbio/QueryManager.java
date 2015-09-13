@@ -1214,7 +1214,7 @@ public class QueryManager {
 						counter++;
 					}
 					metricSequenceHash.put(mk, ms);
-					System.out.println("Adding " + counter + " metrics to MetricSequence for " + mk.toString());
+//					System.out.println("Adding " + counter + " metrics to MetricSequence for " + mk.toString());
 					
 					rs.close();
 					s.close();
@@ -1683,10 +1683,10 @@ public class QueryManager {
 			
 			if (numInserts > 0) {
 				s2.executeBatch();
-				System.out.println("# Inserts: " + numInserts);
+//				System.out.println("# Inserts: " + numInserts);
 			}
 			if (numUpdates > 0) {
-				System.out.println("# Updates: " + numUpdates);
+//				System.out.println("# Updates: " + numUpdates);
 				s3.executeBatch();
 			}
 			s2.close();
@@ -2606,7 +2606,7 @@ public class QueryManager {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static ArrayList<HashMap<String, Object>> getTrainingSet(BarKey bk, Calendar start, Calendar end, ArrayList<String> metricNames) {
 		ArrayList<HashMap<String, Object>> trainingSet = new ArrayList<HashMap<String, Object>>();
 		try {
@@ -2622,18 +2622,26 @@ public class QueryManager {
 				metricJoinClause += "LEFT OUTER JOIN metrics m" + a + " ON b.symbol = m" + a + ".symbol AND b.duration = m" + a + ".duration AND b.start = m" + a + ".start AND m" + a + ".name = '" + metricName + "' ";
 			}
 			
-			Connection c = ConnectionSingleton.getInstance().getConnection();
-
-			String q = 	"SELECT b.*, date_part('hour', b.start) AS hour " + metricColumnClause + 
-						"FROM bar b " + metricJoinClause +
-						"WHERE b.symbol = ? AND b.duration = ? AND b.start >= ? AND b.\"end\" <= ? ORDER BY b.start DESC";
-			PreparedStatement s = c.prepareStatement(q);
-			s.setString(1, bk.symbol);
-			s.setString(2, bk.duration.toString());
-			s.setTimestamp(3, new Timestamp(start.getTimeInMillis()));
-			s.setTimestamp(4, new Timestamp(end.getTimeInMillis()));
+			int numBars = CalendarUtils.getNumBars(start, end, bk.duration);
+			String startOp = ">=";
+			String endOp = "<=";
+			if (numBars == 1) {
+				startOp = "=";
+				endOp = "=";
+			}
 			
-			ResultSet rs = s.executeQuery();
+			Connection c1 = ConnectionSingleton.getInstance().getConnection();
+
+			String q1 = 	"SELECT b.*, date_part('hour', b.start) AS hour " + metricColumnClause + 
+						"FROM bar b " + metricJoinClause +
+						"WHERE b.symbol = ? AND b.duration = ? AND b.start " + startOp + " ? AND b.\"end\" " + endOp + " ? ORDER BY b.start DESC";
+			PreparedStatement s1 = c1.prepareStatement(q1);
+			s1.setString(1, bk.symbol);
+			s1.setString(2, bk.duration.toString());
+			s1.setTimestamp(3, new Timestamp(start.getTimeInMillis()));
+			s1.setTimestamp(4, new Timestamp(end.getTimeInMillis()));
+			
+			ResultSet rs = s1.executeQuery();
 			while (rs.next()) {
 				HashMap<String, Object> record = new HashMap<String, Object>();
 				
@@ -2655,8 +2663,8 @@ public class QueryManager {
 			}
 			
 			rs.close();
-			s.close();
-			c.close();
+			s1.close();
+			c1.close();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
