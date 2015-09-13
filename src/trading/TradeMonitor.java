@@ -10,7 +10,7 @@ import gui.MapSymbol;
 import gui.singletons.MapSymbolSingleton;
 import gui.singletons.MetricSingleton;
 import gui.threads.RealtimeTrackerThread;
-import metrics.MetricsUpdater;
+import metrics.MetricsUpdaterThread;
 
 public class TradeMonitor {
 
@@ -103,7 +103,7 @@ public class TradeMonitor {
 				ArrayList<BarKey> barKeys = new ArrayList<BarKey>();
 				barKeys.add(new BarKey(symbol, duration));
 				QueryManager.deleteMostRecentTradingDayFromMetricTables(barKeys, sellMetrics);
-				MetricsUpdater.calculateMetrics();
+				MetricsUpdaterThread.calculateMetrics();
 				
 				// See if this position's exit (sell or stop) criteria has been met
 				HashMap<String, Object> answers = QueryManager.doICloseThisPosition(symbol, sell, sellop, stop, stopvalue);
@@ -282,7 +282,7 @@ public class TradeMonitor {
 			RealtimeTrackerThread.getUpdatedYahooQuotesAndSaveToDB(symbolStrings);
 			
 			// Recalculate the metrics for today
-			MetricsUpdater.calculateMetrics();
+			MetricsUpdaterThread.calculateMetrics();
 		}
 		catch (Exception e) {
 			e.printStackTrace();

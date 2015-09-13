@@ -1,6 +1,7 @@
 package dbio;
 
 import java.sql.Array;
+import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -1213,7 +1214,7 @@ public class QueryManager {
 						counter++;
 					}
 					metricSequenceHash.put(mk, ms);
-//					System.out.println("Adding " + counter + " metrics to MetricSequence for " + mk.toString());
+					System.out.println("Adding " + counter + " metrics to MetricSequence for " + mk.toString());
 					
 					rs.close();
 					s.close();
@@ -1586,10 +1587,13 @@ public class QueryManager {
 			int numInserts = 0;
 			int numUpdates = 0;
 			
-			// Cache the bars we already have for this metric sequence
-			ArrayList<String> starts = new ArrayList<String>();
+			// Cache the bars we already have for this metric sequence - Using "starts" ArrayList is more sure, but a lot slower
+//			ArrayList<String> starts = new ArrayList<String>();
+			Calendar minCal = Calendar.getInstance();
+			Calendar maxCal = Calendar.getInstance();
 			if (metrics != null && metrics.size() > 0) {
-				String q0 = "SELECT start FROM metrics WHERE name = ? AND symbol = ? AND duration = ?";
+//				String q0 = "SELECT start FROM metrics WHERE name = ? AND symbol = ? AND duration = ?";
+				String q0 = "SELECT MIN(start) AS minstart, MAX(start) AS maxstart FROM metrics WHERE name = ? AND symbol = ? AND duration = ?";
 				PreparedStatement s0 = c.prepareStatement(q0);
 				s0.setString(1, metrics.get(0).name);
 				s0.setString(2, metrics.get(0).symbol);
@@ -1597,14 +1601,21 @@ public class QueryManager {
 				
 				ResultSet rs0 = s0.executeQuery();
 				while (rs0.next()) {
-					Timestamp ts = rs0.getTimestamp("start");
-					Calendar cal = Calendar.getInstance();
-					cal.setTimeInMillis(ts.getTime());
-					starts.add(cal.getTime().toString());
+//					Timestamp ts = rs0.getTimestamp("start");
+//					Calendar cal = Calendar.getInstance();
+//					cal.setTimeInMillis(ts.getTime());
+//					starts.add(cal.getTime().toString());
+					
+					Timestamp minTS = rs0.getTimestamp("minstart");
+					minCal.setTimeInMillis(minTS.getTime());
+					Timestamp maxTS = rs0.getTimestamp("maxstart");
+					maxCal.setTimeInMillis(maxTS.getTime());
 				}
 				rs0.close();
 				s0.close();
 			}
+			
+			
 			
 			
 			for (Metric metric : metrics) {
@@ -1627,7 +1638,13 @@ public class QueryManager {
 //					s.close();
 					
 					boolean exists = false;
-					if (starts.contains(metric.start.getTime().toString())) {
+//					if (starts.contains(metric.start.getTime().toString())) {
+//						exists = true;
+//					}
+					if (CalendarUtils.areSame(metric.start, minCal) || CalendarUtils.areSame(metric.start, maxCal)) {
+						exists = true;
+					}
+					if (metric.start.after(minCal) && metric.start.before(maxCal)) {
 						exists = true;
 					}
 					
@@ -1666,10 +1683,10 @@ public class QueryManager {
 			
 			if (numInserts > 0) {
 				s2.executeBatch();
-//				System.out.println("# Inserts: " + numInserts);
+				System.out.println("# Inserts: " + numInserts);
 			}
 			if (numUpdates > 0) {
-//				System.out.println("# Updates: " + numUpdates);
+				System.out.println("# Updates: " + numUpdates);
 				s3.executeBatch();
 			}
 			s2.close();
@@ -1677,8 +1694,12 @@ public class QueryManager {
 			
 			c.close();
 		}
-		catch (Exception e) {
+		catch (BatchUpdateException e) {
 			e.printStackTrace();
+			e.getNextException().printStackTrace();
+		}
+		catch (Exception e) {
+			e.printStackTrace(); 
 		}
 	}
 

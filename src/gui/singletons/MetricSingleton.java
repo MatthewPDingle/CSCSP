@@ -2,6 +2,8 @@ package gui.singletons;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import data.BarKey;
 import data.Metric;
@@ -38,13 +40,24 @@ public class MetricSingleton {
 	public void init(ArrayList<BarKey> barKeys, ArrayList<String> neededMetrics) {
 		this.barKeys = barKeys;
 		this.neededMetrics = neededMetrics;
+		this.metricSequenceHash = QueryManager.loadMetricSequenceHash(barKeys, neededMetrics);
 	}
 	
+	@Deprecated
 	public void updateMetricSequenceHash() {
 		this.metricSequenceHash = QueryManager.loadMetricSequenceHash(barKeys, neededMetrics);
 	}
 
 	public HashMap<MetricKey, ArrayList<Metric>> getMetricSequenceHash() {
 		return metricSequenceHash;
+	}
+	
+	public synchronized Map.Entry<MetricKey, ArrayList<Metric>> popSingleMetricSequence() {
+		for (Iterator<Map.Entry<MetricKey, ArrayList<Metric>>> it = metricSequenceHash.entrySet().iterator(); it.hasNext();) {
+			Map.Entry<MetricKey, ArrayList<Metric>> entry = it.next();
+			it.remove();
+			return entry;
+		}
+		return null;
 	}
 }

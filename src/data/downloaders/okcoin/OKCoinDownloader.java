@@ -19,7 +19,7 @@ import data.MetricKey;
 import data.Tick;
 import dbio.QueryManager;
 import gui.singletons.MetricSingleton;
-import metrics.MetricsUpdater;
+import metrics.MetricsUpdaterThread;
 import ml.ARFF;
 import ml.Modelling;
 import search.GeneticSearcher;
@@ -103,7 +103,7 @@ public class OKCoinDownloader {
 					}
 					firstPass = false;
 					System.out.println(Calendar.getInstance().getTime().toString() + " - Bar Downloads & Inserts Done");
-					MetricsUpdater.calculateMetrics();
+					MetricsUpdaterThread.calculateMetrics();
 					System.out.println(Calendar.getInstance().getTime().toString() + " - Metrics Done");
 
 					// Experimental

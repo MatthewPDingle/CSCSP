@@ -16,7 +16,7 @@ import gui.MapSymbol;
 import gui.singletons.MapSymbolSingleton;
 import gui.singletons.MetricSingleton;
 import gui.singletons.ParameterSingleton;
-import metrics.MetricsUpdater;
+import metrics.MetricsUpdaterThread;
 import trading.TradeMonitor;
 
 public class RealtimeTrackerThread extends Thread {
@@ -70,7 +70,7 @@ public class RealtimeTrackerThread extends Thread {
 //				}
 				
 				// Calculate metrics for the latest data
-				MetricsUpdater.calculateMetrics();
+				MetricsUpdaterThread.calculateMetrics();
 				
 				mss.setMapSymbols(QueryManager.getMapSymbols());
 			}
@@ -174,7 +174,7 @@ public class RealtimeTrackerThread extends Thread {
 			}
 			
 			// Calculate the metrics
-			MetricsUpdater.calculateMetrics();
+			MetricsUpdaterThread.calculateMetrics();
 			mss.setMapSymbols(QueryManager.getMapSymbols());
 			
 			// Notify the GUI
