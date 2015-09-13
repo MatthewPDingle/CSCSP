@@ -49,9 +49,15 @@ public class Modelling {
 //		System.out.println(classifier.toString());
 	}
 
-	public static Classifier loadModel(String modelName) {
+	public static Classifier loadModel(String modelName, String modelsPath) {
 		try {
-			ObjectInputStream ois = new ObjectInputStream(new FileInputStream("weka\\models\\" + modelName));
+			ObjectInputStream ois = null;
+			if (modelsPath == null || modelsPath.length() == 0) {
+				ois = new ObjectInputStream(new FileInputStream("weka\\models\\" + modelName));
+			}
+			else {
+				ois = new ObjectInputStream(new FileInputStream(modelsPath + "\\" + modelName));
+			}
 			Classifier classifier = (Classifier)ois.readObject();
 			ois.close();
 			return classifier;

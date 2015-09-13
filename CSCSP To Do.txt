@@ -38,7 +38,10 @@ New Stuff
 TODO
 - Memory leak when running GeneticSearcher
 - pricebolls metrics have suspiciously symmetrical values +/-
-- 
+- Multi-thread metric calculations.  Need this as fast as possible for trading
+- Multi-thread BarCreator.
+- Have BarCreator have a parameter so it can start at the point of the most recent existing bar instead of at the first tick.
+- Put some kind of MetricDiscreteValueHash calcultion option on DataManager
 
 Model types
 - Long & Short

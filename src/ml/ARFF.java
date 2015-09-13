@@ -8,6 +8,7 @@ import java.util.HashMap;
 import constants.Constants;
 import constants.Constants.BAR_SIZE;
 import data.BarKey;
+import data.MetricKey;
 import dbio.QueryManager;
 import search.GeneticSearcher;
 
@@ -261,7 +262,7 @@ public class ARFF {
 	 * @param metricDiscreteValueHash
 	 * @return
 	 */
-	public static ArrayList<ArrayList<Object>> createUnlabeledWekaArffData(Calendar periodStart, Calendar periodEnd, BarKey bk, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
+	public static ArrayList<ArrayList<Object>> createUnlabeledWekaArffData(Calendar periodStart, Calendar periodEnd, BarKey bk, ArrayList<String> metricNames, HashMap<MetricKey, ArrayList<Float>> metricDiscreteValueHash) {
 		try {
 			// This is newest to oldest ordered
 			ArrayList<HashMap<String, Object>> rawTrainingSet = QueryManager.getTrainingSet(bk, periodStart, periodEnd, metricNames);
@@ -278,7 +279,8 @@ public class ARFF {
 				// Metric Buckets (or values)
 				String metricPart = "";
 				for (String metricName : metricNames) {
-					ArrayList<Float> bucketCutoffValues = metricDiscreteValueHash.get(metricName);
+					MetricKey mk = new MetricKey(metricName, bk.symbol, bk.duration);
+					ArrayList<Float> bucketCutoffValues = metricDiscreteValueHash.get(mk);
 					if (bucketCutoffValues != null) {
 						float metricValue = (float)record.get(metricName);
 						

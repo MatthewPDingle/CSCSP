@@ -15,6 +15,7 @@ import constants.Constants.BAR_SIZE;
 import data.Bar;
 import data.BarKey;
 import data.Converter;
+import data.MetricKey;
 import data.Tick;
 import dbio.QueryManager;
 import gui.singletons.MetricSingleton;
@@ -76,13 +77,12 @@ public class OKCoinDownloader {
 		
 		BarKey bk = new BarKey("okcoinBTCCNY", BAR_SIZE.BAR_15M);
 		
-		System.out.print("Creating MetricDiscreteValueHash...");
-		int[] percentiles = {1, 2, 5, 10, 20, 35, 50, 65, 80, 90, 95, 98, 99};
-		HashMap<String, ArrayList<Float>> metricDiscreteValueHash = GeneticSearcher.loadBullMetricDiscreteValueLists(percentiles, metricNames);
+		System.out.print("Loading MetricDiscreteValueHash...");
+		HashMap<MetricKey, ArrayList<Float>> metricDiscreteValueHash = QueryManager.loadMetricDisccreteValueHash();
 		System.out.println("Complete.");
 		
-		Classifier cRandomForest6 = Modelling.loadModel("RandomForest6.model");
-		Classifier cNaiveBayes5 = Modelling.loadModel("NaiveBayes5.model");
+		Classifier cRandomForest6 = Modelling.loadModel("RandomForest6.model", null);
+		Classifier cNaiveBayes5 = Modelling.loadModel("NaiveBayes5.model", null);
 		
 		// Loop.  First pass get 1000 bars.  All other passes, get the number specified by parameters.
 		if (params.size() > 0) {
