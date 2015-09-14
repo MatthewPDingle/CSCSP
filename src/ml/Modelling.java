@@ -9,6 +9,7 @@ import java.util.Random;
 
 import constants.Constants;
 import data.BarKey;
+import data.MetricKey;
 import data.Model;
 import dbio.QueryManager;
 import weka.classifiers.Classifier;
@@ -110,7 +111,7 @@ public class Modelling {
 	}
 	
 	public static void buildAndEvaluateModel(String algo, String params, String type, Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, 
-			float targetGain, float minLoss, int numBars, BarKey bk, boolean interBarData, ArrayList<String> metricNames, HashMap<String, ArrayList<Float>> metricDiscreteValueHash) {
+			float targetGain, float minLoss, int numBars, BarKey bk, boolean interBarData, ArrayList<String> metricNames, HashMap<MetricKey, ArrayList<Float>> metricDiscreteValueHash) {
 		try {
 			System.out.println("Starting " + algo);
 			String sellMetric = Constants.OTHER_SELL_METRIC_PERCENT_UP;
