@@ -49,35 +49,50 @@ public class OKCoinAPI {
 	}
 
 	public String requestHttpGet(String url_prex, String url, String param) throws HttpException, IOException {
+		String r = "";
 		try {
-			url = url_prex + url;
-			if (param != null && !param.equals("")) {
-				url = url + "?" + param;
-			}
-			HttpRequestBase method = this.httpGetMethod(url);
-			HttpResponse response = client.execute(method);
-			HttpEntity entity = response.getEntity();
-			if (entity == null) {
-				return "";
-			}
-			InputStream is = null;
-			String responseData = "";
-			try {
-				is = entity.getContent();
-				responseData = IOUtils.toString(is, "UTF-8");
-			} 
-			finally {
-				if (is != null) {
-					is.close();
+			boolean success = false;
+			int attempt = 0;
+			while (!success) {
+				try {
+					attempt++;
+					url = url_prex + url;
+					if (param != null && !param.equals("")) {
+						url = url + "?" + param;
+					}
+					HttpRequestBase method = this.httpGetMethod(url);
+					HttpResponse response = client.execute(method);
+					HttpEntity entity = response.getEntity();
+					if (entity == null) {
+						return "";
+					}
+					InputStream is = null;
+					try {
+						is = entity.getContent();
+						r = IOUtils.toString(is, "UTF-8");
+					} 
+					finally {
+						if (is != null) {
+							is.close();
+						}
+					}
+					success = true;
+				}
+				catch (HttpHostConnectException he) {
+					if (attempt > 10) {
+						LogManager.getLogger("data.downloaders.okcoin").error("Connection to OKCoin failed.  Aborting.");
+						throw he;
+					}
+					LogManager.getLogger("data.downloaders.okcoin").error(he.getStackTrace().toString());
+					Thread.sleep(1000);
 				}
 			}
-			return responseData;
 		}
-		catch (HttpHostConnectException he) {
-			he.printStackTrace();
-			LogManager.getLogger("data.downloaders.okcoin").error(he.getStackTrace().toString());
-			return "";
+		
+		catch (Exception e) {
+			e.printStackTrace();
 		}
+		return r;
 	}
 
 	public String requestHttpPost(String url_prex, String url, Map<String, String> params) throws HttpException, IOException {
