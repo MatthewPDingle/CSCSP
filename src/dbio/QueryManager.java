@@ -2965,6 +2965,47 @@ public class QueryManager {
 		}
 	}
 	
+	public static Bar getMostRecentBar(BarKey bk) {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "SELECT * FROM bar WHERE symbol = ? AND duration = ? ORDER BY start DESC LIMIT 1";
+			PreparedStatement ps = c.prepareStatement(q);
+			ps.setString(1, bk.symbol);
+			ps.setString(2, bk.duration.toString());
+			ResultSet rs = ps.executeQuery();
+			Bar b = null;
+			if (rs.next()) {
+				String symbol = rs.getString("symbol");
+				float open = rs.getFloat("open");
+				float close = rs.getFloat("close");
+				float high = rs.getFloat("high");
+				float low = rs.getFloat("low");
+				float vwap = rs.getFloat("vwap");
+				float volume = rs.getFloat("volume");
+				int numTrades = rs.getInt("numtrades");
+				float change = rs.getFloat("change");
+				float gap = rs.getFloat("gap");
+				Timestamp tsStart = rs.getTimestamp("start");
+				Calendar start = Calendar.getInstance();
+				start.setTimeInMillis(tsStart.getTime());
+				Timestamp tsEnd = rs.getTimestamp("end");
+				Calendar end = Calendar.getInstance();
+				end.setTimeInMillis(tsEnd.getTime());
+				String duration = rs.getString("duration");
+				b  = new Bar(symbol, open, close, high, low, vwap, volume, numTrades, change, gap, start, end, BAR_SIZE.valueOf(duration), true);
+			}
+			rs.close();
+			ps.close();
+			c.close();
+			
+			return b;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	public static HashMap<String, Object> getMetricCalcEssentials(MetricKey mk) {
 		HashMap<String, Object> mce = new HashMap<String, Object>();
 		try {
