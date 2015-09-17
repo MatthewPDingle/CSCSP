@@ -13,26 +13,42 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 
-public class OKCoinAPI {
+public class OKCoinRestAPI {
 
-	private static OKCoinAPI instance = new OKCoinAPI();
+	private static OKCoinRestAPI instance = new OKCoinRestAPI();
 	private static HttpClient client;
 
-	private OKCoinAPI() {
-		client = HttpClientBuilder.create().build();
+	private OKCoinRestAPI() {
+		RequestConfig requestConfig = RequestConfig.custom()
+		        .setConnectTimeout(5000)
+		        .setConnectionRequestTimeout(5000)
+		        .setSocketTimeout(5000)
+		        .build();
+		client = HttpClientBuilder.create()
+				.disableAuthCaching()
+		        .disableAutomaticRetries()
+		        .disableConnectionState()
+		        .disableContentCompression()
+		        .disableCookieManagement()
+		        .disableRedirectHandling()
+		        //.setDefaultRequestConfig(requestConfig)
+		        .build(); 
 	}
 
-	public static OKCoinAPI getInstance() {
+	public static OKCoinRestAPI getInstance() {
 		return instance;
 	}
 
@@ -61,6 +77,7 @@ public class OKCoinAPI {
 						url = url + "?" + param;
 					}
 					HttpRequestBase method = this.httpGetMethod(url);
+					
 					HttpResponse response = client.execute(method);
 					HttpEntity entity = response.getEntity();
 					if (entity == null) {
@@ -79,12 +96,34 @@ public class OKCoinAPI {
 					success = true;
 				}
 				catch (HttpHostConnectException he) {
-					if (attempt > 10) {
+					if (attempt > 3) {
+						System.err.println("Connection to OKCoin failed.  Aborting.");
 						LogManager.getLogger("data.downloaders.okcoin").error("Connection to OKCoin failed.  Aborting.");
 						throw he;
 					}
+					System.err.println("Connection to OKCoin failed.  Trying again.");
 					LogManager.getLogger("data.downloaders.okcoin").error(he.getStackTrace().toString());
-					Thread.sleep(1000);
+					//Thread.sleep(1000);
+				}
+				catch (ConnectTimeoutException cte) {
+					if (attempt > 3) {
+						System.err.println("Connection to OKCoin timed out.  Aborting.");
+						LogManager.getLogger("data.downloaders.okcoin").error("Connection to OKCoin timed out.  Aborting.");
+						throw cte;
+					}
+					System.err.println("Connection to OKCoin timed out.  Trying again.");
+					LogManager.getLogger("data.downloaders.okcoin").error(cte.getStackTrace().toString());
+					//Thread.sleep(1000);
+				}
+				catch (NoHttpResponseException nhre) {
+					if (attempt > 3) {
+						System.err.println("No HTTP Response from OKCoin.  Aborting.");
+						LogManager.getLogger("data.downloaders.okcoin").error("Connection to OKCoin timed out.  Aborting.");
+						throw nhre;
+					}
+					System.err.println("No HTTP Response from OKCoin.  Trying again.");
+					LogManager.getLogger("data.downloaders.okcoin").error(nhre.getStackTrace().toString());
+					//Thread.sleep(1000);
 				}
 			}
 		}

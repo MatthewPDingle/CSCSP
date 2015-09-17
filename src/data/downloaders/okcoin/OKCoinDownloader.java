@@ -52,7 +52,7 @@ public class OKCoinDownloader {
 				param[1] = duration;
 				param[2] = numBars;
 				params.add(param);
-				BarKey barKey = new BarKey(OKCoinConstants.OKCOIN_SYMBOL_TO_SYMBOL_HASH.get(symbol), BAR_SIZE.valueOf(duration));
+				BarKey barKey = new BarKey(OKCoinConstants.OKCOIN_SYMBOL_TO_TICK_SYMBOL_HASH.get(symbol), BAR_SIZE.valueOf(duration));
 				barKeys.add(barKey);
 			}
 		}
@@ -317,44 +317,46 @@ public class OKCoinDownloader {
 					break;
 			}
 			String json = getBarHistoryJSON(okCoinSymbol, okBarDuration, new Integer(barCount + 1).toString(), since);
-			List<List> list = new Gson().fromJson(json, List.class);
-			
-			Float previousClose = null;
-			
-			// From oldest to newest
-			if (list != null) {
-				for (List jsonBar : list) {
-					String timeMS = jsonBar.get(0).toString();
-					timeMS = timeMS.replace(".", "");
-					if (timeMS.contains("E")) {
-						timeMS = timeMS.substring(0, timeMS.indexOf("E"));
-					}
-					while (timeMS.length() < 10) {
-						timeMS = timeMS + "0";
-					}
-					long ms = Long.parseLong(timeMS) * 1000;
-					Calendar periodStart = Calendar.getInstance();
-					periodStart.setTimeInMillis(ms);
-					Calendar periodEnd = Calendar.getInstance();
-					periodEnd.setTime(periodStart.getTime());
-					periodEnd.add(Calendar.MINUTE, barMinutes);
-					float open = Float.parseFloat(jsonBar.get(1).toString());
-					float high = Float.parseFloat(jsonBar.get(2).toString());
-					float low = Float.parseFloat(jsonBar.get(3).toString());
-					float close = Float.parseFloat(jsonBar.get(4).toString());
-					float volume = Float.parseFloat(jsonBar.get(5).toString());
-					float vwapEstimate = (open + close + high + low) / 4f;
-					Float change = null;
-					Float gap = null;
-					if (previousClose != null) {
-						change = close - previousClose; 
-						gap = open - previousClose;
-					}
+			if (json != null && json.length() > 0) {
+				List<List> list = new Gson().fromJson(json, List.class);
 				
-					Bar bar = new Bar(barSymbol, open, close, high, low, vwapEstimate, volume, null, change, gap, periodStart, periodEnd, barSize, false);
-					bars.add(bar);
+				Float previousClose = null;
+			
+				// From oldest to newest
+				if (list != null) {
+					for (List jsonBar : list) {
+						String timeMS = jsonBar.get(0).toString();
+						timeMS = timeMS.replace(".", "");
+						if (timeMS.contains("E")) {
+							timeMS = timeMS.substring(0, timeMS.indexOf("E"));
+						}
+						while (timeMS.length() < 10) {
+							timeMS = timeMS + "0";
+						}
+						long ms = Long.parseLong(timeMS) * 1000;
+						Calendar periodStart = Calendar.getInstance();
+						periodStart.setTimeInMillis(ms);
+						Calendar periodEnd = Calendar.getInstance();
+						periodEnd.setTime(periodStart.getTime());
+						periodEnd.add(Calendar.MINUTE, barMinutes);
+						float open = Float.parseFloat(jsonBar.get(1).toString());
+						float high = Float.parseFloat(jsonBar.get(2).toString());
+						float low = Float.parseFloat(jsonBar.get(3).toString());
+						float close = Float.parseFloat(jsonBar.get(4).toString());
+						float volume = Float.parseFloat(jsonBar.get(5).toString());
+						float vwapEstimate = (open + close + high + low) / 4f;
+						Float change = null;
+						Float gap = null;
+						if (previousClose != null) {
+							change = close - previousClose; 
+							gap = open - previousClose;
+						}
 					
-					previousClose = close;
+						Bar bar = new Bar(barSymbol, open, close, high, low, vwapEstimate, volume, null, change, gap, periodStart, periodEnd, barSize, false);
+						bars.add(bar);
+						
+						previousClose = close;
+					}
 				}
 			}
 			
@@ -387,7 +389,7 @@ public class OKCoinDownloader {
 	private static String getTickHistoryJSON(String symbol, String since) {
 		String result = "";
 		try {
-			OKCoinAPI okCoin = OKCoinAPI.getInstance();
+			OKCoinRestAPI okCoin = OKCoinRestAPI.getInstance();
 			String param = "";
 			if (!StringUtils.isEmpty(symbol)) {
 				if (!param.equals("")) {
@@ -427,7 +429,7 @@ public class OKCoinDownloader {
 	private static String getBarHistoryJSON(String symbol, String type, String numBars, Calendar since) {
 		String result = "";
 		try {
-			OKCoinAPI okCoin = OKCoinAPI.getInstance();
+			OKCoinRestAPI okCoin = OKCoinRestAPI.getInstance();
 			String param = "";
 			if (!StringUtils.isEmpty(symbol)) {
 				if (!param.equals("")) {
