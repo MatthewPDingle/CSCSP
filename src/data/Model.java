@@ -60,9 +60,12 @@ public class Model {
 	public double testRootRelativeSquaredError;
 	public double testROCArea;
 	
+	public String lastActionPrice = "";
 	public String lastAction = "";
 	public Calendar lastActionTime = null;
-	
+	public String lastTargetClose = "";
+	public String lastStopClose = "";
+
 	public Model(String type, String modelFile, String algo, String params, BarKey bk, boolean interBarData, ArrayList<String> metrics,
 			Calendar trainStart, Calendar trainEnd, Calendar testStart, Calendar testEnd, String sellMetric,
 			float sellMetricValue, String stopMetric, float stopMetricValue, int numBars, int trainDatasetSize,

@@ -290,7 +290,8 @@ public class OKCoinWebSocketBase {
 	}
 
 	public void sendMessage(String message) {
-		channel.writeAndFlush(new TextWebSocketFrame(message));
+		if (channel != null) {
+			channel.writeAndFlush(new TextWebSocketFrame(message));}
 	}
 
 	public void sentPing() {

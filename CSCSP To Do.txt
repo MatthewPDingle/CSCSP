@@ -49,3 +49,7 @@ Model types
 - Variations of algorithms
 - Using different bar durations
 - Combining symbols across exchanges and using exchange name as another feature
+
+Bugs
+- OKCoin WebSocket realtime downloader can get slow or disconnected for a while and miss bars
+- OKCoin WebSocket realtime downloader marks all bars as not partial (complete)

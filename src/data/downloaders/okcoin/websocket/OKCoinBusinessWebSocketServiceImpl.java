@@ -88,19 +88,12 @@ public class OKCoinBusinessWebSocketServiceImpl implements OKCoinWebSocketServic
 									gap = (float)open - mostRecentBarInDB.close;
 								}
 								
-//								boolean partial = false;
-//								if (a == data.size() - 1) {
-//									partial = true;
-//								}
-								
 								Bar bar = new Bar(symbol, (float)open, (float)close, (float)high, (float)low, (float)vwap, (float)volume, null, change, gap, barStart, barEnd, duration, false);
 								//QueryManager.insertOrUpdateIntoBar(bar);
 								bars.add(bar);
 							}
 						}
-//						if (bars.size() == 2) {
-//							bars.get(0).partial = false;
-//						}
+
 						okss.setLatestBars(bars);
 					}
 				}

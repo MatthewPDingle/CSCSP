@@ -64,13 +64,18 @@ public class OKCoinWebSocketSingleton {
 		this.symbolTickerDataHash.put(symbol, tickerDataHash);
 	}
 
-	public void insertLatestBarsIntoDB() {
+	public synchronized boolean insertLatestBarsIntoDB() {
 		for (Bar bar : latestBars) {
 			QueryManager.insertOrUpdateIntoBar(bar);
 		}
+		if (latestBars.size() > 0) {
+			latestBars.clear();
+			return true;
+		}
+		return false;
 	}
 
-	public void setLatestBars(ArrayList<Bar> latestBars) {
+	public synchronized void setLatestBars(ArrayList<Bar> latestBars) {
 		this.latestBars = latestBars;
 	}
 
