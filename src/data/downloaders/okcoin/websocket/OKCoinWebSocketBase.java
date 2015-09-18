@@ -3,7 +3,6 @@ package data.downloaders.okcoin.websocket;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimerTask;
@@ -77,6 +76,14 @@ public class OKCoinWebSocketBase {
 		subscriptionChannels.remove(channel);
 	}
 
+	public void removeAllChannels() {
+		for (String channel : subscriptionChannels) {
+			String dataMsg = "{'event':'removeChannel','channel':'" + channel + "'}";
+			this.sendMessage(dataMsg);
+		}
+		subscriptionChannels.clear();
+	}
+	
 	/**
 	 * 
 	 * @param apiKey

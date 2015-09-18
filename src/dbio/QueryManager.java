@@ -2426,7 +2426,6 @@ public class QueryManager {
 			// If it doesn't exist, insert it
 			if (!exists) {
 				Connection c2 = ConnectionSingleton.getInstance().getConnection();
-				
 				String q2 = "INSERT INTO bar(symbol, open, close, high, low, vwap, volume, numtrades, change, gap, start, \"end\", duration, partial) " + 
 							"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 				PreparedStatement s2 = c2.prepareStatement(q2);
@@ -2467,7 +2466,6 @@ public class QueryManager {
 			// It exists and it's partial, so we need to update it.
 			else if (partial) {
 				Connection c3 = ConnectionSingleton.getInstance().getConnection();
-				
 				String q3 = "UPDATE bar SET symbol = ?, open = ?, close = ?, high = ?, low = ?, vwap = ?, volume = ?, numtrades = ?, change = ?, gap = ?, start = ?, \"end\" = ?, duration = ?, partial = ? " +
 							"WHERE symbol = ? AND start = ? AND duration = ?";
 				PreparedStatement s3 = c3.prepareStatement(q3);
@@ -2965,13 +2963,14 @@ public class QueryManager {
 		}
 	}
 	
-	public static Bar getMostRecentBar(BarKey bk) {
+	public static Bar getMostRecentBar(BarKey bk, Calendar cBefore) {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "SELECT * FROM bar WHERE symbol = ? AND duration = ? ORDER BY start DESC LIMIT 1";
+			String q = "SELECT * FROM bar WHERE symbol = ? AND duration = ? AND start < ? ORDER BY start DESC LIMIT 1";
 			PreparedStatement ps = c.prepareStatement(q);
 			ps.setString(1, bk.symbol);
 			ps.setString(2, bk.duration.toString());
+			ps.setTimestamp(3, new Timestamp(cBefore.getTimeInMillis()));
 			ResultSet rs = ps.executeQuery();
 			Bar b = null;
 			if (rs.next()) {

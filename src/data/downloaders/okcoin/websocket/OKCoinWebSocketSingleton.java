@@ -1,18 +1,24 @@
 package data.downloaders.okcoin.websocket;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+
+import data.Bar;
+import dbio.QueryManager;
 
 public class OKCoinWebSocketSingleton {
 
 	private static OKCoinWebSocketSingleton instance = null;
 	
 	private OKCoinWebSocketThread okThread;
-	private HashMap<String, HashMap<String, String>> symbolDataHash;
+	private HashMap<String, HashMap<String, String>> symbolTickerDataHash; // Last Tick info - price, bid, ask, timestamp
+	private ArrayList<Bar> latestBars;
 	private boolean disconnected = false;
 	
 	protected OKCoinWebSocketSingleton() {
 		okThread = new OKCoinWebSocketThread();
-		symbolDataHash = new HashMap<String, HashMap<String, String>>();
+		symbolTickerDataHash = new HashMap<String, HashMap<String, String>>();
+		latestBars = new ArrayList<Bar>();
 	}
 	
 	public static OKCoinWebSocketSingleton getInstance() {
@@ -32,6 +38,7 @@ public class OKCoinWebSocketSingleton {
 				}
 			}
 			else {
+				okThread.removeAllChannels();
 				okThread.setRunning(false);
 				okThread.join();
 			}
@@ -50,11 +57,21 @@ public class OKCoinWebSocketSingleton {
 	}
 	
 	public HashMap<String, HashMap<String, String>> getSymbolDataHash() {
-		return symbolDataHash;
+		return symbolTickerDataHash;
 	}
 
-	public void putSymbolDataHash(String symbol, HashMap<String, String> symbolDataHash) {
-		this.symbolDataHash.put(symbol, symbolDataHash);
+	public void putSymbolTickerDataHash(String symbol, HashMap<String, String> tickerDataHash) {
+		this.symbolTickerDataHash.put(symbol, tickerDataHash);
+	}
+
+	public void insertLatestBarsIntoDB() {
+		for (Bar bar : latestBars) {
+			QueryManager.insertOrUpdateIntoBar(bar);
+		}
+	}
+
+	public void setLatestBars(ArrayList<Bar> latestBars) {
+		this.latestBars = latestBars;
 	}
 
 	public boolean isDisconnected() {

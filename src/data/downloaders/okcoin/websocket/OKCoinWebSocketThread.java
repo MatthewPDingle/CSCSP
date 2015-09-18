@@ -10,7 +10,6 @@ public class OKCoinWebSocketThread extends Thread {
 	private boolean running = false;
 	private OKCoinWebSocketService service = null;
 	private OKCoinWebSocketClient client = null;
-	//private OKCoinWebSocketSingleton ss = OKCoinWebSocketSingleton.getInstance();
 	private HashMap<String, Boolean> channels = new HashMap<String, Boolean>();
 	
 	public OKCoinWebSocketThread() {
@@ -33,6 +32,10 @@ public class OKCoinWebSocketThread extends Thread {
 	public synchronized void removeChannel(String channel) {
 		client.removeChannel(channel);
 		channels.remove(channel);
+	}
+	
+	public synchronized void removeAllChannels() {
+		client.removeAllChannels();
 	}
 
 	@Override
