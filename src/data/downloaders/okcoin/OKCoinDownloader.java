@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.logging.log4j.LogManager;
 
 import com.google.gson.Gson;
@@ -127,7 +128,7 @@ public class OKCoinDownloader {
 		}
 	}
 
-	public static void downloadBarsAndUpdate(String okcoinSymbol, BAR_SIZE barSize, Integer numBars) {
+	public static boolean downloadBarsAndUpdate(String okcoinSymbol, BAR_SIZE barSize, Integer numBars) {
 		int n = 0;
 		if (numBars != null) {
 			n = numBars;
@@ -136,6 +137,10 @@ public class OKCoinDownloader {
 		for (Bar bar : bars) {
 			QueryManager.insertOrUpdateIntoBar(bar);
 		}
+		if (bars != null && bars.size() > 0) {
+			return true;
+		}
+		return false;
 	}
 	
 	public static void downloadTicksAndUpdate(String okcoinSymbol, BAR_SIZE barSize) {
@@ -255,6 +260,7 @@ public class OKCoinDownloader {
 	 */
 	public static ArrayList<Bar> getMostRecentBarsFromBarHistory(String okCoinSymbol, Constants.BAR_SIZE barSize, int barCount, Calendar since) {
 		ArrayList<Bar> bars = new ArrayList<Bar>();
+		String errorJSON = "";
 		try {
 			String barSymbol = "okcoin";
 			if (okCoinSymbol.equals(OKCoinConstants.SYMBOL_BTCUSD)) {
@@ -318,6 +324,7 @@ public class OKCoinDownloader {
 			}
 			String json = getBarHistoryJSON(okCoinSymbol, okBarDuration, new Integer(barCount + 1).toString(), since);
 			if (json != null && json.length() > 0) {
+				errorJSON = json;
 				List<List> list = new Gson().fromJson(json, List.class);
 				
 				Float previousClose = null;
@@ -370,6 +377,7 @@ public class OKCoinDownloader {
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+			System.err.println(errorJSON);
 			LogManager.getLogger("data.downloaders.okcoin").error(e.getStackTrace().toString());
 		}
 		

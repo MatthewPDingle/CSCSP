@@ -1574,7 +1574,7 @@ public class QueryManager {
 		return result;
 	}
 	
-	public static void insertOrUpdateIntoMetrics(ArrayList<Metric> metrics) {
+	public static synchronized void insertOrUpdateIntoMetrics(ArrayList<Metric> metrics) {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			
@@ -2939,6 +2939,28 @@ public class QueryManager {
 		catch (Exception e) {
 			e.printStackTrace();
 			return -1;
+		}
+	}
+	
+	public static void insertTestTrade(String modelFile, Calendar time, double entry, double close, double stop, int numBars) {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "INSERT INTO testtrades(modelfile, \"time\", entry, close, stop, numbars) VALUES (?, ?, ?, ?, ?, ?)";
+			PreparedStatement ps = c.prepareStatement(q);
+			
+			ps.setString(1, modelFile);
+			ps.setTimestamp(2,  new Timestamp(time.getTime().getTime()));
+			ps.setDouble(3, entry);
+			ps.setDouble(4, close);
+			ps.setDouble(5, stop);
+			ps.setInt(6, numBars);
+			
+			ps.executeUpdate();
+			ps.close();
+			c.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	

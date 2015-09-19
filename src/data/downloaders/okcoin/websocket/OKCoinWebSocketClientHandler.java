@@ -38,12 +38,16 @@ public class OKCoinWebSocketClientHandler extends SimpleChannelInboundHandler<Ob
 
 	@Override
 	public void handlerAdded(ChannelHandlerContext ctx) {
-		handshakeFuture = ctx.newPromise();
+		if (ctx != null) {
+			handshakeFuture = ctx.newPromise();
+		}
 	}
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) {
-		handshaker.handshake(ctx.channel());
+		if (ctx != null) {
+			handshaker.handshake(ctx.channel());
+		}
 	}
 
 	@Override
@@ -54,34 +58,39 @@ public class OKCoinWebSocketClientHandler extends SimpleChannelInboundHandler<Ob
 
 	@Override
 	public void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-		Channel ch = ctx.channel();
-		if (!handshaker.isHandshakeComplete()) {
-			handshaker.finishHandshake(ch, (FullHttpResponse) msg);
-			System.out.println("WebSocket Client connected!");
-			handshakeFuture.setSuccess();
-			return;
+		try {
+			Channel ch = ctx.channel();
+			if (!handshaker.isHandshakeComplete()) {
+				handshaker.finishHandshake(ch, (FullHttpResponse) msg);
+				System.out.println("WebSocket Client connected!");
+				handshakeFuture.setSuccess();
+				return;
+			}
+	
+			if (msg instanceof FullHttpResponse) {
+				FullHttpResponse response = (FullHttpResponse) msg;
+				throw new IllegalStateException("Unexpected FullHttpResponse (getStatus=" + response.getStatus() + ", content=" + response.content().toString(CharsetUtil.UTF_8) + ')');
+			}
+	
+			WebSocketFrame frame = (WebSocketFrame) msg;
+			if (frame instanceof TextWebSocketFrame) {
+				TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
+				service.onReceive(textFrame.text());
+			} 
+			else if (frame instanceof BinaryWebSocketFrame) {
+				BinaryWebSocketFrame binaryFrame = (BinaryWebSocketFrame) frame;
+				service.onReceive(decodeByteBuff(binaryFrame.content()));
+			} 
+			else if (frame instanceof PongWebSocketFrame) {
+				System.out.println("WebSocket Client received pong");
+			} 
+			else if (frame instanceof CloseWebSocketFrame) {
+				System.out.println("WebSocket Client received closing");
+				ch.close();
+			}
 		}
-
-		if (msg instanceof FullHttpResponse) {
-			FullHttpResponse response = (FullHttpResponse) msg;
-			throw new IllegalStateException("Unexpected FullHttpResponse (getStatus=" + response.getStatus() + ", content=" + response.content().toString(CharsetUtil.UTF_8) + ')');
-		}
-
-		WebSocketFrame frame = (WebSocketFrame) msg;
-		if (frame instanceof TextWebSocketFrame) {
-			TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
-			service.onReceive(textFrame.text());
-		} 
-		else if (frame instanceof BinaryWebSocketFrame) {
-			BinaryWebSocketFrame binaryFrame = (BinaryWebSocketFrame) frame;
-			service.onReceive(decodeByteBuff(binaryFrame.content()));
-		} 
-		else if (frame instanceof PongWebSocketFrame) {
-			System.out.println("WebSocket Client received pong");
-		} 
-		else if (frame instanceof CloseWebSocketFrame) {
-			System.out.println("WebSocket Client received closing");
-			ch.close();
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -95,20 +104,24 @@ public class OKCoinWebSocketClientHandler extends SimpleChannelInboundHandler<Ob
 	}
 
 	public String decodeByteBuff(ByteBuf buf) throws IOException, DataFormatException {
-
-		byte[] temp = new byte[buf.readableBytes()];
-		ByteBufInputStream bis = new ByteBufInputStream(buf);
-		bis.read(temp);
-		bis.close();
-		Inflater decompresser = new Inflater(true);
-		decompresser.setInput(temp, 0, temp.length);
 		StringBuilder sb = new StringBuilder();
-		byte[] result = new byte[1024];
-		while (!decompresser.finished()) {
-			int resultLength = decompresser.inflate(result);
-			sb.append(new String(result, 0, resultLength, "UTF-8"));
+		try {
+			byte[] temp = new byte[buf.readableBytes()];
+			ByteBufInputStream bis = new ByteBufInputStream(buf);
+			bis.read(temp);
+			bis.close();
+			Inflater decompresser = new Inflater(true);
+			decompresser.setInput(temp, 0, temp.length);
+			byte[] result = new byte[1024];
+			while (!decompresser.finished()) {
+				int resultLength = decompresser.inflate(result);
+				sb.append(new String(result, 0, resultLength, "UTF-8"));
+			}
+			decompresser.end();
 		}
-		decompresser.end();
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 		return sb.toString();
 	}
 }

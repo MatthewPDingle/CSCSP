@@ -51,5 +51,13 @@ Model types
 - Combining symbols across exchanges and using exchange name as another feature
 
 Bugs
-- OKCoin WebSocket realtime downloader can get slow or disconnected for a while and miss bars
-- OKCoin WebSocket realtime downloader marks all bars as not partial (complete)
+- The WebSocket API might try to start before the REST API finishes
+- Trader shows big delays if no data has streamed through OKCoin WebSocket lately.   Make sure it's still evaluating models off last tick.
+- OKCoin REST API sometimes still throws errors - see below
+
+com.google.gson.JsonSyntaxException: java.lang.IllegalStateException: Expected BEGIN_ARRAY but was STRING at line 3 column 1 path $
+	at com.google.gson.Gson.fromJson(Gson.java:822)
+	at com.google.gson.Gson.fromJson(Gson.java:775)
+	at com.google.gson.Gson.fromJson(Gson.java:724)
+	at com.google.gson.Gson.fromJson(Gson.java:696)
+	at data.downloaders.okcoin.OKCoinDownloader.getMostRecentBarsFromBarHistory(OKCoinDownloader.java:321)

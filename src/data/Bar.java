@@ -2,8 +2,11 @@ package data;
 
 import java.util.Calendar;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import constants.Constants;
 import constants.Constants.BAR_SIZE;
+import utils.CalendarUtils;
 
 public class Bar {
 
@@ -63,4 +66,22 @@ public class Bar {
 		return s;
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) {
+			return false;
+		}
+		if (o instanceof Bar) {
+			Bar b = (Bar)o;
+			if (this.symbol.equals(b.symbol) && this.duration == b.duration && CalendarUtils.areSame(this.periodStart, b.periodStart)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder(17, 31).append(symbol).append(duration).append(periodStart).toHashCode();
+	}
 }

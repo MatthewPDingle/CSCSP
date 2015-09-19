@@ -13,7 +13,7 @@ public class OKCoinWebSocketThread extends Thread {
 	private HashMap<String, Boolean> channels = new HashMap<String, Boolean>();
 	
 	public OKCoinWebSocketThread() {
-		service = new OKCoinBusinessWebSocketServiceImpl();
+		service = new OKCoinWebSocketListener();
 		client = new OKCoinWebSocketClient(OKCoinConstants.WEBSOCKET_URL_CHINA, service);
 	}
 
@@ -41,18 +41,21 @@ public class OKCoinWebSocketThread extends Thread {
 	@Override
 	public void run () {
 		if (running) {
-			OKCoinWebSocketSingleton.getInstance().setDisconnected(false);
-			client.start();
+			boolean success = client.start();
+			if (success) {
+				OKCoinWebSocketSingleton.getInstance().setDisconnected(false);
+			}
 		}
 		while (running) {
 			try {
 				if (OKCoinWebSocketSingleton.getInstance().isDisconnected()) {
 					System.out.println("Reconnecting");
-					service = new OKCoinBusinessWebSocketServiceImpl();
+					service = new OKCoinWebSocketListener();
 					client = new OKCoinWebSocketClient(OKCoinConstants.WEBSOCKET_URL_CHINA, service);
-					OKCoinWebSocketSingleton.getInstance().setDisconnected(false);
-					client.connect();
-					client.start();
+					boolean success = client.start();
+					if (success) {
+						OKCoinWebSocketSingleton.getInstance().setDisconnected(false);
+					}
 					for (Entry<String, Boolean> entry : channels.entrySet()) {
 						client.addChannel(entry.getKey());
 						entry.setValue(true);
@@ -66,8 +69,8 @@ public class OKCoinWebSocketThread extends Thread {
 					}
 				}
 			
-				Thread.sleep(2000);
-				
+				Thread.sleep(5000);
+				System.out.println("sentPing");
 				client.sentPing();
 			}
 			catch (Exception e) {

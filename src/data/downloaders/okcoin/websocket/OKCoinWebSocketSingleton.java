@@ -75,8 +75,32 @@ public class OKCoinWebSocketSingleton {
 		return false;
 	}
 
-	public synchronized void setLatestBars(ArrayList<Bar> latestBars) {
-		this.latestBars = latestBars;
+	public synchronized void addLatestBars(ArrayList<Bar> latestBars) {
+		if (latestBars.size() == 5) {
+			this.latestBars = latestBars;
+		}
+		if (latestBars.size() == 2) {
+			latestBars.get(0).partial = false;
+			latestBars.get(1).partial = true;
+			this.latestBars = latestBars;
+		}
+		if (latestBars.size() == 1) {
+			latestBars.get(0).partial = true;
+			if (this.latestBars.size() <= 1) {
+				this.latestBars = latestBars;
+			}
+			else if (this.latestBars.size() == 2) {
+				this.latestBars.get(0).partial = false;
+				this.latestBars.set(1, latestBars.get(0));
+			}
+			else if (this.latestBars.size() == 5) {
+				this.latestBars.get(0).partial = false;
+				this.latestBars.get(1).partial = false;
+				this.latestBars.get(2).partial = false;
+				this.latestBars.get(3).partial = false;
+				this.latestBars.set(4, latestBars.get(0));
+			}
+		}
 	}
 
 	public boolean isDisconnected() {

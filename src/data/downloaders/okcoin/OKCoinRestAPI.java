@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.SSLHandshakeException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
@@ -102,7 +104,7 @@ public class OKCoinRestAPI {
 						throw he;
 					}
 					System.err.println("Connection to OKCoin failed.  Trying again.");
-					LogManager.getLogger("data.downloaders.okcoin").error(he.getStackTrace().toString());
+//					LogManager.getLogger("data.downloaders.okcoin").error(he.getStackTrace().toString());
 					//Thread.sleep(1000);
 				}
 				catch (ConnectTimeoutException cte) {
@@ -112,7 +114,7 @@ public class OKCoinRestAPI {
 						throw cte;
 					}
 					System.err.println("Connection to OKCoin timed out.  Trying again.");
-					LogManager.getLogger("data.downloaders.okcoin").error(cte.getStackTrace().toString());
+//					LogManager.getLogger("data.downloaders.okcoin").error(cte.getStackTrace().toString());
 					//Thread.sleep(1000);
 				}
 				catch (NoHttpResponseException nhre) {
@@ -122,7 +124,17 @@ public class OKCoinRestAPI {
 						throw nhre;
 					}
 					System.err.println("No HTTP Response from OKCoin.  Trying again.");
-					LogManager.getLogger("data.downloaders.okcoin").error(nhre.getStackTrace().toString());
+//					LogManager.getLogger("data.downloaders.okcoin").error(nhre.getStackTrace().toString());
+					//Thread.sleep(1000);
+				}
+				catch (SSLHandshakeException sslhe) {
+					if (attempt > 3) {
+						System.err.println("OKCoin SSL Handshake Exception.  Aborting.");
+						LogManager.getLogger("data.downloaders.okcoin").error("OKCoin SSL Handshake Exception.  Aborting.");
+						throw sslhe;
+					}
+					System.err.println("OKCoin SSL Handshake Exception.  Trying again.");
+//					LogManager.getLogger("data.downloaders.okcoin").error(sslhe.getStackTrace().toString());
 					//Thread.sleep(1000);
 				}
 			}

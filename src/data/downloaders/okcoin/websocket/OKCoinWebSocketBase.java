@@ -37,17 +37,17 @@ public class OKCoinWebSocketBase {
 	private int siteFlag = 0;
 	private Set<String> subscriptionChannels = new HashSet<String>();
 
-	public OKCoinWebSocketBase(String url, OKCoinWebSocketService serivce){
+	public OKCoinWebSocketBase(String url, OKCoinWebSocketService serivce) {
 		this.url = url;
 		this.service = serivce;
 	}
 
-	public void start() {
+	public boolean start() {
 		if (url == null) {
-			return;
+			return false;
 		}
 		if (service == null) {
-			return;
+			return false;
 		}
 		
 		moniter = new TimerTask() {
@@ -55,7 +55,7 @@ public class OKCoinWebSocketBase {
 			public void run() {
 			}
 		};
-		this.connect();
+		return this.connect();
 	}
 
 	public void addChannel(String channel) {
@@ -251,12 +251,12 @@ public class OKCoinWebSocketBase {
 		this.sendMessage(tradeStr.toString());
 	}
 
-	public void connect() {
+	public boolean connect() {
 		try {
 			System.out.println("Connect");
 			final URI uri = new URI(url);
 			if (uri == null) {
-				return;
+				return false;
 			}
 			if (uri.getHost().contains("com")) {
 				siteFlag = 1;
@@ -285,18 +285,22 @@ public class OKCoinWebSocketBase {
 			handler.handshakeFuture().sync();
 		} 
 		catch (Exception e) {
+			e.printStackTrace();
 			group.shutdownGracefully();
+			return false;
 		}
+		return true;
 	}
 
 	public void sendMessage(String message) {
 		if (channel != null) {
-			channel.writeAndFlush(new TextWebSocketFrame(message));}
+			channel.writeAndFlush(new TextWebSocketFrame(message));
+		}
 	}
 
 	public void sentPing() {
 		String dataMsg = "{'event':'ping'}";
-		System.out.println(dataMsg);
+//		System.out.println(dataMsg);
 		this.sendMessage(dataMsg);
 	}
 

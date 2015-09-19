@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class OKCoinMD5Util {
+	
+	private static final char HEX_DIGITS[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+	
 	public static String buildMysignV1(Map<String, String> sArray, String secretKey) {
 		String mysign = "";
 		try {
@@ -23,7 +26,6 @@ public class OKCoinMD5Util {
 	}
 
 	public static String createLinkString(Map<String, String> params) {
-
 		List<String> keys = new ArrayList<String>(params.keySet());
 		Collections.sort(keys);
 		String prestr = "";
@@ -39,9 +41,6 @@ public class OKCoinMD5Util {
 		return prestr;
 	}
 
-	private static final char HEX_DIGITS[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D',
-			'E', 'F' };
-
 	public static String getMD5String(String str) {
 		try {
 			if (str == null || str.trim().length() == 0) {
@@ -56,7 +55,8 @@ public class OKCoinMD5Util {
 				sb.append(HEX_DIGITS[(bytes[i] & 0xf0) >> 4] + "" + HEX_DIGITS[bytes[i] & 0xf]);
 			}
 			return sb.toString();
-		} catch (NoSuchAlgorithmException e) {
+		} 
+		catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 		return "";

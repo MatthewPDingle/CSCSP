@@ -14,7 +14,7 @@ import data.downloaders.okcoin.OKCoinConstants;
 import dbio.QueryManager;
 import utils.CalendarUtils;
 
-public class OKCoinBusinessWebSocketServiceImpl implements OKCoinWebSocketService {
+public class OKCoinWebSocketListener implements OKCoinWebSocketService {
 
 	@Override
 	public void onReceive(String msg) {
@@ -61,7 +61,7 @@ public class OKCoinBusinessWebSocketServiceImpl implements OKCoinWebSocketServic
 							data.clear();
 							data.add(tempBar);
 						}
-
+						
 						// These go oldest to newest
 						for (int a = 0; a < data.size(); a++) {
 							if (data.get(a) instanceof ArrayList<?>) {
@@ -88,13 +88,21 @@ public class OKCoinBusinessWebSocketServiceImpl implements OKCoinWebSocketServic
 									gap = (float)open - mostRecentBarInDB.close;
 								}
 								
-								Bar bar = new Bar(symbol, (float)open, (float)close, (float)high, (float)low, (float)vwap, (float)volume, null, change, gap, barStart, barEnd, duration, false);
+								boolean partial = false;
+								if (data.size() == 1) {
+									partial = true;
+								}
+								if (a == data.size() - 1 && data.size() > 1) {
+									partial = true;
+								}
+	
+								Bar bar = new Bar(symbol, (float)open, (float)close, (float)high, (float)low, (float)vwap, (float)volume, null, change, gap, barStart, barEnd, duration, partial);
 								//QueryManager.insertOrUpdateIntoBar(bar);
 								bars.add(bar);
 							}
 						}
 
-						okss.setLatestBars(bars);
+						okss.addLatestBars(bars);
 					}
 				}
 			}
