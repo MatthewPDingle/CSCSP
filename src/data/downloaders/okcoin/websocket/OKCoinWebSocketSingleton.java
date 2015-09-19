@@ -1,9 +1,11 @@
 package data.downloaders.okcoin.websocket;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 
 import data.Bar;
+import data.BarKey;
 import dbio.QueryManager;
 
 public class OKCoinWebSocketSingleton {
@@ -64,15 +66,11 @@ public class OKCoinWebSocketSingleton {
 		this.symbolTickerDataHash.put(symbol, tickerDataHash);
 	}
 
-	public synchronized boolean insertLatestBarsIntoDB() {
-		for (Bar bar : latestBars) {
-			QueryManager.insertOrUpdateIntoBar(bar);
-		}
-		if (latestBars.size() > 0) {
-			latestBars.clear();
-			return true;
-		}
-		return false;
+	public synchronized ArrayList<Bar> getLatestBarsAndClear() {
+		ArrayList<Bar> returnList = new ArrayList<Bar>();
+		returnList.addAll(latestBars);
+		latestBars.clear();
+		return returnList;
 	}
 
 	public synchronized void addLatestBars(ArrayList<Bar> latestBars) {

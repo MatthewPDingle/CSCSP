@@ -48,6 +48,13 @@ public class OKCoinWebSocketThread extends Thread {
 		}
 		while (running) {
 			try {
+				Thread.sleep(5000);
+				
+				if (service == null || client == null || client.isNettyChannelNull()) {
+					System.err.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+					OKCoinWebSocketSingleton.getInstance().setDisconnected(true);
+				}
+				
 				if (OKCoinWebSocketSingleton.getInstance().isDisconnected()) {
 					System.out.println("Reconnecting");
 					service = new OKCoinWebSocketListener();
@@ -69,11 +76,11 @@ public class OKCoinWebSocketThread extends Thread {
 					}
 				}
 			
-				Thread.sleep(5000);
 				System.out.println("sentPing");
 				client.sentPing();
 			}
 			catch (Exception e) {
+				System.err.println("OKCoinWebSocketThread error");
 				e.printStackTrace();
 			}
 		}

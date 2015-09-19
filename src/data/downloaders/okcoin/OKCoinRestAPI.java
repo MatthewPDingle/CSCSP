@@ -2,6 +2,7 @@ package data.downloaders.okcoin;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -101,41 +102,41 @@ public class OKCoinRestAPI {
 					if (attempt > 3) {
 						System.err.println("Connection to OKCoin failed.  Aborting.");
 						LogManager.getLogger("data.downloaders.okcoin").error("Connection to OKCoin failed.  Aborting.");
-						throw he;
+//						throw he;
 					}
 					System.err.println("Connection to OKCoin failed.  Trying again.");
-//					LogManager.getLogger("data.downloaders.okcoin").error(he.getStackTrace().toString());
-					//Thread.sleep(1000);
 				}
 				catch (ConnectTimeoutException cte) {
 					if (attempt > 3) {
 						System.err.println("Connection to OKCoin timed out.  Aborting.");
 						LogManager.getLogger("data.downloaders.okcoin").error("Connection to OKCoin timed out.  Aborting.");
-						throw cte;
+//						throw cte;
 					}
 					System.err.println("Connection to OKCoin timed out.  Trying again.");
-//					LogManager.getLogger("data.downloaders.okcoin").error(cte.getStackTrace().toString());
-					//Thread.sleep(1000);
 				}
 				catch (NoHttpResponseException nhre) {
 					if (attempt > 3) {
 						System.err.println("No HTTP Response from OKCoin.  Aborting.");
 						LogManager.getLogger("data.downloaders.okcoin").error("Connection to OKCoin timed out.  Aborting.");
-						throw nhre;
+//						throw nhre;
 					}
 					System.err.println("No HTTP Response from OKCoin.  Trying again.");
-//					LogManager.getLogger("data.downloaders.okcoin").error(nhre.getStackTrace().toString());
-					//Thread.sleep(1000);
 				}
 				catch (SSLHandshakeException sslhe) {
 					if (attempt > 3) {
 						System.err.println("OKCoin SSL Handshake Exception.  Aborting.");
 						LogManager.getLogger("data.downloaders.okcoin").error("OKCoin SSL Handshake Exception.  Aborting.");
-						throw sslhe;
+//						throw sslhe;
 					}
 					System.err.println("OKCoin SSL Handshake Exception.  Trying again.");
-//					LogManager.getLogger("data.downloaders.okcoin").error(sslhe.getStackTrace().toString());
-					//Thread.sleep(1000);
+				}
+				catch (SocketException se) {
+					if (attempt > 3) {
+						System.err.println("OKCoin Socket Exception.  Aborting.");
+						LogManager.getLogger("data.downloaders.okcoin").error("OKCoin Socket.  Aborting.");
+//						throw se;
+					}
+					System.err.println("OKCoin Socket Exception.  Trying again.");
 				}
 			}
 		}

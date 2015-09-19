@@ -96,11 +96,16 @@ public class OKCoinWebSocketClientHandler extends SimpleChannelInboundHandler<Ob
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+		try {
 		cause.printStackTrace();
-		if (!handshakeFuture.isDone()) {
-			handshakeFuture.setFailure(cause);
+			if (!handshakeFuture.isDone()) {
+				handshakeFuture.setFailure(cause);
+			}
+			ctx.close();
 		}
-		ctx.close();
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public String decodeByteBuff(ByteBuf buf) throws IOException, DataFormatException {

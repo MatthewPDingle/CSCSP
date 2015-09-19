@@ -84,6 +84,13 @@ public class OKCoinWebSocketBase {
 		subscriptionChannels.clear();
 	}
 	
+	public boolean isNettyChannelNull() {
+		if (channel == null) {
+			return true;
+		}
+		return false;
+	}
+	
 	/**
 	 * 
 	 * @param apiKey
@@ -300,7 +307,6 @@ public class OKCoinWebSocketBase {
 
 	public void sentPing() {
 		String dataMsg = "{'event':'ping'}";
-//		System.out.println(dataMsg);
 		this.sendMessage(dataMsg);
 	}
 

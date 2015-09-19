@@ -6,10 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.logging.log4j.LogManager;
 
 import com.google.gson.Gson;
+import com.google.gson.stream.MalformedJsonException;
 
 import constants.Constants;
 import constants.Constants.BAR_SIZE;
@@ -23,7 +23,6 @@ import gui.singletons.MetricSingleton;
 import metrics.MetricsUpdaterThread;
 import ml.ARFF;
 import ml.Modelling;
-import search.GeneticSearcher;
 import utils.CalendarUtils;
 import utils.StringUtils;
 import weka.classifiers.Classifier;
@@ -324,9 +323,24 @@ public class OKCoinDownloader {
 			}
 			String json = getBarHistoryJSON(okCoinSymbol, okBarDuration, new Integer(barCount + 1).toString(), since);
 			if (json != null && json.length() > 0) {
-				errorJSON = json;
-				List<List> list = new Gson().fromJson(json, List.class);
-				
+				Object jsonObject = null;
+				try {
+					jsonObject = new Gson().fromJson(json, Object.class);
+				}
+				catch (Exception e) {
+					System.err.println(e.getMessage());
+				}
+				List<List> list = null;
+				if (jsonObject != null && jsonObject instanceof List<?>) {
+					list = (List<List>)jsonObject;
+				}
+				else {
+					System.err.println("WTF IS THIS SHIT");
+					if (jsonObject != null) {
+						errorJSON = jsonObject.toString();
+					}
+				}
+
 				Float previousClose = null;
 			
 				// From oldest to newest
@@ -377,7 +391,6 @@ public class OKCoinDownloader {
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(errorJSON);
 			LogManager.getLogger("data.downloaders.okcoin").error(e.getStackTrace().toString());
 		}
 		
