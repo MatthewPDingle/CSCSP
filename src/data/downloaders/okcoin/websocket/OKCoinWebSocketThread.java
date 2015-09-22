@@ -57,6 +57,9 @@ public class OKCoinWebSocketThread extends Thread {
 				
 				if (OKCoinWebSocketSingleton.getInstance().isDisconnected()) {
 					System.out.println("Reconnecting");
+					if (client != null) {
+						client.removeAllChannels();
+					}
 					service = new OKCoinWebSocketListener();
 					client = new OKCoinWebSocketClient(OKCoinConstants.WEBSOCKET_URL_CHINA, service);
 					boolean success = client.start();

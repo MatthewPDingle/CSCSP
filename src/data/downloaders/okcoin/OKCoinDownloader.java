@@ -127,7 +127,7 @@ public class OKCoinDownloader {
 		}
 	}
 
-	public static boolean downloadBarsAndUpdate(String okcoinSymbol, BAR_SIZE barSize, Integer numBars) {
+	public static int downloadBarsAndUpdate(String okcoinSymbol, BAR_SIZE barSize, Integer numBars) {
 		int n = 0;
 		if (numBars != null) {
 			n = numBars;
@@ -137,9 +137,9 @@ public class OKCoinDownloader {
 			QueryManager.insertOrUpdateIntoBar(bar);
 		}
 		if (bars != null && bars.size() > 0) {
-			return true;
+			return bars.size();
 		}
-		return false;
+		return 0;
 	}
 	
 	public static void downloadTicksAndUpdate(String okcoinSymbol, BAR_SIZE barSize) {

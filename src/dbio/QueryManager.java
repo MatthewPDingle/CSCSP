@@ -1607,8 +1607,30 @@ public class QueryManager {
 //					starts.add(cal.getTime().toString());
 					
 					Timestamp minTS = rs0.getTimestamp("minstart");
+					if (minTS == null) {
+						Calendar min = Calendar.getInstance();
+						min.set(Calendar.YEAR, 2014);
+						min.set(Calendar.MONTH, 0);
+						min.set(Calendar.DATE, 1);
+						min.set(Calendar.HOUR, 0);
+						min.set(Calendar.MINUTE, 0);
+						min.set(Calendar.SECOND, 0);
+						min.set(Calendar.MILLISECOND, 0);
+						minTS = new Timestamp(min.getTimeInMillis());
+					}
 					minCal.setTimeInMillis(minTS.getTime());
 					Timestamp maxTS = rs0.getTimestamp("maxstart");
+					if (maxTS == null) {
+						Calendar max = Calendar.getInstance();
+						max.set(Calendar.YEAR, 2014);
+						max.set(Calendar.MONTH, 0);
+						max.set(Calendar.DATE, 1);
+						max.set(Calendar.HOUR, 0);
+						max.set(Calendar.MINUTE, 0);
+						max.set(Calendar.SECOND, 0);
+						max.set(Calendar.MILLISECOND, 0);
+						maxTS = new Timestamp(max.getTimeInMillis());
+					}
 					maxCal.setTimeInMillis(maxTS.getTime());
 				}
 				rs0.close();
@@ -3163,15 +3185,16 @@ public class QueryManager {
 		}
 	}
 	
+	/**
+	 * This method should get the volatility relative to an index of some sort like SPY'
+	 * 
+	 * @param symbol
+	 * @return
+	 */
 	public static float getSymbolRelativeVolatility(String symbol) {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "SELECT p1.value / p2.value AS relvol " +
-						"FROM metric_mvol100 p1 " +
-						"INNER JOIN metric_mvol100 p2 " +
-						"ON p1.date = p2.date AND p2.symbol = 'SPY' " +
-						"WHERE p1.symbol = ? " +
-						"ORDER BY p1.date DESC LIMIT 1";
+			String q =  "SELECT 1 AS relvol ";
 			PreparedStatement s = c.prepareStatement(q);
 			s.setString(1, symbol);
 			ResultSet rs = s.executeQuery();
@@ -3199,15 +3222,18 @@ public class QueryManager {
 	public static float getTradingAccountValue() {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "SELECT (SELECT SUM(b.adjclose * t.shares) " +
-					"FROM trades t " +
-					"INNER JOIN basicr b ON t.symbol = b.symbol AND b.date = (SELECT MAX(date) FROM basicr WHERE symbol = t.symbol) " +
-					"WHERE t.type = 'long' AND status = 'open') " +
-					"+ (SELECT SUM(b.adjclose * t.shares) " +
-					"FROM trades t " +
-					"INNER JOIN basicr b ON t.symbol = b.symbol AND b.date = (SELECT MAX(date) FROM basicr WHERE symbol = t.symbol) " +
-					"WHERE t.type = 'short' AND status = 'open') " +
-					"+ (SELECT cash FROM tradingaccount) AS value";
+			String q = 	"SELECT " +
+						"COALESCE((SELECT SUM(b.close * t.shares) " +
+						"FROM trades t " +
+						"INNER JOIN bar b ON t.symbol = b.symbol AND b.start = (SELECT MAX(start) FROM bar WHERE symbol = t.symbol AND duration = t.duration) " +
+						"WHERE t.type = 'long' AND t.status = 'open'), 0) " +
+						"+  " +
+						"COALESCE((SELECT SUM(b.close * t.shares) " +
+						"FROM trades t " +
+						"INNER JOIN bar b ON t.symbol = b.symbol AND b.start = (SELECT MAX(start) FROM bar WHERE symbol = t.symbol AND duration = t.duration) " +
+						"WHERE t.type = 'short' AND t.status = 'open'), 0) " +
+						"+ " + 
+						"(SELECT cash FROM tradingaccount) AS value";
 			Statement s = c.createStatement();
 			ResultSet rs = s.executeQuery(q);
 			float value = 0f;
@@ -3464,6 +3490,71 @@ public class QueryManager {
 		}
 	}
 	
+	/**
+	 * Newer version used by CSCSP Monitor
+	 * 
+	 * @param type
+	 * @param symbol
+	 * @param entry
+	 * @param numShares
+	 * @param commission
+	 * @param model
+	 * @return
+	 */
+	public static int makeTrade(String type, String symbol, float entry, int numShares, float commission, Model model) {
+		try {
+			Connection c = ConnectionSingleton.getInstance().getConnection();
+			String q = "INSERT INTO trades(status, entry, exit, \"type\", symbol, shares, entryprice, exitprice, exitreason, commission, netprofit, grossprofit, buy1, buy2, sell, sellop, sellvalue, stop, stopvalue) " +
+						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			PreparedStatement s = c.prepareStatement(q, Statement.RETURN_GENERATED_KEYS);
+			
+			s.setString(1, "open");
+			s.setTimestamp(2, new java.sql.Timestamp(Calendar.getInstance().getTime().getTime()));
+			s.setDate(3, null);
+			s.setString(4, type);
+			s.setString(5, symbol);
+			s.setInt(6, numShares);
+			s.setFloat(7, entry);
+			s.setNull(8, java.sql.Types.FLOAT);
+			s.setString(9, null);
+			s.setFloat(10, commission);
+			s.setNull(11, java.sql.Types.FLOAT);
+			s.setNull(12, java.sql.Types.FLOAT);
+			s.setString(13, model.modelFile);
+			s.setString(14, null);
+			s.setString(15, model.sellMetric);
+			s.setString(16, null);
+			s.setFloat(17, model.sellMetricValue);
+			s.setString(18, model.stopMetric);
+			s.setFloat(19, model.stopMetricValue);
+
+			s.executeUpdate();
+			ResultSet rs = s.getGeneratedKeys();
+			int id = 0;
+			while (rs.next()) {
+				id = rs.getInt(1);
+			}
+			rs.close();
+			s.close();
+			c.close();
+			return id;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	
+	/**
+	 * Older version userd by CSCSP
+	 * 
+	 * @param type
+	 * @param symbol
+	 * @param entry
+	 * @param numShares
+	 * @param commission
+	 * @return
+	 */
 	public static int makeTrade(String type, String symbol, float entry, int numShares, float commission) {
 		try {
 			ParameterSingleton ps = ParameterSingleton.getInstance();

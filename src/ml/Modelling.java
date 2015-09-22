@@ -17,6 +17,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.BayesNet;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.evaluation.ThresholdCurve;
+import weka.classifiers.functions.LibSVM;
 import weka.classifiers.functions.SimpleLogistic;
 import weka.classifiers.meta.Bagging;
 import weka.classifiers.trees.J48;
@@ -145,6 +146,9 @@ public class Modelling {
 			}
 			else if (algo.equals("BayesNet")) {
 				classifier = new BayesNet();
+			}
+			else if (algo.equals("LibSVM")) {
+				classifier = new LibSVM();
 			}
 			else {
 				return;

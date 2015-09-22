@@ -29,4 +29,8 @@ public class Commission {
 			return 0f;
 		}
 	}
+	
+	public  static float getOKCoinEstimatedCommission() {
+		return 0f;
+	}
 }
