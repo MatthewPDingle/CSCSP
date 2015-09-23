@@ -3196,7 +3196,6 @@ public class QueryManager {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			String q =  "SELECT 1 AS relvol ";
 			PreparedStatement s = c.prepareStatement(q);
-			s.setString(1, symbol);
 			ResultSet rs = s.executeQuery();
 			float relvol = 1f; 
 			while (rs.next()) {
@@ -3493,55 +3492,47 @@ public class QueryManager {
 	/**
 	 * Newer version used by CSCSP Monitor
 	 * 
-	 * @param type
-	 * @param symbol
-	 * @param entry
+	 * @param suggestedEntry
 	 * @param numShares
 	 * @param commission
 	 * @param model
 	 * @return
 	 */
-	public static int makeTrade(String type, String symbol, float entry, int numShares, float commission, Model model) {
+	public static void makeTrade(float suggestedEntry, int numShares, float commission, Model model) {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "INSERT INTO trades(status, entry, exit, \"type\", symbol, shares, entryprice, exitprice, exitreason, commission, netprofit, grossprofit, buy1, buy2, sell, sellop, sellvalue, stop, stopvalue) " +
-						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-			PreparedStatement s = c.prepareStatement(q, Statement.RETURN_GENERATED_KEYS);
+			String q = "INSERT INTO trades(status, entry, exit, \"type\", symbol, duration, shares, suggestedentryprice, actualentryprice, suggestedexitprice, actualexitprice, exitreason, commission, netprofit, grossprofit, model, sell, sellvalue, stop, stopvalue) " +
+						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			PreparedStatement s = c.prepareStatement(q);
 			
 			s.setString(1, "open");
 			s.setTimestamp(2, new java.sql.Timestamp(Calendar.getInstance().getTime().getTime()));
 			s.setDate(3, null);
-			s.setString(4, type);
-			s.setString(5, symbol);
-			s.setInt(6, numShares);
-			s.setFloat(7, entry);
-			s.setNull(8, java.sql.Types.FLOAT);
-			s.setString(9, null);
-			s.setFloat(10, commission);
+			s.setString(4, model.type);
+			s.setString(5, model.bk.symbol);
+			s.setString(6, model.bk.duration.toString());
+			s.setInt(7, numShares);
+			s.setFloat(8, suggestedEntry);
+			s.setNull(9, java.sql.Types.FLOAT);
+			s.setNull(10, java.sql.Types.FLOAT);
 			s.setNull(11, java.sql.Types.FLOAT);
-			s.setNull(12, java.sql.Types.FLOAT);
-			s.setString(13, model.modelFile);
-			s.setString(14, null);
-			s.setString(15, model.sellMetric);
-			s.setString(16, null);
-			s.setFloat(17, model.sellMetricValue);
-			s.setString(18, model.stopMetric);
-			s.setFloat(19, model.stopMetricValue);
+			s.setString(12, null);
+			s.setFloat(13, commission);
+			s.setNull(14, java.sql.Types.FLOAT);
+			s.setNull(15, java.sql.Types.FLOAT);
+			s.setString(16, model.modelFile);
+			s.setString(17, model.sellMetric);
+			s.setFloat(18, model.sellMetricValue);
+			s.setString(19, model.stopMetric);
+			s.setFloat(20, model.stopMetricValue);
 
 			s.executeUpdate();
-			ResultSet rs = s.getGeneratedKeys();
-			int id = 0;
-			while (rs.next()) {
-				id = rs.getInt(1);
-			}
-			rs.close();
+
 			s.close();
 			c.close();
-			return id;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			return 0;
 		}
 	}
 	

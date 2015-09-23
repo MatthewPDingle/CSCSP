@@ -42,6 +42,8 @@ TODO
 - Have BarCreator have a parameter so it can start at the point of the most recent existing bar instead of at the first tick.
 - Put some kind of MetricDiscreteValueHash calculation option on DataManager
 - Position Size in QueryManager using relative volatility (Used to use mvol100)
+- Metrics with longer time periods
+- Metric values that are the first derivatives of regular ones
 
 Model types
 - Long & Short

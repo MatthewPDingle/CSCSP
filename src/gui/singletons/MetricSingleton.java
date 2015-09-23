@@ -43,6 +43,10 @@ public class MetricSingleton {
 		this.metricSequenceHash = QueryManager.loadMetricSequenceHash(barKeys, neededMetrics);
 	}
 	
+	public void refreshMetricSequenceHash() {
+		this.metricSequenceHash = QueryManager.loadMetricSequenceHash(barKeys, neededMetrics);
+	}
+	
 	@Deprecated
 	public void updateMetricSequenceHash() {
 		this.metricSequenceHash = QueryManager.loadMetricSequenceHash(barKeys, neededMetrics);
