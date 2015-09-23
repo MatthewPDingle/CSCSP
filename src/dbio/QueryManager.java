@@ -3352,7 +3352,7 @@ public class QueryManager {
 		ArrayList<HashMap<String, Object>> openPositions = new ArrayList<HashMap<String, Object>>(); 
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
-			String q = "SELECT type, symbol, duration, shares, entryprice, commission, sell, sellop, sellvalue, stop, stopvalue FROM trades WHERE status = 'open'";
+			String q = "SELECT type, symbol, duration, shares, suggestedentryprice, actualentryprice, commission, sell, sellvalue, stop, stopvalue FROM trades WHERE status = 'open'";
 			Statement s = c.createStatement();
 			ResultSet rs = s.executeQuery(q);
 			while (rs.next()) {
@@ -3360,14 +3360,15 @@ public class QueryManager {
 				openPosition.put("type", rs.getString("type"));
 				openPosition.put("symbol", rs.getString("symbol"));
 				openPosition.put("duration", rs.getString("duration"));
-				openPosition.put("shares", rs.getInt("shares"));
+				openPosition.put("shares", rs.getFloat("shares"));
+				openPosition.put("suggestedentryprice", rs.getFloat("suggestedentryprice"));
+				openPosition.put("actualentryprice", rs.getFloat("actualentryprice"));
+				openPosition.put("commission", rs.getFloat("commission"));
 				openPosition.put("sell", rs.getString("sell"));
-				openPosition.put("sellop", rs.getString("sellop"));
 				openPosition.put("sellvalue", rs.getFloat("sellvalue"));
 				openPosition.put("stop", rs.getString("stop"));
 				openPosition.put("stopvalue", rs.getFloat("stopvalue"));
-				openPosition.put("entryprice", rs.getFloat("entryprice"));
-				openPosition.put("commission", rs.getFloat("commission"));
+				
 				openPositions.add(openPosition);
 			}
 			rs.close();
@@ -3498,7 +3499,7 @@ public class QueryManager {
 	 * @param model
 	 * @return
 	 */
-	public static void makeTrade(float suggestedEntry, int numShares, float commission, Model model) {
+	public static void makeTrade(float suggestedEntry, float numShares, float commission, Model model) {
 		try {
 			Connection c = ConnectionSingleton.getInstance().getConnection();
 			String q = "INSERT INTO trades(status, entry, exit, \"type\", symbol, duration, shares, suggestedentryprice, actualentryprice, suggestedexitprice, actualexitprice, exitreason, commission, netprofit, grossprofit, model, sell, sellvalue, stop, stopvalue) " +
@@ -3511,7 +3512,7 @@ public class QueryManager {
 			s.setString(4, model.type);
 			s.setString(5, model.bk.symbol);
 			s.setString(6, model.bk.duration.toString());
-			s.setInt(7, numShares);
+			s.setFloat(7, numShares);
 			s.setFloat(8, suggestedEntry);
 			s.setNull(9, java.sql.Types.FLOAT);
 			s.setNull(10, java.sql.Types.FLOAT);
@@ -3537,7 +3538,7 @@ public class QueryManager {
 	}
 	
 	/**
-	 * Older version userd by CSCSP
+	 * Older version used by CSCSP
 	 * 
 	 * @param type
 	 * @param symbol
@@ -3546,7 +3547,7 @@ public class QueryManager {
 	 * @param commission
 	 * @return
 	 */
-	public static int makeTrade(String type, String symbol, float entry, int numShares, float commission) {
+	public static int makeTrade(String type, String symbol, float entry, float numShares, float commission) {
 		try {
 			ParameterSingleton ps = ParameterSingleton.getInstance();
 			String stop = ps.getStopMetric();
@@ -3561,7 +3562,7 @@ public class QueryManager {
 			s.setDate(3, null);
 			s.setString(4, type);
 			s.setString(5, symbol);
-			s.setInt(6, numShares);
+			s.setFloat(6, numShares);
 			s.setFloat(7, entry);
 			s.setNull(8, java.sql.Types.FLOAT);
 			s.setString(9, null);

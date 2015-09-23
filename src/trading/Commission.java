@@ -2,7 +2,7 @@ package trading;
 
 public class Commission {
 
-	public static float getIBEstimatedCommission(int numShares, float sharePrice) {
+	public static float getIBEstimatedCommission(float numShares, float sharePrice) {
 		try {
 			float commission = 0f;
 			

@@ -21,7 +21,7 @@ public class PositionSizing {
 	 * @param commission
 	 * @return
 	 */
-	public static int getPositionSize(String symbol, float price) {
+	public static float getPositionSize(String symbol, float price) {
 		try {
 			float tradingAccountValue = QueryManager.getTradingAccountValue();
 			float standardPositionValue = tradingAccountValue / (float)NUM_STANDARD_POSITIONS;
@@ -39,16 +39,16 @@ public class PositionSizing {
 			if (adjustedPositionValue > (cashAvailable - estMaxCommission)) {
 				adjustedPositionValue = cashAvailable - estMaxCommission;
 			}
-			int numShares = (int)Math.floor(adjustedPositionValue / price);
+			float numShares = adjustedPositionValue / price;
 			return numShares;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			return 0;
+			return 0f;
 		}
 	}
 	
-	public static int getPositionSizeIgnoreCash(String symbol, float price) {
+	public static float getPositionSizeIgnoreCash(String symbol, float price) {
 		try {
 			float tradingAccountValue = QueryManager.getTradingAccountValue();
 			float standardPositionValue = tradingAccountValue / (float)NUM_STANDARD_POSITIONS;
@@ -60,12 +60,12 @@ public class PositionSizing {
 				adjustedPositionValue = tradingAccountValue * .15f;
 			}
 			
-			int numShares = (int)Math.floor(adjustedPositionValue / price);
+			float numShares = adjustedPositionValue / price;
 			return numShares;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			return 0;
+			return 0f;
 		}
 	}
 }

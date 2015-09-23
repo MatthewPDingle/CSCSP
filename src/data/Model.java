@@ -488,14 +488,16 @@ public class Model {
 		if (trainTruePositiveRate + trainFalsePositiveRate == 0) {
 			return 0;
 		}
-		return trainTruePositiveRate / (trainTruePositiveRate + trainFalsePositiveRate);
+//		return trainTruePositiveRate / (trainTruePositiveRate + trainFalsePositiveRate);
+		return trainTruePositives / (trainTruePositives + trainFalsePositives);
 	}
 
 	public double getTestWinPercent() {
 		if (testTruePositiveRate + testFalsePositiveRate == 0) {
 			return 0;
 		}
-		return testTruePositiveRate / (testTruePositiveRate + testFalsePositiveRate);
+//		return testTruePositiveRate / (testTruePositiveRate + testFalsePositiveRate);
+		return testTruePositives / (testTruePositives + testFalsePositives);
 	}
 	
 	public int getTestNumOpportunities() {

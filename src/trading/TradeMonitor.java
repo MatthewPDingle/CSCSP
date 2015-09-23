@@ -40,7 +40,7 @@ public class TradeMonitor {
 					MapSymbol bestBullSymbol = getBestBullSymbolBasedOnPositionSizeAdjustedScore();
 					if (bestBullSymbol != null) {
 						float cash = QueryManager.getTradingAccountCash();
-						int numShares = PositionSizing.getPositionSize(bestBullSymbol.getSymbol(), bestBullSymbol.getPrice());
+						float numShares = PositionSizing.getPositionSize(bestBullSymbol.getSymbol(), bestBullSymbol.getPrice());
 						float commission = Commission.getIBEstimatedCommission(numShares, bestBullSymbol.getPrice());
 						float tradeCost = (numShares * bestBullSymbol.getPrice()) + commission;
 						
@@ -59,7 +59,7 @@ public class TradeMonitor {
 					MapSymbol bestBearSymbol = getBestBearSymbolBasedOnPositionSizeAdjustedScore();
 					if (bestBearSymbol != null) {
 						float cash = QueryManager.getTradingAccountCash();
-						int numShares = PositionSizing.getPositionSize(bestBearSymbol.getSymbol(), bestBearSymbol.getPrice());
+						float numShares = PositionSizing.getPositionSize(bestBearSymbol.getSymbol(), bestBearSymbol.getPrice());
 						float commission = Commission.getIBEstimatedCommission(numShares, bestBearSymbol.getPrice());
 						float tradeCost = (numShares * bestBearSymbol.getPrice()) + commission;
 						
@@ -176,7 +176,7 @@ public class TradeMonitor {
 			for (MapSymbol hpSymbol:mss.getHighPriorityMapSymbols()) {
 				// TODO: make sure this hpSymbol was last updated just now
 				if (!positionSymbols.contains(hpSymbol.getSymbol())) {
-					int numShares = PositionSizing.getPositionSizeIgnoreCash(hpSymbol.getSymbol(), hpSymbol.getPrice());
+					float numShares = PositionSizing.getPositionSizeIgnoreCash(hpSymbol.getSymbol(), hpSymbol.getPrice());
 					float positionValue = numShares * hpSymbol.getPrice();
 					float estimatedOneWayCommission = Commission.getIBEstimatedCommission(numShares, hpSymbol.getPrice());
 					float estimatedTwoWayCommission = estimatedOneWayCommission * 2;
@@ -203,7 +203,7 @@ public class TradeMonitor {
 			for (MapSymbol hpSymbol:mss.getHighPriorityMapSymbols()) {
 				// TODO: make sure this hpSymbol was last updated just now
 				if (!positionSymbols.contains(hpSymbol.getSymbol())) {
-					int numShares = PositionSizing.getPositionSizeIgnoreCash(hpSymbol.getSymbol(), hpSymbol.getPrice());
+					float numShares = PositionSizing.getPositionSizeIgnoreCash(hpSymbol.getSymbol(), hpSymbol.getPrice());
 					float positionValue = numShares * hpSymbol.getPrice();
 					float estimatedOneWayCommission = Commission.getIBEstimatedCommission(numShares, hpSymbol.getPrice());
 					float estimatedTwoWayCommission = estimatedOneWayCommission * 2;

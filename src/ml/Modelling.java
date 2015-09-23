@@ -189,12 +189,12 @@ public class Modelling {
 			
 			int testDatasetSize = testInstances.numInstances();
 			double[][] testConfusionMatrix = testEval.confusionMatrix();
-			int testTrueNegatives = (int)testConfusionMatrix[0][0];
-			int testFalseNegatives = (int)testConfusionMatrix[1][0];
-			int testFalsePositives = (int)testConfusionMatrix[0][1];
-			int testTruePositives = (int)testConfusionMatrix[1][1];
-			double testTruePositiveRate = testTruePositives / (double)(testTruePositives + testFalseNegatives);
-			double testFalsePositiveRate = testFalsePositives / (double)(testFalsePositives + testTrueNegatives);
+			int testTrueNegatives = (int)testConfusionMatrix[0][0]; // Don't buy, and shouldn't
+			int testFalseNegatives = (int)testConfusionMatrix[1][0]; // Don't buy, but should
+			int testFalsePositives = (int)testConfusionMatrix[0][1]; // Buy, but shouldn't
+			int testTruePositives = (int)testConfusionMatrix[1][1]; // Buy, and should
+			double testTruePositiveRate = testTruePositives / (double)(testTruePositives + testFalseNegatives); // Percentage of ones you should buy that you actually do
+			double testFalsePositiveRate = testFalsePositives / (double)(testFalsePositives + testTrueNegatives); // Percentage of ones you shouldn't buy that you do anyways
 			double testCorrectRate = testEval.pctCorrect();
 			double testKappa = testEval.kappa();
 			double testMeanAbsoluteError = testEval.meanAbsoluteError();
