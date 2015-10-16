@@ -32,7 +32,6 @@ New Stuff
 - More Bar Type Metrics
 - Data downloaders for bitfinex, bitstamp, kraken, btc-e, forex
 - Would be nice to be able to view charts and metrics by clicking on a cell
-- Might be able to speed up map generation a little more by not including unused columns in the query and trying to make the math code tighter
 - Use of numtrades and vwap fields in bar data (maybe probably not)
 
 TODO
@@ -45,13 +44,16 @@ TODO
 - Metrics with longer time periods
 - Metric values that are the first derivatives of regular ones
 - Downloading multiple sized bars at the same time doesn't work well
-- Make sure models aren't being loaded from disk each time they're used.  Cache them in memory if they are.
-- Model favorites
-- Change MetricSingleton from having to re-init to adding/updating that last Metric at the end
-- Write method to turn the OKCoin ticker channel into bars - seems faster and more reliable than kline bar channels.  Also don't have to subscribe to as many channels
+- Write method to turn the OKCoin ticker channel into bars - seems faster and more reliable than kline bar channels.  Also don't have to subscribe to as many channels.  Not sure of feasibility given volume 
+- Have some true partial bars going back to 9/21 - need to clean out the bars and metrics sometime
+- Might have to change MetricFunctions to not set the value if it's already set
+- Try out OKCoin Fix API
+- Instances in ARFF data need weights when there's a heavy skew towards one classification over the other
+- Have to finish support for Normalized Numeric values by storing the Normalizer and using it in TradingThread (line ~125) to evaluate new data.
+- Breakout metrics have poor metricdiscretevalues.  Should they be used?
+
 
 Model types
-- Long & Short
 - Shorter timeframe & fewer metrics, Longer timeframe & more metrics
 - Variations of metrics
 - Variations of algorithms
@@ -59,5 +61,9 @@ Model types
 - Combining symbols across exchanges and using exchange name as another feature
 
 Bugs
-RSI and some other metrics might have bad values at times when the real-time downloader starts up
-Metrics stop getting calculated pretty quickly after starting realtime downloader.  OKCoinWebSocketThread doesn't get shut off or something.
+- RSI and some other metrics might have bad values at times when the real-time downloader starts up.  This *might* be fixed since I changed loadMetricSequenceHash to not also include partial bars.
+- Check to make sure there are no orphan partial bars.
+- Still getting disconnects on OKCoin WebSocket API
+- Sometimes it looks like new OKCoin WebSocket bars aren't triggering recalculation/updates.
+- ModelManagement fucks up when you have selected rows and do a search and then weird rows get selected or something
+- RealtimeDownloaderServlet looks to see if the REST API downloaded at least one bar before starting the WebSocket API.  Zero bars is completely valid if there are actually zero new ones.  Change this check.

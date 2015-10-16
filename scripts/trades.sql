@@ -4,6 +4,7 @@
 
 CREATE TABLE trades
 (
+  id integer,
   status text,
   entry timestamp without time zone,
   exit timestamp without time zone,
@@ -14,16 +15,14 @@ CREATE TABLE trades
   suggestedentryprice real,
   actualentryprice real,
   suggestedexitprice real,
+  suggestedstopprice real,
   actualexitprice real,
   exitreason text,
   commission real,
   netprofit real,
   grossprofit real,
   model text,
-  sell text,
-  sellvalue real,
-  stop text,
-  stopvalue real
+  expiration timestamp without time zone
 )
 WITH (
   OIDS=FALSE
